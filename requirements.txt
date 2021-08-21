@@ -4,5 +4,6 @@ pyyaml
 aiohttp
 redis
 aiodav
+aiofiles
 uvloop
 apscheduler

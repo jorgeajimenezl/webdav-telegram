@@ -12,6 +12,8 @@ from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, 
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
+from tasks.telegram_to_webdav_parallel import TelegramToWebdavParallelTask
+
 
 class WebdavModule(Module):
     def __init__(self, context: UserContext, database: Database,
@@ -84,7 +86,8 @@ class WebdavModule(Module):
         data = self.database.get_data(user)
 
         # upload
-        task = self.executor.add(TelegramToWebdavTask,
+        cls = TelegramToWebdavTask if str(data['upload_parallel']) != 'on' else TelegramToWebdavParallelTask
+        task = self.executor.add(cls,
                                  on_end_callback=self._on_task_end,
                                  user=user,
                                  file_message=message,

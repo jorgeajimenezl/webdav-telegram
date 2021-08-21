@@ -17,7 +17,8 @@ class Database(object):
                 'password': '',
                 'cwd': '/',
                 'split_size': 100,
-                'upload_path': '/'
+                'upload_path': '/',
+                'upload_parallel': 'off'
             }
 
             self.set_data(id, **data)

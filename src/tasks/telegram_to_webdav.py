@@ -81,6 +81,8 @@ class TelegramToWebdavTask(Task):
                                             progress=self._make_progress,
                                             progress_args=())
                         break
+                    except CancelledError:
+                        raise CancelledError
                     except Exception as e:
                         self._set_state(
                             TaskState.WORKING,

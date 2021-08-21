@@ -18,7 +18,8 @@ class SettingsModule(Module):
         f"{emoji.BUST_IN_SILHOUETTE} Username": ("username", r"\S+", 'user', None),
         f"{emoji.KEY} Password": ("password", r".+", 'password', None),
         f"{emoji.STRAIGHT_RULER} Split Size": ("max file size for split (Default: 10MB)", r"\d+", 'split_size', lambda x: int(x)),
-        f"Upload Path": ("upload files path", r"[\S/]+", "upload_path", None)
+        f"Upload Path": ("upload files path", r"[\S/]+", "upload_path", None),
+        f"{emoji.UPWARDS_BUTTON} Parallel": ("upload files concurrently", r"(on|off)", "upload_parallel", None),
     }
     # yapf: enable
 
