@@ -207,10 +207,25 @@ class FileModule(Module):
 
                 self.context.update(user, CONTEXT['IDLE'])
 
+    async def free(self, app: Client, message: Message):
+        user = message.from_user.id
+        data = self.database.get_data(user)
+
+        async with DavClient(hostname=data['server'],
+                             login=data['user'],
+                             password=data['password']) as dav:
+            try:
+                n = await dav.free()
+                await app.send_message(user, f"Free: {naturalsize(n, format='%.3f')}")
+            except Exception:
+                await app.send_message(user, "Unable to get free space")
+
     def register_app(self, app: Client):
         handlers = [
             MessageHandler(self.list,
                            filters.command("list") & filters.private),
+            MessageHandler(self.free,
+                           filters.command("free") & filters.private),
             CallbackQueryHandler(self._file_info,
                                  ~filters.bot & filters.regex('^open .+$')),
             CallbackQueryHandler(self._change_directory,

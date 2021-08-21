@@ -59,7 +59,7 @@ class TelegramToWebdavParallelTask(Task):
                 piece.write(chunk)
 
                 # reach size limit
-                if piece.tell() >= self.split_size:                    
+                if piece.tell() >= self.split_size:
                     piece.close()
                     k += 1
 
