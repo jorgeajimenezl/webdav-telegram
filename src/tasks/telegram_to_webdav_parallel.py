@@ -114,7 +114,8 @@ class TelegramToWebdavParallelTask(Task):
                             description=
                             f"{emoji.HOURGLASS_DONE} Uploading all pieces")
                 self._make_progress(0, self.total_upload)
-                L = await asyncio.gather([upload_file(i) for i in range(k)])
+                coros = [upload_file(i) for i in range(k)]
+                L = await asyncio.gather(*coros)
             except Exception:
                 self.cancel()
 
