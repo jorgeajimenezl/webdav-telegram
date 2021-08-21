@@ -33,6 +33,7 @@ DOWNLOAD_CHUNK_SIZE = 2097152  # 2 MB
 with open('config.yml', 'r') as file:
     CONFIG = yaml.load(file.read(), Loader=yaml.Loader)
 
+scheduler = AsyncIOScheduler()
 database = Database(db=0, config=CONFIG)
 context = UserContext(db=0, config=CONFIG)
 executor = TaskExecutor()
@@ -42,7 +43,8 @@ tasks_lock = asyncio.Lock()
 # Modules instantiation
 settings_module = SettingsModule(context, database)
 file_module = FileModule(context, database)
-webdav_moduele = WebdavModule(context, database, executor, tasks, tasks_lock)
+webdav_moduele = WebdavModule(context, database, scheduler, executor, tasks,
+                              tasks_lock)
 
 app = PyrogramClient('deverlop',
                      api_id=CONFIG['telegram']['api-id'],
@@ -75,30 +77,7 @@ async def start(_, message: Message):
         await app.send_message(user, "You are already logged")
 
 
-async def updater():
-    async with tasks_lock:
-        for task, message in tasks.items():
-            state, description = task.state()
-
-            if state == TaskState.ERROR or \
-                state == TaskState.SUCCESSFULL:
-                continue
-
-            if description == None:
-                continue
-
-            current, total = task.progress()
-
-            text = f"{description} ({naturalsize(current, format='%.3f')}, {naturalsize(total, format='%.3f')})"
-            if message.text != text:
-                message.text = text
-                await message.edit_text(text)
-
-
 async def main():
-    scheduler = AsyncIOScheduler()
-    scheduler.add_job(updater, "interval", seconds=2, max_instances=1)
-
     async with app:
         scheduler.start()
 

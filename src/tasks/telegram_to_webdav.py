@@ -64,7 +64,7 @@ class TelegramToWebdav(Task):
                 assert file.seek(0) == 0, "Impossible seek to start of stream"
 
                 remote_path = os.path.join(self.webdav_path,
-                                           f"{filename}.part{i}")
+                                           f"{filename}.{i:0=3}")
                 retry_count = 3
 
                 while True:
@@ -127,9 +127,10 @@ class TelegramToWebdav(Task):
 
         async with DavClient(hostname=self.webdav_hostname,
                              login=self.webdav_username,
-                             password=self.webdav_password) as dav:
+                             password=self.webdav_password,
+                             timeout=10*60) as dav:
             try:
-                if self.split_size == -1:
+                if self.split_size == 0:
                     await self._streaming(filename, dav)
                 else:
                     await self._upload_by_split(filename, dav)
