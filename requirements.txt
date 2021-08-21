@@ -1,0 +1,8 @@
+-e git+git://github.com/jorgeajimenezl/pyrogram@iterable-download#egg=pyrogram
+tgcrypto
+pyyaml
+aiohttp
+redis
+aiodav
+uvloop
+apscheduler

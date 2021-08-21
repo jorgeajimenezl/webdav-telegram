@@ -1,0 +1,10 @@
+telegram:
+  api-id: TELEGRAM_API_ID
+  api-hash: TELEGRAM_API_HASH
+  bot-token: TELEGRAM_BOT_TOKEN
+  
+redis:
+  host: REDIS_HOST
+  port: REDIS_PORT
+  username: REDIS_USER
+  password: REDIS_PASSWORD

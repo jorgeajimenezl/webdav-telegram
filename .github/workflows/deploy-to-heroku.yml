@@ -1,0 +1,27 @@
+name: Deploy to Heroku
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      
+      - name: Replace secrets
+        run: |
+         sed -i 's/TELEGRAM_BOT_TOKEN/${{ secrets.TELEGRAM_BOT_TOKEN }}/g' src/config.yml         
+         sed -i 's/REDIS_HOST/${{ secrets.REDIS_HOST }}/g' src/config.yml
+         sed -i 's/REDIS_PORT/${{ secrets.REDIS_PORT }}/g' src/config.yml
+         sed -i 's/REDIS_USER/${{ secrets.REDIS_USER }}/g' src/config.yml
+         sed -i 's/REDIS_PASSWORD/${{ secrets.REDIS_PASSWORD }}/g' src/config.yml
+
+      - uses: akhileshns/heroku-deploy@v3.12.12
+        with:
+          heroku_api_key: ${{secrets.HEROKU_ACCOUNT_API_KEY}}
+          heroku_app_name: ${{secrets.HEROKU_ACCOUNT_APP_NAME}}
+          heroku_email: ${{secrets.HEROKU_ACCOUNT_EMAIL}}
+          usedocker: true
+          docker_heroku_process_type: worker
+          stack: container

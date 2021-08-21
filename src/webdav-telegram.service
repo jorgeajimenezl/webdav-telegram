@@ -1,0 +1,10 @@
+[Unit]
+Description=WebDav Telegram Bot Instance
+After=network.target
+
+[Service]
+User=revdev
+Group=revdev
+WorkingDirectory=/home/debian/webdav-telegram/src
+Environment="PATH=/home/debian/webdav-telegram/env/bin"
+ExecStart=/home/debian/webdav-telegram/env/bin/python3 app.py
