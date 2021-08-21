@@ -11,6 +11,8 @@ jobs:
       
       - name: Replace secrets
         run: |
+         sed -i 's/TELEGRAM_API_ID/${{ secrets.TELEGRAM_API_ID }}/g' src/config.yml
+         sed -i 's/TELEGRAM_API_HASH/${{ secrets.TELEGRAM_API_HASH }}/g' src/config.yml
          sed -i 's/TELEGRAM_BOT_TOKEN/${{ secrets.TELEGRAM_BOT_TOKEN }}/g' src/config.yml         
          sed -i 's/REDIS_HOST/${{ secrets.REDIS_HOST }}/g' src/config.yml
          sed -i 's/REDIS_PORT/${{ secrets.REDIS_PORT }}/g' src/config.yml

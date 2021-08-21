@@ -4,7 +4,7 @@
 
 ## Deploy (Debian)
 Clone repository to the VM  
-WARNING: Edit configuration in `src/config/config.yml`
+WARNING: Edit configuration in `src/config.yml`
 
 ### Install dependencies
 ```shell
