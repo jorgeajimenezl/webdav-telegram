@@ -7,7 +7,7 @@ import traceback, tempfile, asyncio, os
 from aiodav.client import Client as DavClient
 
 
-class TelegramToWebdav(Task):
+class TelegramToWebdavTask(Task):
     """
     Download telegram file and upload to webdav
     """
@@ -123,7 +123,7 @@ class TelegramToWebdav(Task):
 
     async def start(self) -> None:
         self._set_state(TaskState.STARTING)
-        filename = TelegramToWebdav.__get_file_name(self.file_message)
+        filename = TelegramToWebdavTask.__get_file_name(self.file_message)
 
         async with DavClient(hostname=self.webdav_hostname,
                              login=self.webdav_username,

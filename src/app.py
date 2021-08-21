@@ -24,7 +24,7 @@ from modules.settings import SettingsModule
 from modules.file import FileModule
 
 # Tasks
-from tasks.telegram_to_webdav import TelegramToWebdav
+from tasks.telegram_to_webdav import TelegramToWebdavTask
 
 DATA_FOLDER_PATH = './data/'
 DOWNLOAD_CHUNK_SIZE = 2097152  # 2 MB

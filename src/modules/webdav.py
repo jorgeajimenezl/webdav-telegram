@@ -3,7 +3,7 @@ from executor import TaskExecutor
 from module import Module
 from context import UserContext
 from database import Database
-from tasks.telegram_to_webdav import TelegramToWebdav
+from tasks.telegram_to_webdav import TelegramToWebdavTask
 from task import Task, TaskState
 from filesize import naturalsize
 
@@ -26,7 +26,7 @@ class WebdavModule(Module):
         self.tasks_lock = tasks_lock
         self.tasks_id = dict()
 
-    async def _on_task_end(self, task: TelegramToWebdav):
+    async def _on_task_end(self, task: TelegramToWebdavTask):
         user = task.user
         state, description = task.state()
 
@@ -84,7 +84,7 @@ class WebdavModule(Module):
         data = self.database.get_data(user)
 
         # upload
-        task = self.executor.add(TelegramToWebdav,
+        task = self.executor.add(TelegramToWebdavTask,
                                  on_end_callback=self._on_task_end,
                                  user=user,
                                  file_message=message,
