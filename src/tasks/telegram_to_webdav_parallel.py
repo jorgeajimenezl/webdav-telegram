@@ -104,7 +104,7 @@ class TelegramToWebdavParallelTask(Task):
                             if retry_count < 0:
                                 raise e
                             assert (await file.seek(
-                                0) == 0, "Impossible seek to start of stream")
+                                0) == 0), "Impossible seek to start of stream"
                 return i
 
             try:
