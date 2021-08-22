@@ -68,6 +68,12 @@ class TelegramToWebdavParallelTask(Task):
             if piece.tell() != 0:
                 piece.close()
                 k += 1
+            
+            # DEBUG:
+            # directory = '/disk/'
+            # k = 3
+            # filename = 'test'
+            # self.total_upload = 227038 + 203064
 
             M = [0] * k
             self.current_upload = 0
@@ -83,7 +89,7 @@ class TelegramToWebdavParallelTask(Task):
 
                     self._make_progress(self.current_upload, self.total_upload)
 
-                path = os.path.join(directory, f"{filename}.{k:0=3}")
+                path = os.path.join(directory, f"{filename}.{i:0=3}")
                 async with aiofiles.open(path, "rb") as file:
                     buffer_size = os.stat(path).st_size
                     while True:
@@ -113,6 +119,7 @@ class TelegramToWebdavParallelTask(Task):
                             TaskState.WORKING,
                             description=
                             f"{emoji.HOURGLASS_DONE} Uploading all pieces")
+                            
                 self._make_progress(0, self.total_upload)
                 coros = [upload_file(i) for i in range(k)]
                 L = await asyncio.gather(*coros)

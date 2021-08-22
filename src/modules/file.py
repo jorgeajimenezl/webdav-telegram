@@ -42,7 +42,7 @@ class FileModule(Module):
 
                     return [
                         InlineKeyboardButton(
-                            f"{emoji.OPEN_FILE_FOLDER if info['isdir'] else ''} {name}",
+                            f"{emoji.OPEN_FILE_FOLDER if info['isdir'] else emoji.PACKAGE} {name}",
                             callback_data=
                             f"{'cd' if info['isdir'] else 'open'} {partial}")
                     ]
