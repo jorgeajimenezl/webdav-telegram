@@ -73,7 +73,7 @@ class WebdavModule(Module):
         await app.send_message(user, "Unsupported method")
 
     async def cancel_upload(self, app: Client, callback_query: CallbackQuery):
-        await callback_query.answer("Scheduled stop", show_alert=True)
+        await callback_query.answer("Scheduled stop")
         _, _, id = callback_query.data.partition(' ')
         id = int(id)
 

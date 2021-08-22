@@ -130,7 +130,7 @@ class TelegramToWebdavTask(Task):
         async with DavClient(hostname=self.webdav_hostname,
                              login=self.webdav_username,
                              password=self.webdav_password,
-                             timeout=10*60) as dav:
+                             timeout=10 * 60) as dav:
             try:
                 if self.split_size == 0:
                     await self._streaming(filename, dav)
