@@ -216,7 +216,7 @@ class FileModule(Module):
                              password=data['password']) as dav:
             try:
                 n = await dav.free()
-                await app.send_message(user, f"Free: {naturalsize(n, format='%.3f')}")
+                await app.send_message(user, f"{emoji.BAR_CHART} Free: **{naturalsize(n, format='%.3f')}**")
             except Exception:
                 await app.send_message(user, "Unable to get free space")
 
