@@ -44,7 +44,7 @@ class TelegramToWebdavParallelTask(Task):
 
     async def _upload(self, filename: str, dav: DavClient):
         with tempfile.TemporaryDirectory() as directory:
-            k = 0
+            k = 1
             piece = open(os.path.join(directory, f"{filename}.{k:0=3}"), "wb")
             self.total_upload = 0
 
@@ -67,13 +67,6 @@ class TelegramToWebdavParallelTask(Task):
 
             if piece.tell() != 0:
                 piece.close()
-                k += 1
-            
-            # DEBUG:
-            # directory = '/disk/'
-            # k = 3
-            # filename = 'test'
-            # self.total_upload = 227038 + 203064
 
             M = [0] * k
             self.current_upload = 0
@@ -121,7 +114,7 @@ class TelegramToWebdavParallelTask(Task):
                             f"{emoji.HOURGLASS_DONE} Uploading all pieces")
                             
                 self._make_progress(0, self.total_upload)
-                coros = [upload_file(i) for i in range(k)]
+                coros = [upload_file(i) for i in range(1, k + 1)]
                 L = await asyncio.gather(*coros)
             except Exception:
                 self.cancel()

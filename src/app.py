@@ -1,7 +1,5 @@
 import uvloop
 
-from modules.webdav import WebdavModule
-
 uvloop.install()
 
 from pyrogram import (filters, emoji, idle)
@@ -16,15 +14,10 @@ from database import Database
 
 from filesize import naturalsize
 
-from executor import TaskExecutor
-from task import Task, TaskState
-
 # Modules
 from modules.settings import SettingsModule
 from modules.file import FileModule
-
-# Tasks
-from tasks.telegram_to_webdav import TelegramToWebdavTask
+from modules.webdav import WebdavModule
 
 DATA_FOLDER_PATH = './data/'
 DOWNLOAD_CHUNK_SIZE = 2097152  # 2 MB
@@ -36,15 +29,12 @@ with open('config.yml', 'r') as file:
 scheduler = AsyncIOScheduler()
 database = Database(db=0, config=CONFIG)
 context = UserContext(db=0, config=CONFIG)
-executor = TaskExecutor()
-tasks = dict()
-tasks_lock = asyncio.Lock()
+
 
 # Modules instantiation
 settings_module = SettingsModule(context, database)
 file_module = FileModule(context, database)
-webdav_moduele = WebdavModule(context, database, scheduler, executor, tasks,
-                              tasks_lock)
+webdav_moduele = WebdavModule(context, database, scheduler)
 
 app = PyrogramClient('deverlop',
                      api_id=CONFIG['telegram']['api-id'],

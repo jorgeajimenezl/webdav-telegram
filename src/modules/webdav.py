@@ -17,16 +17,16 @@ from tasks.telegram_to_webdav_parallel import TelegramToWebdavParallelTask
 
 class WebdavModule(Module):
     def __init__(self, context: UserContext, database: Database,
-                 scheduler: AsyncIOScheduler, executor: TaskExecutor,
-                 tasks: dict, tasks_lock: asyncio.Lock) -> None:
+                 scheduler: AsyncIOScheduler) -> None:
         super().__init__(context, database)
 
         self.scheduler = scheduler
-        self.executor = executor
         self.app = None
-        self.tasks = tasks
-        self.tasks_lock = tasks_lock
+
         self.tasks_id = dict()
+        self.executor = TaskExecutor()
+        self.tasks = dict()
+        self.tasks_lock = asyncio.Lock()
 
     async def _on_task_end(self, task: TelegramToWebdavTask):
         user = task.user
@@ -86,7 +86,8 @@ class WebdavModule(Module):
         data = self.database.get_data(user)
 
         # upload
-        cls = TelegramToWebdavTask if str(data['upload_parallel']) != 'on' else TelegramToWebdavParallelTask
+        cls = TelegramToWebdavTask if str(
+            data['upload_parallel']) != 'on' else TelegramToWebdavParallelTask
         task = self.executor.add(cls,
                                  on_end_callback=self._on_task_end,
                                  user=user,
