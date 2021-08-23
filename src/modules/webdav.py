@@ -121,7 +121,7 @@ class WebdavModule(Module):
                     continue
 
                 current, total = task.progress()
-                text = f"{description} ({naturalsize(current, format='%.3f')}, {naturalsize(total, format='%.3f')})"
+                text = f"{description} ({naturalsize(current, format='%.3f') if current != None else '~'}, {naturalsize(total, format='%.3f') if total != None else '~'})"
 
                 if message.text != text:
                     message.text = text
