@@ -30,7 +30,6 @@ scheduler = AsyncIOScheduler()
 database = Database(db=0, config=CONFIG)
 context = UserContext(db=0, config=CONFIG)
 
-
 # Modules instantiation
 settings_module = SettingsModule(context, database)
 file_module = FileModule(context, database)
