@@ -36,10 +36,12 @@ settings_module = SettingsModule(context, database)
 file_module = FileModule(context, database)
 webdav_moduele = WebdavModule(context, database, scheduler)
 
+# WARNING: workers parameter pushed because that will run in a 1-CPU
 app = PyrogramClient('deverlop',
                      api_id=CONFIG['telegram']['api-id'],
                      api_hash=CONFIG['telegram']['api-hash'],
-                     bot_token=CONFIG['telegram']['bot-token'])
+                     bot_token=CONFIG['telegram']['bot-token'],
+                     workers=5)
 
 # Register all modules callbacks
 settings_module.register_app(app)
