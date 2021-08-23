@@ -92,7 +92,7 @@ class TaskExecutor(object):
                     asyncio.create_task(on_end_callback(task))
                 else:
                     on_end_callback()
-                return (task, None)
+                return task
 
             def at_end(f: Future[Tuple[int, Task]]):
                 # Do something with result
@@ -111,4 +111,4 @@ class TaskExecutor(object):
 
             future.add_done_callback(at_end)
 
-        return (task, future)
+        return task
