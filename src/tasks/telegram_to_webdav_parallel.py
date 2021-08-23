@@ -22,6 +22,8 @@ class TelegramToWebdavParallelTask(Task):
         self.webdav_username = kwargs.get('username')
         self.webdav_password = kwargs.get('password')
         self.webdav_path = kwargs.get('path')
+        
+        # self.executor = kwargs.get('executor')
 
     def __get_file_name(message):
         available_media = ("audio", "document", "photo", "sticker",

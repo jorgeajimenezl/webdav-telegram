@@ -125,7 +125,7 @@ class WebdavModule(Module):
                     text = f"{description} ({naturalsize(current, format='%.3f')}, {naturalsize(total, format='%.3f')})"
                 else:
                     text = description
-                
+
                 if message.text != text:
                     message.text = text
                     await message.edit_text(

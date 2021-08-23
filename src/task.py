@@ -24,9 +24,11 @@ class Task(object):
         
         self.stop = None
         self.result = None
+        self.future = None
 
-    # async def stop(self) -> None:
-    #     self.internal_task.cancel()
+    def cancel(self):
+        if self.future != None:
+            self.future.cancel()
 
     async def start(self) -> None:
         raise NotImplementedError
