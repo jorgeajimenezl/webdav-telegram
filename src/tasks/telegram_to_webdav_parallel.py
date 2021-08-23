@@ -68,7 +68,7 @@ class TelegramToWebdavParallelTask(Task):
             if piece.tell() != 0:
                 piece.close()
 
-            M = [0] * k
+            M = [0] * (k + 1)
             self.current_upload = 0
 
             # Upload in parallel
