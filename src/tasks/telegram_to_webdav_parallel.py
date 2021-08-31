@@ -128,7 +128,7 @@ class TelegramToWebdavParallelTask(Task):
         async with DavClient(hostname=self.webdav_hostname,
                              login=self.webdav_username,
                              password=self.webdav_password,
-                             timeout=10 * 60,
+                             timeout=10 * 60 * 5,
                              chunk_size=2097152) as dav:
             try:
                 if self.split_size == 0:
