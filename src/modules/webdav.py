@@ -120,6 +120,7 @@ class WebdavModule(Module):
                 if description == None:
                     continue
 
+                current, total = task.progress()
                 if (current or total) != None:
                     text = f"{description} ({naturalsize(current, format='%.3f')}, {naturalsize(total, format='%.3f')})"
                 else:
