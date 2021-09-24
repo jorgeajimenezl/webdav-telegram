@@ -3,7 +3,8 @@ from async_executor.executor import TaskExecutor
 from module import Module
 from context import UserContext
 from database import Database
-from tasks.telegram_to_webdav import TelegramToWebdavTask
+from modules.service import Service
+from services.telegram import TelegramService
 from async_executor.task import Task, TaskState
 from filesize import naturalsize
 
@@ -12,10 +13,11 @@ from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, 
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
-from tasks.telegram_to_webdav_parallel import TelegramToWebdavParallelTask
-
-
 class WebdavModule(Module):
+    SERVICES = [
+        TelegramService
+    ]
+
     def __init__(self, context: UserContext, database: Database,
                  scheduler: AsyncIOScheduler) -> None:
         super().__init__(context, database)
@@ -28,7 +30,7 @@ class WebdavModule(Module):
         self.tasks = dict()
         self.tasks_lock = asyncio.Lock()
 
-    async def _on_task_end(self, task: TelegramToWebdavTask):
+    async def _on_task_end(self, task: Service):
         user = task.user
         state, description = task.state()
 
@@ -56,22 +58,6 @@ class WebdavModule(Module):
             except Exception:
                 pass
 
-    async def upload_url(self, app: Client, message: Message):
-        user = message.from_user.id
-
-        # try:
-        #     url = message.command[-1]
-        #     if not re.fullmatch(URL_REGEX_PATERN, url):
-        #         raise Exception
-
-        # except Exception:
-        #     await app.send_message(
-        #         user,
-        #         'You must insert a valid url. Ex: **/download https://example.com/file.zip**'
-        #     )
-        #     context.update(user, CONTEXT['IDLE'])
-        await app.send_message(user, "Unsupported method")
-
     async def cancel_upload(self, app: Client, callback_query: CallbackQuery):
         await callback_query.answer("Scheduled stop")
         _, _, id = callback_query.data.partition(' ')
@@ -83,11 +69,19 @@ class WebdavModule(Module):
 
     async def upload_file(self, app: Client, message: Message):
         user = message.from_user.id
+        cls = None
+
+        for service in WebdavModule.SERVICES:
+            if service.check(message):
+                cls = service
+                break
+        
+        if cls == None:
+            await app.send_message(user, f"{emoji.CROSS_MARK} This action don't match with any service")
+
         data = self.database.get_data(user)
 
         # upload
-        cls = TelegramToWebdavTask if str(
-            data['upload_parallel']) != 'on' else TelegramToWebdavParallelTask
         task = self.executor.add(cls,
                                  on_end_callback=self._on_task_end,
                                  user=user,
@@ -145,9 +139,7 @@ class WebdavModule(Module):
                                max_instances=1)
 
         handlers = [
-            MessageHandler(
-                self.upload_file, filters.document | filters.photo
-                | filters.video | filters.audio),
+            MessageHandler(self.upload_file),
             CallbackQueryHandler(self.cancel_upload,
                                  filters.regex('^cancel \d+$'))
         ]

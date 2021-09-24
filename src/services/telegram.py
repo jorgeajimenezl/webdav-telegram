@@ -1,29 +1,34 @@
 from asyncio.exceptions import CancelledError
 from async_executor.task import Task, TaskState
-from pyrogram import emoji
+from modules.service import Service
+from pyrogram import emoji, filters
 from pyrogram.types import Message
 
 import traceback, tempfile, asyncio, os
 from aiodav.client import Client as DavClient
 
 
-class TelegramToWebdavTask(Task):
+class TelegramService(Service):
     """
     Download telegram file and upload to webdav
     """
-    def __init__(self, id: int, user: int, *args, **kwargs) -> None:
-        super().__init__(id, *args, **kwargs)
 
-        self.user = user
-        self.file_message = kwargs.get('file_message')
-        self.split_size = kwargs.get('split_size', 10) * 1024 * 1024  # Bytes
+    #yapf: disable
+    def __init__(
+        self,
+        id: int,
+        user: int,
+        file_message: Message,
+        *args, **kwargs
+    ) -> None:
+        #yapf: enable
+        super().__init__(id, user, file_message, *args, **kwargs)        
 
-        self.webdav_hostname = kwargs.get('hostname')
-        self.webdav_username = kwargs.get('username')
-        self.webdav_password = kwargs.get('password')
-        self.webdav_path = kwargs.get('path')
+    @staticmethod
+    def check(m: Message):
+        return bool(m.document) | bool(m.photo) | bool(m.video) | bool(m.audio)
 
-    def __get_file_name(message):
+    def __get_file_name(message: Message):
         available_media = ("audio", "document", "photo", "sticker",
                            "animation", "video", "voice", "video_note",
                            "new_chat_photo")
@@ -125,7 +130,7 @@ class TelegramToWebdavTask(Task):
 
     async def start(self) -> None:
         self._set_state(TaskState.STARTING)
-        filename = TelegramToWebdavTask.__get_file_name(self.file_message)
+        filename = TelegramService.__get_file_name(self.file_message)
 
         async with DavClient(hostname=self.webdav_hostname,
                              login=self.webdav_username,
