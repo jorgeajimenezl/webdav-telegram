@@ -1,0 +1,30 @@
+{
+    "name": "webdav-telegram",
+    "description": "A Telegram bot for manage your files via WebDAV",
+    "repository": "https://github.com/jorgeajimenezl/webdav-telegram",
+    "keywords": ["webdav", "telegram", "bot", "python"],
+    "env": {
+        "TELEGRAM_API_ID": {
+            "description": "Telegram API ID from https://my.telegram.org/apps",
+            "required": true
+        },
+        "TELEGRAM_API_HASH": {
+            "description": "Telegram API Hash from https://my.telegram.org/apps",
+            "required": true
+        },
+        "TELEGRAM_BOT_TOKEN": {
+            "description": "Telegram Bot token from @BotFather (https://t.me/BotFather)",
+            "required": true
+        },
+        "REDIS_HOST": {
+            "description": "Redis server in format `[username:password]@hostname[:port]`",
+            "required": true
+        }
+    },
+    "formation": {
+        "worker": {
+            "quantity": 1,
+            "size": "free"
+        }
+    }
+}

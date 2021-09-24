@@ -1,12 +1,14 @@
 from redis import Redis
-
+from urllib.parse import urlparse
 
 class Database(object):
     def __init__(self, db: int = 0, **kwargs):
-        self._redis = Redis(host=kwargs.get('config')['redis']['host'],
-                            port=kwargs.get('config')['redis']['port'],
-                            username=kwargs.get('config')['redis']['username'],
-                            password=kwargs.get('config')['redis']['password'],
+        ret = urlparse(kwargs.get('config')['redis']['host'])
+
+        self._redis = Redis(host=ret.hostname,
+                            port=ret.port if ret.port != 80 else 6379,
+                            username=ret.username,
+                            password=ret.password,
                             db=db)
 
     def add_user(self, id: int, force=False):

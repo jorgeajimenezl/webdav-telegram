@@ -9,7 +9,7 @@ __pycache__/
 env/
 
 # Kanban
-.kanbn
+.kanbn/
 
 # Certificates
 # *.private

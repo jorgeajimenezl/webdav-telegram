@@ -1,3 +1,4 @@
+from urllib.parse import urlparse
 from redis import Redis
 from pyrogram.types import CallbackQuery
 from pyrogram import filters
@@ -16,11 +17,13 @@ CONTEXT = {v: 1 << k for k, v in enumerate(CONTEXT_NAMES)}
 
 class UserContext(object):
     def __init__(self, db: int = 0, **kwargs):
-        self.__redis = Redis(host=kwargs.get('config')['redis']['host'], 
-                             port=kwargs.get('config')['redis']['port'],
-                             username=kwargs.get('config')['redis']['username'],
-                             password=kwargs.get('config')['redis']['password'],
-                             db=db)
+        ret = urlparse(kwargs.get('config')['redis']['host'])
+
+        self._redis = Redis(host=ret.hostname,
+                            port=ret.port if ret.port != 80 else 6379,
+                            username=ret.username,
+                            password=ret.password,
+                            db=db)
 
     def update(self, id: int, context: int) -> bool:
         assert isinstance(context, int)

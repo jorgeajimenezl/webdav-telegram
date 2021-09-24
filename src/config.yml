@@ -5,6 +5,3 @@ telegram:
   
 redis:
   host: REDIS_HOST
-  port: REDIS_PORT
-  username: REDIS_USER
-  password: REDIS_PASSWORD

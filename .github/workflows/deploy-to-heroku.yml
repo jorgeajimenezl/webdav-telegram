@@ -1,9 +1,6 @@
 name: Deploy to Heroku
 
 on:
-  push:
-    branches:
-      - master
   workflow_dispatch:
 
 jobs:
@@ -18,9 +15,6 @@ jobs:
          sed -i 's/TELEGRAM_API_HASH/${{ secrets.TELEGRAM_API_HASH }}/g' src/config.yml
          sed -i 's/TELEGRAM_BOT_TOKEN/${{ secrets.TELEGRAM_BOT_TOKEN }}/g' src/config.yml         
          sed -i 's/REDIS_HOST/${{ secrets.REDIS_HOST }}/g' src/config.yml
-         sed -i 's/REDIS_PORT/${{ secrets.REDIS_PORT }}/g' src/config.yml
-         sed -i 's/REDIS_USER/${{ secrets.REDIS_USER }}/g' src/config.yml
-         sed -i 's/REDIS_PASSWORD/${{ secrets.REDIS_PASSWORD }}/g' src/config.yml
 
       - uses: akhileshns/heroku-deploy@v3.12.12
         with:

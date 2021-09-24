@@ -124,7 +124,7 @@ class WebdavModule(Module):
                 if (current or total) != None:
                     text = f"{description} ({naturalsize(current, format='%.3f')}, {naturalsize(total, format='%.3f')})"
                 else:
-                    text = description
+                    text = f"{description} (...)"
 
                 if message.text != text:
                     message.text = text
