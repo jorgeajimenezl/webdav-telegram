@@ -4,7 +4,6 @@ from module import Module
 from context import UserContext
 from database import Database
 from modules.service import Service
-from services.telegram import TelegramService
 from async_executor.task import Task, TaskState
 from filesize import naturalsize
 
@@ -13,9 +12,14 @@ from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, 
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
+# Services
+from services.http import HttpService
+from services.telegram import TelegramService
+
 class WebdavModule(Module):
     SERVICES = [
-        TelegramService
+        TelegramService,
+        HttpService
     ]
 
     def __init__(self, context: UserContext, database: Database,
