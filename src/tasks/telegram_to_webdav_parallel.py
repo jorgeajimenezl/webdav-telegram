@@ -1,5 +1,5 @@
 from asyncio.exceptions import CancelledError
-from task import Task, TaskState
+from async_executor.task import Task, TaskState
 from pyrogram import emoji
 from pyrogram.types import Message
 

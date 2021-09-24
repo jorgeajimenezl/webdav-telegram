@@ -1,10 +1,10 @@
 import asyncio
-from executor import TaskExecutor
+from async_executor.executor import TaskExecutor
 from module import Module
 from context import UserContext
 from database import Database
 from tasks.telegram_to_webdav import TelegramToWebdavTask
-from task import Task, TaskState
+from async_executor.task import Task, TaskState
 from filesize import naturalsize
 
 from pyrogram import Client, emoji, filters
