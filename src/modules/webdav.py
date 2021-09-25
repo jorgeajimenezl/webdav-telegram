@@ -90,6 +90,7 @@ class WebdavModule(Module):
                                  on_end_callback=self._on_task_end,
                                  user=user,
                                  file_message=message,
+                                 pyrogram_client=app,
                                  split_size=int(data['split_size']),
                                  hostname=data['server'],
                                  username=data['user'],

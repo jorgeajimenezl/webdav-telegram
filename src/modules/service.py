@@ -6,6 +6,7 @@ class Service(Task):
         self.user = user
         self.file_message = file_message
 
+        self.pyrogram_client = kwargs.get('pyrogram_client', file_message._client)
         self.split_size = kwargs.get('split_size', 10) * 1024 * 1024  # Bytes
 
         self.webdav_hostname = kwargs.get('hostname')
