@@ -57,7 +57,7 @@ class FileModule(Module):
                         app,
                         user,
                         options=nodes,
-                        message_text='**Files**',
+                        message_text='**Select your file**',
                         multi_selection=False,
                         name_selector=create_button,
                         delete=False,

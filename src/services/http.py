@@ -8,6 +8,7 @@ from pyrogram.types import Message
 
 import traceback, tempfile, asyncio, os, re, aiohttp
 from aiodav.client import Client as DavClient
+from utils import URL_REGEX_PATTERN
 
 
 class HttpService(Service):
@@ -28,9 +29,7 @@ class HttpService(Service):
 
     @staticmethod
     def check(m: Message):
-        return re.fullmatch(
-            'https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)',
-            m.text)
+        return re.fullmatch(URL_REGEX_PATTERN, m.text)
 
     async def _streaming(self, filename: str, dav: DavClient,
                          response: ClientResponse):

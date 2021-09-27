@@ -16,7 +16,7 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 # Services
 from services.http import HttpService
 from services.telegram import TelegramService
-from services.torrent import TorrentService
+# from services.torrent import TorrentService
 
 class WebdavModule(Module):
     SERVICES = [
