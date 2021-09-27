@@ -7,7 +7,7 @@ from pyrogram import Client as PyrogramClient
 from pyrogram.types import Message, InlineKeyboardButton, InlineKeyboardMarkup, BotCommand
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
-import asyncio, yaml, re
+import asyncio, yaml, re, os
 
 from context import CONTEXT, UserContext
 from database import Database
@@ -25,6 +25,12 @@ DOWNLOAD_CHUNK_SIZE = 2097152  # 2 MB
 # Read config file
 with open('config.yml', 'r') as file:
     CONFIG = yaml.load(file.read(), Loader=yaml.Loader)
+    
+    CONFIG['telegram']['api-id'] = os.getenv('TELEGRAM_API_ID') or CONFIG['telegram']['api-id']
+    CONFIG['telegram']['api-hash'] = os.getenv('TELEGRAM_API_HASH') or CONFIG['telegram']['api-hash']
+    CONFIG['telegram']['bot-token'] = os.getenv('TELEGRAM_BOT_TOKEN') or CONFIG['telegram']['bot-token']
+    CONFIG['redis']['host'] = os.getenv('REDIS_HOST') or CONFIG['redis']['host']
+
 
 scheduler = AsyncIOScheduler()
 database = Database(db=0, config=CONFIG)
