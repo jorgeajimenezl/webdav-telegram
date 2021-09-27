@@ -117,15 +117,16 @@ class WebdavModule(Module):
             path=data["upload_path"],
         )
 
-        self.tasks[task] = await app.send_message(
-            user,
-            f"Waiting to process this action (Task #{task.id})",
-            reply_markup=InlineKeyboardMarkup(
-                [[self.cancel_group.add(task.id, cachable=True).button("Cancel")]]
-            ),
-        )
+        async with self.tasks_lock:
+            self.tasks[task] = await app.send_message(
+                user,
+                f"Waiting to process this action (Task #{task.id})",
+                reply_markup=InlineKeyboardMarkup(
+                    [[self.cancel_group.add(task.id, cachable=True).button("Cancel")]]
+                ),
+            )
 
-        self.tasks_id[task.id] = task
+            self.tasks_id[task.id] = task
 
     async def _updater(self):
         async with self.tasks_lock:
