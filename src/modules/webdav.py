@@ -6,6 +6,7 @@ from database import Database
 from modules.service import Service
 from async_executor.task import Task, TaskState
 from filesize import naturalsize
+from button import ButtonFactory
 
 from pyrogram import Client, emoji, filters
 from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
@@ -15,9 +16,11 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 # Services
 from services.http import HttpService
 from services.telegram import TelegramService
+from services.torrent import TorrentService
 
 class WebdavModule(Module):
     SERVICES = [
+        # TorrentService,
         TelegramService,
         HttpService
     ]
@@ -33,6 +36,10 @@ class WebdavModule(Module):
         self.executor = TaskExecutor()
         self.tasks = dict()
         self.tasks_lock = asyncio.Lock()
+        self.factory = ButtonFactory()
+
+        # Buttons
+        self.cancel_group = self.factory.create_group('cancel')
 
     async def _on_task_end(self, task: Service):
         user = task.user
@@ -64,8 +71,8 @@ class WebdavModule(Module):
 
     async def cancel_upload(self, app: Client, callback_query: CallbackQuery):
         await callback_query.answer("Scheduled stop")
-        _, _, id = callback_query.data.partition(' ')
-        id = int(id)
+        id = self.factory.get_value(callback_query.data)
+        assert isinstance(id, int)
 
         async with self.tasks_lock:
             if id in self.tasks_id:
@@ -82,6 +89,7 @@ class WebdavModule(Module):
         
         if cls == None:
             await app.send_message(user, f"{emoji.CROSS_MARK} This action don't match with any service")
+            return
 
         data = self.database.get_data(user)
 
@@ -90,7 +98,7 @@ class WebdavModule(Module):
                                  on_end_callback=self._on_task_end,
                                  user=user,
                                  file_message=message,
-                                 pyrogram_client=app,
+                                 pyrogram=app,
                                  split_size=int(data['split_size']),
                                  hostname=data['server'],
                                  username=data['user'],
@@ -101,8 +109,7 @@ class WebdavModule(Module):
             user,
             f"Waiting to process this action (Task #{task.id})",
             reply_markup=InlineKeyboardMarkup([[
-                InlineKeyboardButton("Cancel",
-                                     callback_data=f"cancel {task.id}")
+                self.cancel_group.add(task.id, cachable=True).button('Cancel')
             ]]))
 
         self.tasks_id[task.id] = task
@@ -130,8 +137,7 @@ class WebdavModule(Module):
                     await message.edit_text(
                         text,
                         reply_markup=InlineKeyboardMarkup([[
-                            InlineKeyboardButton(
-                                "Cancel", callback_data=f"cancel {task.id}")
+                            self.cancel_group.add(task.id, cachable=True).button('Cancel')
                         ]]))
 
     def register_app(self, app: Client):
@@ -145,8 +151,7 @@ class WebdavModule(Module):
 
         handlers = [
             MessageHandler(self.upload_file),
-            CallbackQueryHandler(self.cancel_upload,
-                                 filters.regex('^cancel \d+$'))
+            self.cancel_group.callback_handler(self.cancel_upload)
         ]
 
         for u in handlers:

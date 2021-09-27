@@ -1,9 +1,9 @@
-from typing import Any, Dict, List, Set, Tuple, Union
+from typing import Any, Callable, Dict, List, Set, Tuple, Union
 from pyrogram import Client, emoji, filters
-from pyrogram.types import CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
+from pyrogram.types import CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton, Message
 from pyrogram.handlers import CallbackQueryHandler
 from types import SimpleNamespace
-from button import ButtonFactory
+from button import ButtonFactory, GroupButton
 
 import random, asyncio
 
@@ -11,12 +11,15 @@ URL_REGEX_PATTERN = 'https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-
 
 async def selection(app: Client,
                     user: int,
-                    options: Dict[str, Any],
-                    message: str = 'Select',
+                    options: List[Any],
+                    message_text: str = 'Select',
                     multi_selection: bool = True,
-                    max_options_per_page: int = 8) -> Dict[str, Any]:
+                    name_selector: Callable[[Any], str] = None,
+                    max_options_per_page: int = 8,
+                    message: Message = None,
+                    delete : bool = True) -> Union[Dict[str, Any], Tuple[Dict[str, Any], Message]]:
     ns = SimpleNamespace()
-    opt = dict()
+    opt = list()
 
     ns.page = 0
     ns.done = False
@@ -25,72 +28,67 @@ async def selection(app: Client,
     total_pages = len(options) // max_options_per_page \
                     + (1 if len(options) % max_options_per_page != 0 else 0)
 
-    prefix = random.randbytes(20)
-    rid = {prefix + random.randbytes(44): k for k in options}    
+    factory = ButtonFactory()
+    select_group = factory.create_group('select')
+    items = [select_group.add(k) for k in options]
 
-    next_id = random.randbytes(64)
-    back_id = random.randbytes(64)
-    select_all_id = random.randbytes(64)
-    unselect_all_id = random.randbytes(64)
-    done_id = random.randbytes(64)
-    cancel_id = random.randbytes(64)
+    next_button = factory.create_action('next')
+    back_button = factory.create_action('back')
+    selectall_button = factory.create_action('select all')
+    unselectall_button = factory.create_action('unselect all')
+    done_button = factory.create_action('done')
+    cancel_button = factory.create_action('cancel')
 
-    exact_match = lambda data: filters.create(
-        lambda flt, _, query: query.data == flt.data, data=data)
-    starts_with = lambda data: filters.create(
-        lambda flt, _, query: query.data.startswith(flt.data), data=data)
+    def create_button(button: GroupButton):        
+        name = button.value
+        if callable(name_selector):
+            name = name_selector(name)
+        name = str(name)
 
-    def create_button(option: Tuple[str, bytes]):
-        id, name = option
         if len(name) >= 20:
-            name = name[:20]
+            name = name[:40]
         selected = (name in opt)
         return [
-            InlineKeyboardButton(
-                f"{emoji.CHECK_MARK_BUTTON if selected else ''}{name}",
-                callback_data=id)
+            button.button(
+                f"{emoji.CHECK_MARK_BUTTON if selected else ''}{name}")
         ]
 
     def navigation_buttons():
-        back = InlineKeyboardButton(f'{emoji.LEFT_ARROW} {ns.page - 1}',
-                                    callback_data=back_id)
-        next = InlineKeyboardButton(f'{ns.page + 1} {emoji.RIGHT_ARROW}',
-                                    callback_data=next_id)
         ret = []
+
         if ns.page > 0:
-            ret.append(back)
+            ret.append(back_button.button(f'{emoji.LEFT_ARROW} {ns.page - 1}'))
         if ns.page < total_pages - 1:
-            ret.append(next)
+            ret.append(
+                next_button.button(f'{ns.page + 1} {emoji.RIGHT_ARROW}'))
 
         return ret
-
-    items = list(rid.items())
 
     async def _select(app: Client, callback_query: CallbackQuery):
         a = ns.page * max_options_per_page
         b = min(len(options), (ns.page + 1) * max_options_per_page)
-        page_items = items[a:b]
 
         # yapf: disable
-        done_button = InlineKeyboardButton('Done', callback_data=done_id)
-        cancel_button = InlineKeyboardButton('Cancel', callback_data=cancel_id)
-
         extra = [
             [
-                InlineKeyboardButton('Select All', callback_data=select_all_id),
-                InlineKeyboardButton('Unselect All', callback_data=unselect_all_id)
+                selectall_button.button('Select all'),
+                unselectall_button.button('Unselect all')
             ],
-            [done_button, cancel_button]
+            [done_button.button('DONE'), cancel_button.button('CANCEL')]
         ]
-
+        navigation = navigation_buttons()
         markup = InlineKeyboardMarkup(
-            [create_button(opt) for opt in page_items] +
-            [navigation_buttons()] + (extra if multi_selection else [cancel_button])
+            [create_button(opt) for opt in items[a:b]] +
+            ([navigation] if len(navigation) > 0 else []) + (extra if multi_selection else [[cancel_button.button('Cancel')]])
         )
         # yapf: enable
 
         if callback_query == None:
-            await app.send_message(user, message, reply_markup=markup)
+            if message == None:
+                return await app.send_message(user, message_text, reply_markup=markup)
+            else:
+                await message.edit(message_text, reply_markup=markup)
+                return message
         else:
             await callback_query.edit_message_reply_markup(markup)
 
@@ -122,44 +120,40 @@ async def selection(app: Client,
         ns.done = True
 
     async def _select_item(app: Client, callback_query: CallbackQuery):
-        m = rid[callback_query.data]
+        m = factory.get(callback_query.data).value
 
         if m in opt:
-            opt.pop(m)
+            opt.remove(m)
         else:
-            opt[m] = options[m]
+            opt.append(m)
 
         if multi_selection:
             await _select(app, callback_query)
         else:
-            callback_query.message.delete(True)
+            if delete: 
+                await callback_query.message.delete(True)
             ns.done = True
 
-    ret = [
-        app.add_handler(
-            CallbackQueryHandler(_select_item, filters=starts_with(prefix))),
-        app.add_handler(
-            CallbackQueryHandler(_next_page, filters=exact_match(next_id))),
-        app.add_handler(
-            CallbackQueryHandler(_back_page, filters=exact_match(back_id))),
-        app.add_handler(
-            CallbackQueryHandler(_select_all,
-                                 filters=exact_match(select_all_id))),
-        app.add_handler(
-            CallbackQueryHandler(_unselect_all,
-                                 filters=exact_match(unselect_all_id))),
-        app.add_handler(
-            CallbackQueryHandler(_done, filters=exact_match(done_id))),
-        app.add_handler(
-            CallbackQueryHandler(_cancel, filters=exact_match(cancel_id))),
+    handlers = [
+        select_group.callback_handler(_select_item),
+        next_button.callback_handler(_next_page),
+        back_button.callback_handler(_back_page),
+        selectall_button.callback_handler(_select_all),
+        unselectall_button.callback_handler(_unselect_all),
+        done_button.callback_handler(_done),
+        cancel_button.callback_handler(_cancel),
     ]
 
-    await _select(app, None)
+    for u in handlers:
+        app.add_handler(u)
 
+    message = await _select(app, None)
     while not ns.done:
         await asyncio.sleep(0.5)
 
-    for h, g in ret:
-        app.remove_handler(h, g)
+    for h in handlers:
+        app.remove_handler(h)
 
-    return opt if not ns.canceled else None
+    if delete:
+        return opt if not ns.canceled else None
+    return (opt if not ns.canceled else None, message)

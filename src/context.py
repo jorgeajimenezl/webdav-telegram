@@ -27,11 +27,11 @@ class UserContext(object):
 
     def update(self, id: int, context: int) -> bool:
         assert isinstance(context, int)
-        return self.__redis.set(f'ctx:{id}', context)
+        return self._redis.set(f'ctx:{id}', context)
 
     def resolve(self, id: int) -> int:
-        if self.__redis.exists(f'ctx:{id}'):
-            return int(self.__redis.get(f'ctx:{id}'))
+        if self._redis.exists(f'ctx:{id}'):
+            return int(self._redis.get(f'ctx:{id}'))
         return 0
 
     def filter(self, data):

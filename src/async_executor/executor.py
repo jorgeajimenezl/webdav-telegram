@@ -4,7 +4,7 @@ from threading import Lock
 import asyncio, os, inspect
 from asyncio import events
 from typing import Callable, Optional, Tuple
-from task import Task
+from async_executor.task import Task
 
 
 class TaskExecutor(object):
