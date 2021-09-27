@@ -5,22 +5,29 @@ from typing import Any, Callable, Dict, List, Set, Tuple, Union
 
 from pyrogram import Client, emoji, filters
 from pyrogram.handlers import CallbackQueryHandler
-from pyrogram.types import (CallbackQuery, InlineKeyboardButton,
-                            InlineKeyboardMarkup, Message)
+from pyrogram.types import (
+    CallbackQuery,
+    InlineKeyboardButton,
+    InlineKeyboardMarkup,
+    Message,
+)
 
 from button import ButtonFactory, GroupButton
 
-URL_REGEX_PATTERN = 'https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)'
+URL_REGEX_PATTERN = "https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)"
 
-async def selection(app: Client,
-                    user: int,
-                    options: List[Any],
-                    message_text: str = 'Select',
-                    multi_selection: bool = True,
-                    name_selector: Callable[[Any], str] = None,
-                    max_options_per_page: int = 8,
-                    message: Message = None,
-                    delete : bool = True) -> Union[Dict[str, Any], Tuple[Dict[str, Any], Message]]:
+
+async def selection(
+    app: Client,
+    user: int,
+    options: List[Any],
+    message_text: str = "Select",
+    multi_selection: bool = True,
+    name_selector: Callable[[Any], str] = None,
+    max_options_per_page: int = 8,
+    message: Message = None,
+    delete: bool = True,
+) -> Union[List[Any], Tuple[List[Any], Message]]:
     ns = SimpleNamespace()
     opt = list()
 
@@ -28,21 +35,22 @@ async def selection(app: Client,
     ns.done = False
     ns.canceled = False
 
-    total_pages = len(options) // max_options_per_page \
-                    + (1 if len(options) % max_options_per_page != 0 else 0)
+    total_pages = len(options) // max_options_per_page + (
+        1 if len(options) % max_options_per_page != 0 else 0
+    )
 
     factory = ButtonFactory()
-    select_group = factory.create_group('select')
+    select_group = factory.create_group("select")
     items = [select_group.add(k) for k in options]
 
-    next_button = factory.create_action('next')
-    back_button = factory.create_action('back')
-    selectall_button = factory.create_action('select all')
-    unselectall_button = factory.create_action('unselect all')
-    done_button = factory.create_action('done')
-    cancel_button = factory.create_action('cancel')
+    next_button = factory.create_action("next")
+    back_button = factory.create_action("back")
+    selectall_button = factory.create_action("select all")
+    unselectall_button = factory.create_action("unselect all")
+    done_button = factory.create_action("done")
+    cancel_button = factory.create_action("cancel")
 
-    def create_button(button: GroupButton):        
+    def create_button(button: GroupButton):
         name = button.value
         if callable(name_selector):
             name = name_selector(name)
@@ -50,20 +58,16 @@ async def selection(app: Client,
 
         if len(name) >= 20:
             name = name[:40]
-        selected = (name in opt)
-        return [
-            button.button(
-                f"{emoji.CHECK_MARK_BUTTON if selected else ''}{name}")
-        ]
+        selected = name in opt
+        return [button.button(f"{emoji.CHECK_MARK_BUTTON if selected else ''}{name}")]
 
     def navigation_buttons():
         ret = []
 
         if ns.page > 0:
-            ret.append(back_button.button(f'{emoji.LEFT_ARROW} {ns.page - 1}'))
+            ret.append(back_button.button(f"{emoji.LEFT_ARROW} {ns.page - 1}"))
         if ns.page < total_pages - 1:
-            ret.append(
-                next_button.button(f'{ns.page + 1} {emoji.RIGHT_ARROW}'))
+            ret.append(next_button.button(f"{ns.page + 1} {emoji.RIGHT_ARROW}"))
 
         return ret
 
@@ -133,7 +137,7 @@ async def selection(app: Client,
         if multi_selection:
             await _select(app, callback_query)
         else:
-            if delete: 
+            if delete:
                 await callback_query.message.delete(True)
             ns.done = True
 

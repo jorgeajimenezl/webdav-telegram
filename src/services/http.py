@@ -21,7 +21,7 @@ class HttpService(Service):
     Download web file and upload to webdav
     """
 
-    #yapf: disable
+    # yapf: disable
     def __init__(
         self,
         id: int,

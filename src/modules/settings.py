@@ -10,7 +10,7 @@ from module import Module
 
 
 class SettingsModule(Module):
-    COMMAND_NAME = 'settings'
+    COMMAND_NAME = "settings"
     # Text, Description, Regex, Field name, Converter
     # yapf: disable
     MENU = {
@@ -33,32 +33,36 @@ class SettingsModule(Module):
             await app.send_message(user, "Must be registred. **Write /start**")
             return
 
-        self.context.update(user, CONTEXT['SETTINGS'])
-        await app.send_message(user,
-                               'Select action:',
-                               reply_markup=ReplyKeyboardMarkup(
-                                   [[name] for name in SettingsModule.MENU.keys()] + [["Back"]]))
+        self.context.update(user, CONTEXT["SETTINGS"])
+        await app.send_message(
+            user,
+            "Select action:",
+            reply_markup=ReplyKeyboardMarkup(
+                [[name] for name in SettingsModule.MENU.keys()] + [["Back"]]
+            ),
+        )
 
     async def _setting_menu(self, app: Client, message: Message):
         user = message.from_user.id
 
-        if message.text.lower() == 'back':
-            self.context.update(user, CONTEXT['IDLE'])
+        if message.text.lower() == "back":
+            self.context.update(user, CONTEXT["IDLE"])
             await app.send_message(user, "Home", reply_markup=ReplyKeyboardRemove())
             return
 
         if not message.text in SettingsModule.MENU:
-            await app.send_message(user,
-                                   'Unknow option. Select **valid** action')
+            await app.send_message(user, "Unknow option. Select **valid** action")
             return
 
         description, *_ = SettingsModule.MENU[message.text]
         self.context.update(user, CONTEXT[message.text])
 
-        await app.send_message(user,
-                               f"Write a valid {description}",
-                               reply_markup=ReplyKeyboardRemove(),
-                               disable_web_page_preview=True)
+        await app.send_message(
+            user,
+            f"Write a valid {description}",
+            reply_markup=ReplyKeyboardRemove(),
+            disable_web_page_preview=True,
+        )
 
     async def _setting_handler_menu(self, app: Client, message: Message):
         user = message.from_user.id
@@ -68,12 +72,11 @@ class SettingsModule(Module):
         _, pattern, field, converter = SettingsModule.MENU[id]
 
         if re.fullmatch(pattern, message.text):
-            payload = {
-                field: converter(message.text) if converter else message.text
-            }
+            payload = {field: converter(message.text) if converter else message.text}
             self.database.set_data(user, **payload)
             await app.send_message(
-                user, f"{emoji.CHECK_MARK_BUTTON} {id} successfull updated")
+                user, f"{emoji.CHECK_MARK_BUTTON} {id} successfull updated"
+            )
         else:
             await app.send_message(user, f"{emoji.CROSS_MARK} Invalid value")
 
@@ -90,13 +93,16 @@ class SettingsModule(Module):
         mask = ((1 << len(SettingsModule.MENU)) - 1) << l
 
         handlers = [
-            MessageHandler(self._settings,
-                           filters.command(SettingsModule.COMMAND_NAME)),
+            MessageHandler(
+                self._settings, filters.command(SettingsModule.COMMAND_NAME)
+            ),
             MessageHandler(
                 self._setting_menu,
-                filters.text & self.context.filter(CONTEXT['SETTINGS'])),
-            MessageHandler(self._setting_handler_menu,
-                           filters.text & self.context.filter(mask)),
+                filters.text & self.context.filter(CONTEXT["SETTINGS"]),
+            ),
+            MessageHandler(
+                self._setting_handler_menu, filters.text & self.context.filter(mask)
+            ),
         ]
 
         for u in handlers:

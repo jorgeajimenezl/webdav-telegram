@@ -17,15 +17,15 @@ class GroupButton(object):
     map: bytes
 
     def button(self, text: str) -> InlineKeyboardButton:
-        return InlineKeyboardButton(text,
-                                    callback_data=(self.prefix + self.map))
+        return InlineKeyboardButton(text, callback_data=(self.prefix + self.map))
 
     def callback_handler(self, func: Callable):
         return CallbackQueryHandler(func, filters=self.filter())
 
     def filter(self):
-        return filters.create(lambda flt, _, query: query.data == flt.data,
-                              data=(self.prefix + self.map))
+        return filters.create(
+            lambda flt, _, query: query.data == flt.data, data=(self.prefix + self.map)
+        )
 
 
 @dataclass
@@ -42,17 +42,18 @@ class ActionButton(object):
         return CallbackQueryHandler(func, filters=self.filter())
 
     def filter(self):
-        return filters.create(lambda flt, _, query: query.data == flt.data,
-                              data=self.map)
+        return filters.create(
+            lambda flt, _, query: query.data == flt.data, data=self.map
+        )
 
 
 @dataclass
 class Group(object):
-    name: str    
+    name: str
 
     # Private
     prefix: bytes
-    _factory: "ButtonFactory" 
+    _factory: "ButtonFactory"
     _cache: dict = field(init=False, default_factory=dict)
 
     def add(self, value: Any, cachable: bool = False) -> GroupButton:
@@ -75,8 +76,8 @@ class Group(object):
 
     def filter(self):
         return filters.create(
-            lambda flt, _, query: query.data.startswith(flt.data),
-            data=self.prefix)
+            lambda flt, _, query: query.data.startswith(flt.data), data=self.prefix
+        )
 
 
 class ButtonFactory(object):

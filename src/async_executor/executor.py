@@ -10,13 +10,12 @@ from async_executor.task import Task
 
 
 class TaskExecutor(object):
-    def __init__(self,
-                 max_tasks: int = 10,
-                 workers: Optional[int] = None) -> None:
+    def __init__(self, max_tasks: int = 10, workers: Optional[int] = None) -> None:
         super().__init__()
         self.workers = workers or min(32, os.cpu_count())
         self._executor = ThreadPoolExecutor(
-            max_workers=workers, thread_name_prefix="async_executor")
+            max_workers=workers, thread_name_prefix="async_executor"
+        )
         self._semaphore = asyncio.Semaphore(max_tasks)
         self._lock = Lock()
         self._count = 0
@@ -49,12 +48,14 @@ class TaskExecutor(object):
     def shutdown():
         raise NotImplementedError
 
-    def add(self,
-            cls: type,
-            on_end_callback: Callable[[Task], None],
-            current_thread: bool = True,
-            *args,
-            **kwargs) -> Task:
+    def add(
+        self,
+        cls: type,
+        on_end_callback: Callable[[Task], None],
+        current_thread: bool = True,
+        *args,
+        **kwargs
+    ) -> Task:
         if not issubclass(cls, Task):
             raise TypeError("the task argument must be a subclass from 'Task'")
 
@@ -68,8 +69,7 @@ class TaskExecutor(object):
             else:
                 if self._threads_running >= self.workers:
                     # Look for minimun-impact thread for run in their loop
-                    u = min(range(self.workers),
-                            key=lambda x: self._count_tasks[x])
+                    u = min(range(self.workers), key=lambda x: self._count_tasks[x])
                 else:
                     # Append new thread to pool
                     future = self._executor.submit(self._start_loop)
@@ -80,9 +80,9 @@ class TaskExecutor(object):
                     self._threads_running += 1
 
                 # Run the coro in the minimun-impact loop
-                future = asyncio.run_coroutine_threadsafe(self._execute(
-                    task, u),
-                                                          loop=self._loops[u])
+                future = asyncio.run_coroutine_threadsafe(
+                    self._execute(task, u), loop=self._loops[u]
+                )
                 future = asyncio.wrap_future(future)  # wrap to use with await
                 self._count_tasks[u] += 1
 

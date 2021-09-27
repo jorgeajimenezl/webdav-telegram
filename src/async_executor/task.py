@@ -21,7 +21,7 @@ class Task(object):
         self._state = (TaskState.UNKNOW, None)
         self._progress = (None, None)
         self._lock = Lock()
-        
+
         self.stop = None
         self.result = None
         self.future = None
