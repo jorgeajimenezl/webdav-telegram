@@ -1,5 +1,7 @@
 from pyrogram.types import Message
+
 from async_executor.task import Task
+
 
 class Service(Task):
     def __init__(self, id: int, user: int, file_message: Message, *args, **kwargs) -> None:

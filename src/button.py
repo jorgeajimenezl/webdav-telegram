@@ -1,11 +1,10 @@
+import random
 from dataclasses import dataclass, field
 from typing import Any, Callable, Union
 
 from pyrogram import filters
-from pyrogram.types import InlineKeyboardButton
 from pyrogram.handlers import CallbackQueryHandler
-
-import random
+from pyrogram.types import InlineKeyboardButton
 
 
 @dataclass

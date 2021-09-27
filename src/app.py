@@ -2,21 +2,23 @@ import uvloop
 
 uvloop.install()
 
-from pyrogram import (filters, emoji, idle)
-from pyrogram import Client as PyrogramClient
-from pyrogram.types import Message, InlineKeyboardButton, InlineKeyboardMarkup, BotCommand
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
+import asyncio
+import os
+import re
 
-import asyncio, yaml, re, os
+import yaml
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from pyrogram import Client as PyrogramClient
+from pyrogram import emoji, filters, idle
+from pyrogram.types import (BotCommand, InlineKeyboardButton,
+                            InlineKeyboardMarkup, Message)
 
 from context import CONTEXT, UserContext
 from database import Database
-
 from filesize import naturalsize
-
+from modules.file import FileModule
 # Modules
 from modules.settings import SettingsModule
-from modules.file import FileModule
 from modules.webdav import WebdavModule
 
 DATA_FOLDER_PATH = './data/'

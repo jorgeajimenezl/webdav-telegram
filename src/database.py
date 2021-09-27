@@ -1,5 +1,7 @@
-from redis import Redis
 from urllib.parse import urlparse
+
+from redis import Redis
+
 
 class Database(object):
     def __init__(self, db: int = 0, **kwargs):

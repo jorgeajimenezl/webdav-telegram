@@ -1,7 +1,8 @@
 from urllib.parse import urlparse
-from redis import Redis
-from pyrogram.types import CallbackQuery
+
 from pyrogram import filters
+from pyrogram.types import CallbackQuery
+from redis import Redis
 
 CONTEXT_NAMES = [
     'INITIALIZE',

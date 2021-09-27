@@ -1,11 +1,14 @@
-from typing import Any, Callable, Dict, List, Set, Tuple, Union
-from pyrogram import Client, emoji, filters
-from pyrogram.types import CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton, Message
-from pyrogram.handlers import CallbackQueryHandler
+import asyncio
+import random
 from types import SimpleNamespace
-from button import ButtonFactory, GroupButton
+from typing import Any, Callable, Dict, List, Set, Tuple, Union
 
-import random, asyncio
+from pyrogram import Client, emoji, filters
+from pyrogram.handlers import CallbackQueryHandler
+from pyrogram.types import (CallbackQuery, InlineKeyboardButton,
+                            InlineKeyboardMarkup, Message)
+
+from button import ButtonFactory, GroupButton
 
 URL_REGEX_PATTERN = 'https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)'
 

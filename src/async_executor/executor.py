@@ -1,9 +1,11 @@
-from concurrent.futures import ThreadPoolExecutor, Future
-from threading import Lock
-
-import asyncio, os, inspect
+import asyncio
+import inspect
+import os
 from asyncio import events
+from concurrent.futures import Future, ThreadPoolExecutor
+from threading import Lock
 from typing import Callable, Optional, Tuple
+
 from async_executor.task import Task
 
 

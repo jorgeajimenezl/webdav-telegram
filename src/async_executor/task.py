@@ -1,7 +1,7 @@
 import asyncio
-from typing import Tuple
-from threading import Lock
 from enum import Enum
+from threading import Lock
+from typing import Tuple
 
 
 class TaskState(Enum):

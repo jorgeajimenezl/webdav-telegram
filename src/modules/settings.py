@@ -2,7 +2,7 @@ import re
 
 from pyrogram import Client, emoji, filters
 from pyrogram.handlers import MessageHandler
-from pyrogram.types import (Message, ReplyKeyboardMarkup, ReplyKeyboardRemove)
+from pyrogram.types import Message, ReplyKeyboardMarkup, ReplyKeyboardRemove
 
 from context import CONTEXT, UserContext
 from database import Database
