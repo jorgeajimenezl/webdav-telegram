@@ -1,8 +1,8 @@
 import asyncio
 import os
 import re
-import tempfile
 import traceback
+import aiofiles.tempfile
 from asyncio.exceptions import CancelledError
 
 import aiohttp
@@ -55,10 +55,9 @@ class HttpService(Service):
 
     async def _upload_by_split(self, filename: str, dav: DavClient,
                                response: ClientResponse):
-        with tempfile.TemporaryFile() as file:
-
+        async with aiofiles.tempfile.TemporaryFile() as file:
             async def upload_file(buffer_size, i):
-                assert file.seek(0) == 0, "Impossible seek to start of stream"
+                assert (await file.seek(0) == 0), "Impossible seek to start of stream"
 
                 remote_path = os.path.join(self.webdav_path,
                                            f"{filename}.{i:0=3}")
@@ -92,12 +91,12 @@ class HttpService(Service):
                         if retry_count < 0:
                             raise e
 
-                        assert file.seek(
-                            0) == 0, "Impossible seek to start of stream"
+                        assert (await file.seek(
+                            0) == 0), "Impossible seek to start of stream"
 
-                assert file.seek(0) == 0, "Impossible seek to start of stream"
-                assert file.truncate(
-                    0) == 0, "Impossible truncate temporary file"
+                assert (await file.seek(0) == 0), "Impossible seek to start of stream"
+                assert (await file.truncate(
+                    0) == 0), "Impossible truncate temporary file"
 
             k = 0
             # TODO: delete this hardcode value
@@ -109,17 +108,19 @@ class HttpService(Service):
                 offset += len(chunk)
                 self._make_progress(offset, response.content_length)
 
-                file.write(chunk)
-                file.flush()
+                await file.write(chunk)
+                await file.flush()
 
                 # reach size limit
-                if file.tell() >= self.split_size:
-                    await upload_file(file.tell(), k)
+                length = await file.tell()
+                if length >= self.split_size:
+                    await upload_file(length, k)
                     k += 1
 
             # has some bytes still to write
-            if file.tell() != 0:
-                await upload_file(file.tell(), k)
+            length = await file.tell()
+            if length != 0:
+                await upload_file(length, k)
 
     async def start(self) -> None:
         self._set_state(TaskState.STARTING)
