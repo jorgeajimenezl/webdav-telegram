@@ -83,7 +83,7 @@ class FileModule(Module):
                         await message.edit_text(
                             f"Name: {os.path.basename(cwd)}\n"
                             f"Created: {node['created']}\n"
-                            f"Size: {naturalsize(node['size'])}\n"
+                            f"Size: {naturalsize(node['size'], binary=True)}\n"
                             f"Modified: {node['modified']}\n"
                             f"Etag: {node['etag']}",
                             reply_markup=InlineKeyboardMarkup(
@@ -142,7 +142,8 @@ class FileModule(Module):
             try:
                 n = await dav.free()
                 await app.send_message(
-                    user, f"{emoji.BAR_CHART} Free: **{naturalsize(n, format='%.3f')}**"
+                    user,
+                    f"{emoji.BAR_CHART} Free: **{naturalsize(n, binary=True, format='%.3f')}**",
                 )
             except Exception:
                 await app.send_message(user, "Unable to get free space")

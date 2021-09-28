@@ -7,3 +7,4 @@ aiodav
 aiofiles
 uvloop
 apscheduler
+aria2p

@@ -22,13 +22,12 @@ from modules.service import Service
 # Services
 from services.http import HttpService
 from services.telegram import TelegramService
-
-# from services.torrent import TorrentService
+from services.torrent import TorrentService
 
 
 class WebdavModule(Module):
     SERVICES = [
-        # TorrentService,
+        TorrentService,
         TelegramService,
         HttpService,
     ]
@@ -49,6 +48,10 @@ class WebdavModule(Module):
 
         # Buttons
         self.cancel_group = self.factory.create_group("cancel")
+
+    # async def _on_task_precall(self, task: Service):
+    #     if hasattr(task, 'options'):
+    #         await task.options()
 
     async def _on_task_end(self, task: Service):
         user = task.user
@@ -117,6 +120,10 @@ class WebdavModule(Module):
             path=data["upload_path"],
         )
 
+        if task == None:
+            await app.send_message(user, f"{emoji.CROSS_MARK} Unable to start task")
+            return
+
         async with self.tasks_lock:
             self.tasks[task] = await app.send_message(
                 user,
@@ -141,7 +148,7 @@ class WebdavModule(Module):
 
                 current, total = task.progress()
                 if (current or total) != None:
-                    text = f"{description} ({naturalsize(current, format='%.3f')}, {naturalsize(total, format='%.3f')})"
+                    text = f"{description} ({naturalsize(current, binary=True, format='%.3f')}, {naturalsize(total, binary=True, format='%.3f')})"
                 else:
                     text = f"{description} (...)"
 
