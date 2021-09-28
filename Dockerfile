@@ -1,7 +1,7 @@
 FROM python:3.9
 
 # Install aria2
-RUN sudo apt install -y aria2
+RUN apt install -y aria2
 
 # Copy all files
 RUN mkdir /app
