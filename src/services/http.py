@@ -34,7 +34,7 @@ class HttpService(Service):
 
     @staticmethod
     def check(m: Message):
-        return re.fullmatch(URL_REGEX_PATTERN, m.text)
+        return bool(re.fullmatch(URL_REGEX_PATTERN, m.text))
 
     async def _streaming(self, filename: str, dav: DavClient,
                          response: ClientResponse):
