@@ -82,7 +82,7 @@ class TorrentService(Service):
             )
 
         hash = d.info_hash
-        d = aria2.add_torrent(f'{hash}.torrent',
+        d = aria2.add_torrent(f'/app/torrent_data/{hash}.torrent',
                               options={'dry-run': 'true'})
 
         app = self.pyrogram
