@@ -13,8 +13,6 @@ from pyrogram.types import Message
 
 from async_executor.task import Task, TaskState
 from modules.service import Service
-from utils import URL_REGEX_PATTERN
-
 
 class HttpService(Service):
     """
