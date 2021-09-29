@@ -59,7 +59,7 @@ class WebdavModule(Module):
 
         if state == TaskState.ERROR or state == TaskState.CANCELED:
             await self.app.send_message(
-                user, description, reply_to_message_id=task.file_message.message_id
+                user, description[:4096], reply_to_message_id=task.file_message.message_id
             )
 
         if state == TaskState.SUCCESSFULL:
