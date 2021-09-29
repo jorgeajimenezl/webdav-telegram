@@ -19,7 +19,6 @@ class HttpService(Service):
     Download web file and upload to webdav
     """
 
-    # yapf: disable
     def __init__(
         self,
         id: int,
@@ -27,11 +26,10 @@ class HttpService(Service):
         file_message: Message,
         *args, **kwargs
     ) -> None:
-        #yapf: enable
         super().__init__(id, user, file_message, *args, **kwargs)
 
     @staticmethod
-    def check(m: Message):
+    def check(m: Message) -> bool:
         return bool(re.fullmatch(r"https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)", m.text))
 
     async def _streaming(self, filename: str, dav: DavClient,

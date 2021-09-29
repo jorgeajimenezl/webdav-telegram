@@ -1,4 +1,5 @@
 import asyncio
+from typing import Dict
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from pyrogram import Client, emoji, filters
@@ -26,7 +27,7 @@ from services.torrent import TorrentService
 
 
 class WebdavModule(Module):
-    SERVICES = [
+    SERVICES: Dict[Service] = [
         TorrentService,
         TelegramService,
         HttpService,
