@@ -14,30 +14,31 @@ from pyrogram.types import Message
 from async_executor.task import Task, TaskState
 from modules.service import Service
 
+
 class HttpService(Service):
     """
     Download web file and upload to webdav
     """
 
     def __init__(
-        self,
-        id: int,
-        user: int,
-        file_message: Message,
-        *args, **kwargs
+        self, id: int, user: int, file_message: Message, *args, **kwargs
     ) -> None:
         super().__init__(id, user, file_message, *args, **kwargs)
 
     @staticmethod
     def check(m: Message) -> bool:
-        return bool(re.fullmatch(r"https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)", m.text))
+        return bool(
+            re.fullmatch(
+                r"https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)",
+                m.text,
+            )
+        )
 
-    async def _streaming(self, filename: str, dav: DavClient,
-                         response: ClientResponse):
+    async def _streaming(self, filename: str, dav: DavClient, response: ClientResponse):
         remote_path = os.path.join(self.webdav_path, filename)
         self._set_state(
-            TaskState.WORKING,
-            description=f'{emoji.HOURGLASS_DONE} Streaming to Webdav')
+            TaskState.WORKING, description=f"{emoji.HOURGLASS_DONE} Streaming to Webdav"
+        )
 
         async def file_sender():
             # TODO: delete this hardcode value
@@ -49,37 +50,39 @@ class HttpService(Service):
 
         await dav.upload_to(remote_path, buffer=file_sender())
 
-    async def _upload_by_split(self, filename: str, dav: DavClient,
-                               response: ClientResponse):
+    async def _upload_by_split(
+        self, filename: str, dav: DavClient, response: ClientResponse
+    ):
         async with aiofiles.tempfile.TemporaryFile() as file:
-            async def upload_file(buffer_size, i):
-                assert (await file.seek(0) == 0), "Impossible seek to start of stream"
 
-                remote_path = os.path.join(self.webdav_path,
-                                           f"{filename}.{i:0=3}")
+            async def upload_file(buffer_size, i):
+                assert await file.seek(0) == 0, "Impossible seek to start of stream"
+
+                remote_path = os.path.join(self.webdav_path, f"{filename}.{i:0=3}")
                 retry_count = 3
 
                 while True:
                     try:
                         self._set_state(
                             TaskState.WORKING,
-                            description=
-                            f"{emoji.HOURGLASS_DONE} Uploading **Piece #{k}**")
+                            description=f"{emoji.HOURGLASS_DONE} Uploading **Piece #{k}**",
+                        )
                         self._make_progress(0, buffer_size)
 
-                        await dav.upload_to(remote_path,
-                                            buffer=file,
-                                            buffer_size=buffer_size,
-                                            progress=self._make_progress,
-                                            progress_args=())
+                        await dav.upload_to(
+                            remote_path,
+                            buffer=file,
+                            buffer_size=buffer_size,
+                            progress=self._make_progress,
+                            progress_args=(),
+                        )
                         break
                     except CancelledError:
                         raise CancelledError
                     except Exception as e:
                         self._set_state(
                             TaskState.WORKING,
-                            description=
-                            f"{emoji.CLOCKWISE_VERTICAL_ARROWS} Trying again at error: {retry_count} attemps"
+                            description=f"{emoji.CLOCKWISE_VERTICAL_ARROWS} Trying again at error: {retry_count} attemps",
                         )
                         await asyncio.sleep(5)  # Wait
 
@@ -87,20 +90,20 @@ class HttpService(Service):
                         if retry_count < 0:
                             raise e
 
-                        assert (await file.seek(
-                            0) == 0), "Impossible seek to start of stream"
+                        assert (
+                            await file.seek(0) == 0
+                        ), "Impossible seek to start of stream"
 
-                assert (await file.seek(0) == 0), "Impossible seek to start of stream"
-                assert (await file.truncate(
-                    0) == 0), "Impossible truncate temporary file"
+                assert await file.seek(0) == 0, "Impossible seek to start of stream"
+                assert await file.truncate(0) == 0, "Impossible truncate temporary file"
 
             k = 0
             # TODO: delete this hardcode value
             offset = 0
             async for chunk in response.content.iter_chunked(2097152):
                 self._set_state(
-                    TaskState.WORKING,
-                    description=f'{emoji.HOURGLASS_DONE} Downloading')
+                    TaskState.WORKING, description=f"{emoji.HOURGLASS_DONE} Downloading"
+                )
                 offset += len(chunk)
                 self._make_progress(offset, response.content_length)
 
@@ -121,11 +124,13 @@ class HttpService(Service):
     async def start(self) -> None:
         self._set_state(TaskState.STARTING)
 
-        async with DavClient(hostname=self.webdav_hostname,
-                             login=self.webdav_username,
-                             password=self.webdav_password,
-                             timeout=10 * 60 * 5,
-                             chunk_size=2097152) as dav:
+        async with DavClient(
+            hostname=self.webdav_hostname,
+            login=self.webdav_username,
+            password=self.webdav_password,
+            timeout=10 * 60 * 5,
+            chunk_size=2097152,
+        ) as dav:
             try:
                 async with aiohttp.ClientSession() as session:
                     async with session.get(self.file_message.text) as response:
@@ -134,8 +139,7 @@ class HttpService(Service):
                         if self.split_size == 0:
                             await self._streaming(filename, dav, response)
                         else:
-                            await self._upload_by_split(
-                                filename, dav, response)
+                            await self._upload_by_split(filename, dav, response)
 
                 self._set_state(TaskState.SUCCESSFULL)
             except CancelledError:
@@ -143,6 +147,7 @@ class HttpService(Service):
             except Exception as e:
                 self._set_state(
                     TaskState.ERROR,
-                    f"{emoji.CROSS_MARK} Error: {traceback.format_exc()}")
+                    f"{emoji.CROSS_MARK} Error: {traceback.format_exc()}",
+                )
 
         return None

@@ -1,4 +1,5 @@
 import asyncio
+import utils
 from typing import List
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
@@ -59,9 +60,10 @@ class WebdavModule(Module):
         state, description = task.state()
 
         if state == TaskState.ERROR or state == TaskState.CANCELED:
-            await self.app.send_message(
-                user, description[:4096], reply_to_message_id=task.file_message.message_id
-            )
+            for piece in utils.cut(description, 4096):
+                await self.app.send_message(
+                    user, piece, reply_to_message_id=task.file_message.message_id
+                )
 
         if state == TaskState.SUCCESSFULL:
             await self.app.send_message(

@@ -1,7 +1,7 @@
 import asyncio
 import random
 from types import SimpleNamespace
-from typing import Any, Callable, Dict, List, Set, Tuple, Union
+from typing import Any, Callable, Dict, Iterable, List, Set, Tuple, Union
 
 from pyrogram import Client, emoji, filters
 from pyrogram.handlers import CallbackQueryHandler
@@ -13,6 +13,15 @@ from pyrogram.types import (
 )
 
 from button import ButtonFactory, GroupButton
+
+
+def cut(x: str, length: int) -> List[str]:
+    ret = []
+    while x != "":
+        ret.append(x[:length])
+        x = x[length:]
+    return ret
+
 
 async def selection(
     app: Client,
