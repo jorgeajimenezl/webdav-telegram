@@ -14,9 +14,6 @@ from pyrogram.types import (
 
 from button import ButtonFactory, GroupButton
 
-URL_REGEX_PATTERN = "https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)"
-
-
 async def selection(
     app: Client,
     user: int,
@@ -59,7 +56,7 @@ async def selection(
         if len(name) >= 20:
             name = name[:40]
         selected = name in opt
-        return [button.button(f"{emoji.CHECK_MARK_BUTTON if selected else ''}{name}")]
+        return [button.button(f"{emoji.CHECK_MARK if selected else ''}{name}")]
 
     def navigation_buttons():
         ret = []
@@ -81,7 +78,7 @@ async def selection(
                 selectall_button.button('Select all'),
                 unselectall_button.button('Unselect all')
             ],
-            [done_button.button('DONE'), cancel_button.button('CANCEL')]
+            [done_button.button(f'{emoji.CHECK_MARK_BUTTON} DONE'), cancel_button.button(f'{emoji.CROSS_MARK_BUTTON} CANCEL')]
         ]
         navigation = navigation_buttons()
         markup = InlineKeyboardMarkup(

@@ -34,7 +34,7 @@ class HttpService(Service):
 
     @staticmethod
     def check(m: Message):
-        return bool(re.fullmatch(URL_REGEX_PATTERN, m.text))
+        return bool(re.fullmatch(r"https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)", m.text))
 
     async def _streaming(self, filename: str, dav: DavClient,
                          response: ClientResponse):
