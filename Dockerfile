@@ -13,10 +13,9 @@ WORKDIR /app
 # Install requirements
 RUN pip3 install -r /app/requirements.txt
 
-# Run aria2 daemon
+# Create torrent download folder
 RUN mkdir torrent_data
-RUN aria2c --enable-rpc --daemon --dir=/app/torrent_data
 
 # Run with -u $(id -u):$(id -g) to avoid file permission issues
-# ENTRYPOINT ["python3", "app.py"]
-CMD ["python3", "app.py"]
+# ENTRYPOINT ["/bin/sh", "run.sh"]
+CMD ["/bin/sh", "run.sh"]
