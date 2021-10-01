@@ -97,7 +97,7 @@ class HttpService(Service):
                 assert await file.seek(0) == 0, "Impossible seek to start of stream"
                 assert await file.truncate(0) == 0, "Impossible truncate temporary file"
 
-            k = 0
+            k = 1
             # TODO: delete this hardcode value
             offset = 0
             async for chunk in response.content.iter_chunked(2097152):

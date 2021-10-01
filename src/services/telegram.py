@@ -111,7 +111,7 @@ class TelegramService(Service):
                 assert (await file.truncate(
                     0) == 0), "Impossible truncate temporary file"
 
-            k = 0
+            k = 1
             async for chunk, offset, total in self.file_message.iter_download(
             ):
                 self._set_state(
