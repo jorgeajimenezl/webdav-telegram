@@ -20,11 +20,16 @@ from context import CONTEXT, UserContext
 from database import Database
 from filesize import naturalsize
 from module import Module
+from button import ButtonFactory
 
 
 class FileModule(Module):
     def __init__(self, context: UserContext, database: Database) -> None:
         super().__init__(context, database)
+        self.factory = ButtonFactory()
+
+        # Groups
+        self.delete_group = self.factory.create_group("delete")
 
     async def _list(self, app: Client, event: Message):
         # TODO: Fix this async bug
@@ -96,10 +101,9 @@ class FileModule(Module):
                                         InlineKeyboardButton(
                                             f"{emoji.PENCIL} Rename", callback_data=b"1"
                                         ),
-                                        InlineKeyboardButton(
-                                            f"{emoji.CROSS_MARK} Delete",
-                                            callback_data=b"1",
-                                        ),
+                                        self.delete_group.add(
+                                            cwd, cachable=True
+                                        ).button(f"{emoji.CROSS_MARK} Delete"),
                                     ]
                                 ]
                             ),
@@ -112,8 +116,9 @@ class FileModule(Module):
 
     async def _delete_file(self, app: Client, callback_query: CallbackQuery):
         user = callback_query.from_user.id
+        path = self.factory.get_value(callback_query.data)
+        assert isinstance(path, str)
 
-        _, _, path = callback_query.data.partition(" ")
         name = os.path.basename(path)
         data = self.database.get_data(user)
 
@@ -152,10 +157,7 @@ class FileModule(Module):
         handlers = [
             MessageHandler(self._list, filters.command("list") & filters.private),
             MessageHandler(self.free, filters.command("free") & filters.private),
-            # CallbackQueryHandler(self._file_info,
-            #                      ~filters.bot & filters.regex('^open .+$')),
-            # CallbackQueryHandler(self._delete_file,
-            #                      ~filters.bot & filters.regex('^delete .+$')),
+            self.delete_group.callback_handler(self._delete_file),
         ]
 
         for u in handlers:
