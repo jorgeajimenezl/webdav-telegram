@@ -134,6 +134,12 @@ class YoutubeService(Service):
                     functools.partial(ydl.extract_info, self.file_message.text, download=True))               
                 filename = ydl.prepare_filename(meta)
 
+            # Check if changed format
+            if not os.path.exists(filename):
+                filename, ext = os.path.splitext(filename)
+                if os.path.exists(filename + '.mkv'):
+                    filename = filename + '.mkv'
+
             async with DavClient(hostname=self.webdav_hostname,
                                 login=self.webdav_username,
                                 password=self.webdav_password,
