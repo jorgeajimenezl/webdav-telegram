@@ -1,8 +1,8 @@
-FROM python:3.9-alpine
+FROM archlinux
 
-# Install aria2
-RUN apk update
-RUN apk add aria2 git build-base
+# Install dependencies
+RUN pacman -Syyu --noconfirm
+RUN pacman -S python base-devel aria2 git --noconfirm
 
 # Copy all files
 RUN mkdir /app
