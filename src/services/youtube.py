@@ -48,8 +48,7 @@ class YoutubeService(Service):
 
             meta = await loop.run_in_executor(None, 
                 functools.partial(ydl.extract_info, self.file_message.text, download=False))
-            formats = meta.get('formats', [meta])
-            formats = [x for x in formats if x['acodec'] != 'none'] # Filter no-audio streams
+            formats = meta.get('formats', [meta]) # Filter no-audio streams
 
             app = self.pyrogram
             format = await utils.selection(
@@ -119,7 +118,7 @@ class YoutubeService(Service):
                 self._make_progress(d.get('downloaded_bytes', None), d.get('total_bytes', None))
 
             options = {
-                'format': format['format_id'],
+                'format': f"{format['format_id']}+bestaudio",
                 'quiet': True,
                 'noplaylist' : True,
                 'writesubtitles': True,

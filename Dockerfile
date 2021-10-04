@@ -2,7 +2,7 @@ FROM python:3.9-slim
 
 # Install aria2
 RUN apt-get update -y
-RUN apt-get install -y git aria2
+RUN apt-get install -y git ffmpeg aria2
 
 # Copy all files
 RUN mkdir /app
