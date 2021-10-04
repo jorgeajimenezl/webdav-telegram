@@ -95,7 +95,7 @@ class YoutubeService(Service):
             self._set_state(TaskState.STARTING)
 
             def progress_wrapper(d):
-                self._make_progress(d['downloaded_bytes'], d['total_bytes_estimate'])
+                self._make_progress(d.get('downloaded_bytes', None), d.get('total_bytes', None))
 
             options = {
                 'format': format['format_id'],
