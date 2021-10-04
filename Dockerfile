@@ -2,7 +2,7 @@ FROM archlinux
 
 # Install dependencies
 RUN pacman -Syyu --noconfirm
-RUN pacman -S python base-devel aria2 git --noconfirm
+RUN pacman -S base-devel python python-pip aria2 git --noconfirm
 
 # Copy all files
 RUN mkdir /app
