@@ -18,7 +18,7 @@ from async_executor.task import Task, TaskState
 from button import ButtonFactory
 from context import UserContext
 from database import Database
-from filesize import naturalsize
+from humanize import naturalsize
 from module import Module
 from modules.service import Service
 
@@ -153,7 +153,10 @@ class WebdavModule(Module):
 
                 current, total = task.progress()
                 if (current or total) != None:
-                    text = f"{description} ({naturalsize(current, binary=True, format='%.3f')}, {naturalsize(total, binary=True, format='%.3f')})"
+                    current_text = naturalsize(current, binary=True, format='%.3f') if current != None else 'Unknown'
+                    total_text = naturalsize(total, binary=True, format='%.3f') if total != None else 'Unknown'
+
+                    text = f"{description} ({current_text} / {total_text})"
                 else:
                     text = f"{description} (...)"
 

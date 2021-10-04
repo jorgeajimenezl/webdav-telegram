@@ -7,5 +7,6 @@ aiodav
 aiofiles
 uvloop
 apscheduler
+humanize
 aria2p
 youtube-dl

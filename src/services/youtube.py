@@ -15,7 +15,7 @@ from pyrogram.types import Message
 import utils
 from async_executor.task import TaskState
 from modules.service import Service
-from filesize import naturalsize
+from humanize import naturalsize, naturaldelta
 
 
 class YoutubeService(Service):
@@ -113,9 +113,9 @@ class YoutubeService(Service):
             self._set_state(TaskState.STARTING)
 
             def progress_wrapper(d):
-                eta = d.get('eta', 'unknown')
-
-                self._set_state(TaskState.WORKING, description=f"{emoji.HOURGLASS_DONE} Downloading video (ETA: {eta})")
+                eta = d.get('eta', None)
+                if eta != None:
+                    self._set_state(TaskState.WORKING, description=f"{emoji.HOURGLASS_DONE} Downloading video (ETA: {naturaldelta(eta)})")
                 self._make_progress(d.get('downloaded_bytes', None), d.get('total_bytes', None))
 
             options = {
@@ -127,7 +127,9 @@ class YoutubeService(Service):
                 'progress_hooks': [progress_wrapper]
             }
             
-            with youtube_dl.YoutubeDL(options) as ydl:                
+            with youtube_dl.YoutubeDL(options) as ydl:  
+                self._set_state(TaskState.WORKING, description=f"{emoji.HOURGLASS_DONE} Downloading video")
+
                 loop = asyncio.get_running_loop()
                 meta = await loop.run_in_executor(None, 
                     functools.partial(ydl.extract_info, self.file_message.text, download=True))               

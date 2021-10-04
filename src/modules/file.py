@@ -18,7 +18,7 @@ from pyrogram.types import (
 import utils
 from context import CONTEXT, UserContext
 from database import Database
-from filesize import naturalsize
+from humanize import naturalsize
 from module import Module
 from button import ButtonFactory
 

@@ -12,14 +12,11 @@ from pyrogram import Client as PyrogramClient
 from pyrogram import emoji, filters, idle
 from pyrogram.types import (
     BotCommand,
-    InlineKeyboardButton,
-    InlineKeyboardMarkup,
     Message,
 )
 
 from context import CONTEXT, UserContext
 from database import Database
-from filesize import naturalsize
 from modules.file import FileModule
 
 # Modules
