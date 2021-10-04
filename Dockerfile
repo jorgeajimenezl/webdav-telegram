@@ -1,8 +1,8 @@
-FROM archlinux
+FROM python:3.9-slim
 
-# Install dependencies
-RUN pacman -Syyu --noconfirm
-RUN pacman -S base-devel python python-pip aria2 git --noconfirm
+# Install aria2
+RUN apt-get update -y
+RUN apt-get install -y aria2
 
 # Copy all files
 RUN mkdir /app

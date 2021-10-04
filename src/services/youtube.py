@@ -69,6 +69,7 @@ class YoutubeService(Service):
                     name = os.path.basename(path)
                     remote_path = os.path.join(self.webdav_path, name)
 
+                    self._make_progress(0, buffer_size)
                     await dav.upload_to(remote_path,
                                         buffer=file,
                                         buffer_size=buffer_size,
@@ -124,7 +125,7 @@ class YoutubeService(Service):
                                 chunk_size=2097152) as dav:
                 self._set_state(TaskState.WORKING,
                                 description=
-                                f"{emoji.HOURGLASS_DONE} Upload {os.path.basename(filename)} to webdav server")
+                                f"{emoji.HOURGLASS_DONE} Upload {meta['title']} to webdav server")
                 await self.upload_file(filename, os.stat(filename).st_size, dav)
                 os.unlink(filename) # Delete file
 
