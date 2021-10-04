@@ -42,7 +42,7 @@ class YoutubeService(Service):
             m.text)
 
     async def options(self) -> str:
-        with youtube_dl.YoutubeDL({}) as ydl:
+        with youtube_dl.YoutubeDL({'quiet': True}) as ydl:
             loop = asyncio.get_running_loop()
             func = functools.partial(ydl.extract_info, self.file_message.text, download=False)
 
@@ -59,7 +59,7 @@ class YoutubeService(Service):
                 name_selector=lambda x: f"{ydl.format_resolution(x)}({x['ext']}) - "
                                         f"{naturalsize(x['filesize'], binary=True) if 'filesize' in x else 'Unknown'}")
 
-            return format['format_id']
+            return format
 
     async def upload_file(self, path: str, buffer_size: int, dav: DavClient):
         retry_count = 3
@@ -88,6 +88,8 @@ class YoutubeService(Service):
         try:
             # Chosen video format
             format = await self.options()
+            if format is None:
+                raise CancelledError
 
             self._set_state(TaskState.STARTING)
 
