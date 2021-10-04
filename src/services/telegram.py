@@ -140,7 +140,7 @@ class TelegramService(Service):
                              login=self.webdav_username,
                              password=self.webdav_password,
                              timeout=10 * 60 * 5,
-                             chunk_size=2097152) as dav:
+                             chunk_size=1048576) as dav:
             try:
                 if self.split_size == 0:
                     await self._streaming(filename, dav)

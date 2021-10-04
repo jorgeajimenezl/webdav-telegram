@@ -27,7 +27,6 @@ from modules.settings import SettingsModule
 from modules.webdav import WebdavModule
 
 DATA_FOLDER_PATH = "./data/"
-DOWNLOAD_CHUNK_SIZE = 2097152  # 2 MB
 
 # Read config file
 with open("config.yml", "r") as file:

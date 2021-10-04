@@ -63,35 +63,44 @@ class YoutubeService(Service):
 
             return format
 
-    async def upload_file(self, path: str, buffer_size: int, dav: DavClient):
+    async def upload_file(self, path: str, buffer_size: int, dav: DavClient, split_size: int = -1):
         retry_count = 3
         async with aiofiles.open(path, "rb") as file:
-            while True:
-                try:
-                    name = os.path.basename(path)
-                    remote_path = os.path.join(self.webdav_path, name)
+            if split_size == -1:
+                split_size = buffer_size
+            pieces = buffer_size // split_size
+            if buffer_size % split_size != 0:
+                pieces += 1
 
-                    self._make_progress(0, buffer_size)
-                    await dav.upload_to(remote_path,
-                                        buffer=file,
-                                        buffer_size=buffer_size,
-                                        progress=self._make_progress)
-                    break
-                except CancelledError:
-                    raise CancelledError
-                except Exception as e:
-                    self._set_state(
-                        TaskState.WORKING,
-                        description=
-                        f"{emoji.CLOCKWISE_VERTICAL_ARROWS} Trying again at error: {retry_count} attemps"
-                    )
+            name = os.path.basename(path)
+            remote_path = os.path.join(self.webdav_path, name)
 
-                    await asyncio.sleep(5)  # Wait
-                    retry_count -= 1
-                    if retry_count < 0:
-                        raise e
-                    assert (await file.seek(
-                                0) == 0), "Impossible seek to start of stream" 
+            for piece in range(pieces):
+                while True:
+                    try:
+                        pos = await file.seek(piece * split_size)
+                        assert pos != piece * split_size, "Impossible seek stream"
+                        length = min(split_size, buffer_size - pos)                        
+
+                        self._make_progress(0, length)
+                        await dav.upload_to(remote_path,
+                                            buffer=file,
+                                            buffer_size=length,
+                                            progress=self._make_progress)
+                        break
+                    except CancelledError:
+                        raise CancelledError
+                    except Exception as e:
+                        self._set_state(
+                            TaskState.WORKING,
+                            description=
+                            f"{emoji.CLOCKWISE_VERTICAL_ARROWS} Trying again at error: {retry_count} attemps"
+                        )
+
+                        await asyncio.sleep(5)  # Wait
+                        retry_count -= 1
+                        if retry_count < 0:
+                            raise e
 
     async def start(self) -> None:        
         try:
@@ -105,7 +114,7 @@ class YoutubeService(Service):
 
             def progress_wrapper(d):
                 eta = d.get('eta', 'unknown')
-                
+
                 self._set_state(TaskState.WORKING, description=f"{emoji.HOURGLASS_DONE} Downloading video (ETA: {eta})")
                 self._make_progress(d.get('downloaded_bytes', None), d.get('total_bytes', None))
 
@@ -128,11 +137,11 @@ class YoutubeService(Service):
                                 login=self.webdav_username,
                                 password=self.webdav_password,
                                 timeout=10 * 60 * 5,
-                                chunk_size=2097152) as dav:
+                                chunk_size=1048576) as dav:
                 self._set_state(TaskState.WORKING,
                                 description=
                                 f"{emoji.HOURGLASS_DONE} Uploading **{meta['title']}**")
-                await self.upload_file(filename, os.stat(filename).st_size, dav)
+                await self.upload_file(filename, os.stat(filename).st_size, dav, self.split_size)
                 os.unlink(filename) # Delete file
 
                 self._set_state(TaskState.SUCCESSFULL)

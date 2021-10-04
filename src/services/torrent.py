@@ -124,7 +124,7 @@ class TorrentService(Service):
                                 login=self.webdav_username,
                                 password=self.webdav_password,
                                 timeout=10 * 60 * 5,
-                                chunk_size=2097152) as dav:
+                                chunk_size=1048576) as dav:
                 for file in download.files:
                     if file.is_metadata or not file.selected:
                         continue
