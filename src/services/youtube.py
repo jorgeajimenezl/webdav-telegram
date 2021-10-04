@@ -125,7 +125,7 @@ class YoutubeService(Service):
                 self._set_state(TaskState.WORKING,
                                 description=
                                 f"{emoji.HOURGLASS_DONE} Upload {os.path.basename(filename)} to webdav server")
-                self.upload_file(filename, os.stat(filename).st_size, dav)
+                await self.upload_file(filename, os.stat(filename).st_size, dav)
                 os.unlink(filename) # Delete file
 
                 self._set_state(TaskState.SUCCESSFULL)
