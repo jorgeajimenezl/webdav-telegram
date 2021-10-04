@@ -33,11 +33,9 @@ class FileModule(Module):
 
     async def _list(self, app: Client, event: Message):
         # TODO: Fix this async bug
-        asyncio.create_task(self.list(app, event))
+        asyncio.create_task(self.list(event.from_user.id, app))
 
-    async def list(self, app: Client, event: Message):
-        user = event.from_user.id
-
+    async def list(self, user: int, app: Client, message: Message = None):
         data = self.database.get_data(user)
         cwd = "/"
         ret = urlparse(data["server"])
@@ -64,7 +62,6 @@ class FileModule(Module):
                     _, name = get_path(info["path"])
                     return f"{emoji.OPEN_FILE_FOLDER if info['isdir'] else emoji.PACKAGE} {name}"
 
-                message = None
                 while True:
                     nodes = await dav.list(cwd, get_info=True)
                     node, message = await utils.selection(
@@ -127,7 +124,11 @@ class FileModule(Module):
         ) as dav:
             try:
                 await dav.unlink(path)
-                await app.send_message(user, f"The item **{name}** has been deleted")
+
+                # Notify and go back
+                await callback_query.answer(f"The item **{name}** has been deleted")
+                asyncio.create_task(self.list(user, app, callback_query.message))
+                return
             except RemoteResourceNotFound:
                 await app.send_message(
                     user, f"Resource **{path}** isn't longer available"
