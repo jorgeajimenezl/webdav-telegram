@@ -8,3 +8,4 @@ aiofiles
 uvloop
 apscheduler
 aria2p
+youtube-dl
