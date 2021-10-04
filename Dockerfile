@@ -1,8 +1,8 @@
-FROM python:3.9
+FROM python:3.9-alpine
 
 # Install aria2
-RUN apt-get update -y
-RUN apt-get install -y aria2
+RUN apk update
+RUN apk add aria2
 
 # Copy all files
 RUN mkdir /app
