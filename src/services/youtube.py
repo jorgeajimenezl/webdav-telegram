@@ -45,9 +45,9 @@ class YoutubeService(Service):
     async def options(self) -> str:
         with youtube_dl.YoutubeDL({'quiet': True}) as ydl:
             loop = asyncio.get_running_loop()
-            func = functools.partial(ydl.extract_info, self.file_message.text, download=False)
 
-            meta = await loop.run_in_executor(None, func)
+            meta = await loop.run_in_executor(None, 
+                functools.partial(ydl.extract_info, self.file_message.text, download=False))
             formats = meta.get('formats', [meta])
             formats = [x for x in formats if x['acodec'] != 'none'] # Filter no-audio streams
 
@@ -115,15 +115,14 @@ class YoutubeService(Service):
                 'progress_hooks': [progress_wrapper]
             }
             
-            with youtube_dl.YoutubeDL(options) as ydl:
-                loop = asyncio.get_running_loop()
-                func = functools.partial(ydl.extract_info, self.file_message.text, download=True)
-
+            with youtube_dl.YoutubeDL(options) as ydl:                
                 self._set_state(TaskState.WORKING,
                                 description=
                                 f"{emoji.HOURGLASS_DONE} Downloading video")
 
-                meta = await loop.run_in_executor(None, func)               
+                loop = asyncio.get_running_loop()
+                meta = await loop.run_in_executor(None, 
+                    functools.partial(ydl.extract_info, self.file_message.text, download=True))               
                 filename = ydl.prepare_filename(meta)
 
             async with DavClient(hostname=self.webdav_hostname,
