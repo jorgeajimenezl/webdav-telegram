@@ -62,10 +62,10 @@ class YoutubeService(Service):
 
             return format
 
-    async def upload_file(self, path: str, buffer_size: int, dav: DavClient, split_size: int = -1):
+    async def upload_file(self, path: str, buffer_size: int, dav: DavClient, split_size: int = 0):
         retry_count = 3
         async with aiofiles.open(path, "rb") as file:
-            if split_size == -1:
+            if split_size <= 0:
                 split_size = buffer_size
             pieces = buffer_size // split_size
             if buffer_size % split_size != 0:
