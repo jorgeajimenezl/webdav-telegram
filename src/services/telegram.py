@@ -99,11 +99,9 @@ class TelegramService(Service):
                             f"{emoji.CLOCKWISE_VERTICAL_ARROWS} Trying again at error: {retry_count} attemps"
                         )
                         await asyncio.sleep(5)  # Wait
-
                         retry_count -= 1
                         if retry_count < 0:
                             raise e
-
                         assert (await file.seek(
                             0) == 0), "Impossible seek to start of stream"
 

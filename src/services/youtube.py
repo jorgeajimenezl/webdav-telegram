@@ -36,11 +36,12 @@ class YoutubeService(Service):
 
     @staticmethod
     def check(m: Message):
-        # TODO: Improve this regex
-        return bool(m.text) and re.fullmatch(
-            rf'https?:\/\/(www\.)?(youtu\.be|youtube\.com)\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)',
-            m.text)
-
+        extractors = youtube_dl.extractor.gen_extractors()
+        for e in extractors:
+            if e.suitable(m.text) and e.IE_NAME != 'generic':
+                return True
+        return False
+        
     async def options(self) -> str:
         with youtube_dl.YoutubeDL({'quiet': True}) as ydl:
             loop = asyncio.get_running_loop()
@@ -48,6 +49,7 @@ class YoutubeService(Service):
 
             meta = await loop.run_in_executor(None, func)
             formats = meta.get('formats', [meta])
+            formats = [x for x in formats if x['acodec'] != 'none'] # Filter no-audio streams
 
             app = self.pyrogram
             format = await utils.selection(
@@ -78,6 +80,12 @@ class YoutubeService(Service):
                 except CancelledError:
                     raise CancelledError
                 except Exception as e:
+                    self._set_state(
+                        TaskState.WORKING,
+                        description=
+                        f"{emoji.CLOCKWISE_VERTICAL_ARROWS} Trying again at error: {retry_count} attemps"
+                    )
+
                     await asyncio.sleep(5)  # Wait
                     retry_count -= 1
                     if retry_count < 0:
@@ -125,7 +133,7 @@ class YoutubeService(Service):
                                 chunk_size=2097152) as dav:
                 self._set_state(TaskState.WORKING,
                                 description=
-                                f"{emoji.HOURGLASS_DONE} Upload {meta['title']} to webdav server")
+                                f"{emoji.HOURGLASS_DONE} Uploading **{meta['title']}**")
                 await self.upload_file(filename, os.stat(filename).st_size, dav)
                 os.unlink(filename) # Delete file
 
