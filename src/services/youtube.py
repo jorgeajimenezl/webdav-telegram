@@ -78,7 +78,7 @@ class YoutubeService(Service):
                 while True:
                     try:
                         pos = await file.seek(piece * split_size)
-                        assert pos != piece * split_size, "Impossible seek stream"
+                        assert pos == piece * split_size, "Impossible seek stream"
                         length = min(split_size, buffer_size - pos)                        
 
                         self._make_progress(0, length)
