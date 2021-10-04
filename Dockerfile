@@ -2,7 +2,7 @@ FROM python:3.9-alpine
 
 # Install aria2
 RUN apk update
-RUN apk add aria2 git
+RUN apk add aria2 git build-base
 
 # Copy all files
 RUN mkdir /app
