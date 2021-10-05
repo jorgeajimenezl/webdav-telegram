@@ -8,13 +8,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      
-      - name: Replace secrets
-        run: |
-         sed -i 's/TELEGRAM_API_ID/${{ secrets.TELEGRAM_API_ID }}/g' src/config.yml
-         sed -i 's/TELEGRAM_API_HASH/${{ secrets.TELEGRAM_API_HASH }}/g' src/config.yml
-         sed -i 's/TELEGRAM_BOT_TOKEN/${{ secrets.TELEGRAM_BOT_TOKEN }}/g' src/config.yml         
-         sed -i 's/REDIS_HOST/${{ secrets.REDIS_HOST }}/g' src/config.yml
 
       - uses: akhileshns/heroku-deploy@v3.12.12
         with:
@@ -24,3 +17,8 @@ jobs:
           usedocker: true
           docker_heroku_process_type: worker
           stack: container
+        env: 
+          HD_TELEGRAM_API_ID: ${{ secrets.TELEGRAM_API_ID }}
+          HD_TELEGRAM_API_HASH: ${{ secrets.TELEGRAM_API_HASH }}
+          HD_TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          HD_REDIS_HOST: ${{ secrets.REDIS_HOST }}

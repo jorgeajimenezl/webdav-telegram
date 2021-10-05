@@ -2,11 +2,9 @@ import uvloop
 
 uvloop.install()
 
-import asyncio
 import os
-import re
-
 import yaml
+
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from pyrogram import Client as PyrogramClient
 from pyrogram import emoji, filters, idle
