@@ -112,8 +112,6 @@ class TelegramService(Service):
                     0) == 0), "Impossible truncate temporary file"
 
             k = 1
-            self.reset_stats()
-            
             async for chunk, offset, total in self.file_message.iter_download(
             ):
                 self._set_state(
@@ -130,6 +128,8 @@ class TelegramService(Service):
                 if length >= self.split_size:
                     await upload_file(length, k)
                     k += 1
+
+                    self.reset_stats()
 
             # has some bytes still to write
             length = await file.tell()

@@ -101,8 +101,7 @@ class HttpService(Service):
 
             k = 1
             # TODO: delete this hardcode value
-            offset = 0
-            self.reset_stats()
+            offset = 0            
             async for chunk in response.content.iter_chunked(1048576):
                 self._set_state(
                     TaskState.WORKING, description=f"{emoji.HOURGLASS_DONE} Downloading"
@@ -118,6 +117,8 @@ class HttpService(Service):
                 if length >= self.split_size:
                     await upload_file(length, k)
                     k += 1
+
+                    self.reset_stats()
 
             # has some bytes still to write
             length = await file.tell()

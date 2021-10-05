@@ -167,7 +167,7 @@ class WebdavModule(Module):
                     speed = task.speed()
                     eta = task.eta()
 
-                    text = f"{description} ({current_text} / {total_text})\nSpeed: {utils.get_str(naturalsize(speed, binary=True))}/S\nETA: {utils.get_str(naturaldelta(eta))}"
+                    text = f"{description} ({current_text} / {total_text})\nSpeed: {utils.get_str(naturalsize(speed, binary=True))}/sec\nETA: {utils.get_str(naturaldelta(eta))}"
                 else:
                     text = f"{description} (...)"
 
