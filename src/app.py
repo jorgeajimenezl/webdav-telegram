@@ -63,7 +63,7 @@ file_module.register_app(app)
 webdav_moduele.register_app(app)
 
 
-@app.on_message(filters.command("start") & filters.private)
+@app.on_message(filters.command("start") & filters.private, group=-1)
 async def start(_, message: Message):
     user = message.from_user.id
     context.update(user, CONTEXT["INITIALIZE"])
