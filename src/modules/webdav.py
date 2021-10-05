@@ -153,8 +153,16 @@ class WebdavModule(Module):
 
                 current, total = task.progress()
                 if (current or total) != None:
-                    current_text = naturalsize(current, binary=True, format='%.3f') if current != None else 'Unknown'
-                    total_text = naturalsize(total, binary=True, format='%.3f') if total != None else 'Unknown'
+                    current_text = (
+                        naturalsize(current, binary=True, format="%.3f")
+                        if current != None
+                        else "Unknown"
+                    )
+                    total_text = (
+                        naturalsize(total, binary=True, format="%.3f")
+                        if total != None
+                        else "Unknown"
+                    )
 
                     text = f"{description} ({current_text} / {total_text})"
                 else:

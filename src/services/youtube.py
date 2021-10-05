@@ -77,6 +77,9 @@ class YoutubeService(Service):
             for piece in range(pieces):
                 while True:
                     try:
+                        remote_name = f"{name}.{(piece + 1):0=3}" if pieces != 1 else name
+                        remote_path = os.path.join(self.webdav_path, remote_name)
+
                         pos = await file.seek(piece * split_size)
                         assert pos == piece * split_size, "Impossible seek stream"
                         length = min(split_size, buffer_size - pos)                        
