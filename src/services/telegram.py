@@ -57,6 +57,7 @@ class TelegramService(Service):
             TaskState.WORKING,
             description=
             f'{emoji.HOURGLASS_DONE} Streaming from Telegram to Webdav')
+        self.reset_stats()
 
         async def file_sender():
             async for chunk, offset, total in self.file_message.iter_download(
@@ -82,6 +83,7 @@ class TelegramService(Service):
                             TaskState.WORKING,
                             description=
                             f"{emoji.HOURGLASS_DONE} Uploading **Piece #{k}**")
+                        self.reset_stats()
                         self._make_progress(0, buffer_size)
 
                         await dav.upload_to(remote_path,
@@ -110,6 +112,8 @@ class TelegramService(Service):
                     0) == 0), "Impossible truncate temporary file"
 
             k = 1
+            self.reset_stats()
+            
             async for chunk, offset, total in self.file_message.iter_download(
             ):
                 self._set_state(

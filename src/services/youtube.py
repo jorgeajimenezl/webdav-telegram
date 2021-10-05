@@ -82,6 +82,7 @@ class YoutubeService(Service):
                         self._set_state(TaskState.WORKING,
                                         description=
                                         f"{emoji.HOURGLASS_DONE} Uploading **{title}**")
+                        self.reset_stats()
 
                         remote_name = f"{name}.{(piece + 1):0=3}" if pieces != 1 else name
                         remote_path = os.path.join(self.webdav_path, remote_name)
@@ -137,6 +138,7 @@ class YoutubeService(Service):
             
             with youtube_dl.YoutubeDL(options) as ydl:  
                 self._set_state(TaskState.WORKING, description=f"{emoji.HOURGLASS_DONE} Downloading video")
+                self.reset_stats()
 
                 loop = asyncio.get_running_loop()
                 meta = await loop.run_in_executor(None, 

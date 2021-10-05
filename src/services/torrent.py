@@ -111,9 +111,10 @@ class TorrentService(Service):
                             description=
                             f"{emoji.HOURGLASS_DONE} Download torrent"
                     )
-
+            self.reset_stats()
+            
             while not download.is_complete:
-                await asyncio.sleep(5)
+                await asyncio.sleep(10)
                 download.update()
                 self._make_progress(download.completed_length, download.total_length)
 
@@ -133,6 +134,7 @@ class TorrentService(Service):
                             description=
                             f"{emoji.HOURGLASS_DONE} Upload {os.path.basename(file.path)} to webdav server"
                     )
+                    self.reset_stats()
 
                     self.upload_file(file.path, file.length, dav)
                     os.unlink(file.path) # Delete file                   

@@ -54,6 +54,14 @@ class Task(object):
         with self._lock:
             return self._speed
 
+    def reset_stats(self) -> None:
+        with self._lock:
+            self._last_point = None
+            self._last_time = None
+            self._eta = None
+            self._speed = None
+            self._progress = (None, None)
+
     def _set_state(self, state: TaskState, description: str = None) -> None:
         with self._lock:
             self._state = (state, description)
