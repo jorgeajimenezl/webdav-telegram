@@ -18,7 +18,7 @@ from async_executor.task import Task, TaskState
 from button import ButtonFactory
 from context import UserContext
 from database import Database
-from humanize import naturalsize
+from humanize import naturalsize, naturaldelta
 from module import Module
 from modules.service import Service
 
@@ -164,7 +164,10 @@ class WebdavModule(Module):
                         else "Unknown"
                     )
 
-                    text = f"{description} ({current_text} / {total_text})"
+                    speed = task.speed()
+                    eta = task.eta()
+
+                    text = f"{description} ({current_text} / {total_text})\nSpeed: {utils.get_str(naturalsize(speed))}/S\nETA: {utils.get_str(naturaldelta(eta))}"
                 else:
                     text = f"{description} (...)"
 
@@ -187,7 +190,7 @@ class WebdavModule(Module):
         self.app = app
 
         # Add to scheduler updater function
-        self.scheduler.add_job(self._updater, "interval", seconds=2, max_instances=1)
+        self.scheduler.add_job(self._updater, "interval", seconds=3, max_instances=1)
 
         handlers = [
             app.add_handler(MessageHandler(self.upload_file)),

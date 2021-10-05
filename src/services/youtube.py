@@ -15,7 +15,7 @@ from pyrogram.types import Message
 import utils
 from async_executor.task import TaskState
 from modules.service import Service
-from humanize import naturalsize, naturaldelta
+from humanize import naturalsize
 
 
 class YoutubeService(Service):
@@ -62,8 +62,10 @@ class YoutubeService(Service):
 
             return format
 
-    async def upload_file(self, path: str, buffer_size: int, dav: DavClient, split_size: int = 0):
+    async def upload_file(self, title: str, path: str, buffer_size: int, dav: DavClient):
         retry_count = 3
+        split_size = self.split_size
+
         async with aiofiles.open(path, "rb") as file:
             if split_size <= 0:
                 split_size = buffer_size
@@ -77,6 +79,10 @@ class YoutubeService(Service):
             for piece in range(pieces):
                 while True:
                     try:
+                        self._set_state(TaskState.WORKING,
+                                        description=
+                                        f"{emoji.HOURGLASS_DONE} Uploading **{title}**")
+
                         remote_name = f"{name}.{(piece + 1):0=3}" if pieces != 1 else name
                         remote_path = os.path.join(self.webdav_path, remote_name)
 
@@ -114,11 +120,11 @@ class YoutubeService(Service):
 
             self._set_state(TaskState.STARTING)
 
-            def progress_wrapper(d):
-                eta = d.get('eta', None)
-                if eta != None:
-                    self._set_state(TaskState.WORKING, description=f"{emoji.HOURGLASS_DONE} Downloading video (ETA: {naturaldelta(eta)})")
-                self._make_progress(d.get('downloaded_bytes', None), d.get('total_bytes', None))
+            def progress_wrapper(d):                   
+                self._make_progress(d.get('downloaded_bytes', None), 
+                                    d.get('total_bytes', None), 
+                                    speed=d.get('speed', None), 
+                                    eta=d.get('eta', None))
 
             options = {
                 'format': f"{format['format_id']}+bestaudio",
@@ -139,19 +145,15 @@ class YoutubeService(Service):
 
             # Check if changed format
             if not os.path.exists(filename):
-                filename, ext = os.path.splitext(filename)
-                if os.path.exists(filename + '.mkv'):
-                    filename = filename + '.mkv'
+                filename, _ = os.path.splitext(filename)
+                filename = filename + '.mkv'
 
             async with DavClient(hostname=self.webdav_hostname,
                                 login=self.webdav_username,
                                 password=self.webdav_password,
                                 timeout=10 * 60 * 5,
-                                chunk_size=1048576) as dav:
-                self._set_state(TaskState.WORKING,
-                                description=
-                                f"{emoji.HOURGLASS_DONE} Uploading **{meta['title']}**")
-                await self.upload_file(filename, os.stat(filename).st_size, dav, self.split_size)
+                                chunk_size=1048576) as dav:                
+                await self.upload_file(meta['title'], filename, os.stat(filename).st_size, dav)
                 os.unlink(filename) # Delete file
 
                 self._set_state(TaskState.SUCCESSFULL)

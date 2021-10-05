@@ -15,6 +15,10 @@ from pyrogram.types import (
 from button import ButtonFactory, GroupButton
 
 
+def get_str(x: str):
+    return x if x != None else "Unknown"
+
+
 def cut(x: str, length: int) -> List[str]:
     ret = []
     while x != "":

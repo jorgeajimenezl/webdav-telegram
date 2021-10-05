@@ -1,7 +1,8 @@
 import asyncio
+import time
 from enum import Enum
 from threading import Lock
-from typing import Tuple
+from typing import Tuple, Union
 
 
 class TaskState(Enum):
@@ -21,6 +22,10 @@ class Task(object):
         self._state = (TaskState.UNKNOW, None)
         self._progress = (None, None)
         self._lock = Lock()
+        self._last_point = None
+        self._last_time = None
+        self._eta = None
+        self._speed = None
 
         self.stop = None
         self.result = None
@@ -41,14 +46,39 @@ class Task(object):
         with self._lock:
             return self._progress
 
+    def eta(self) -> Union[float, None]:
+        with self._lock:
+            return self._eta
+
+    def speed(self) -> Union[float, None]:
+        with self._lock:
+            return self._speed
+
     def _set_state(self, state: TaskState, description: str = None) -> None:
         with self._lock:
             self._state = (state, description)
         return None
 
-    def _make_progress(self, current: int, total: int) -> None:
+    def _make_progress(self, current: int, total: int, *args, **kwargs) -> None:
         with self._lock:
             self._progress = (current, total)
+
+            try:
+                if self._last_time == None:
+                    self._last_time = time.monotonic()
+                    self._last_point = current
+                    return
+
+                # compute eta
+                self._speed = kwargs.get(
+                    "speed",
+                    (current - self._last_point) / (time.monotonic() - self._last_time),
+                )
+                self._eta = kwargs.get("eta", (total - current) / self._speed)
+            except Exception:
+                self._eta = None
+                self._speed = None
+
         return None
 
     def __hash__(self) -> int:
