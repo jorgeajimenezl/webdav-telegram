@@ -79,11 +79,6 @@ class YoutubeService(Service):
             for piece in range(pieces):
                 while True:
                     try:
-                        self._set_state(TaskState.WORKING,
-                                        description=
-                                        f"{emoji.HOURGLASS_DONE} Uploading **{title}**")
-                        self.reset_stats()
-
                         remote_name = f"{name}.{(piece + 1):0=3}" if pieces != 1 else name
                         remote_path = os.path.join(self.webdav_path, remote_name)
 
@@ -91,6 +86,10 @@ class YoutubeService(Service):
                         assert pos == piece * split_size, "Impossible seek stream"
                         length = min(split_size, buffer_size - pos)                        
 
+                        self._set_state(TaskState.WORKING,
+                                        description=
+                                        f"{emoji.HOURGLASS_DONE} Uploading **{title}**")
+                        self.reset_stats()
                         self._make_progress(0, length)
                         await dav.upload_to(remote_path,
                                             buffer=file,
@@ -156,8 +155,6 @@ class YoutubeService(Service):
                                 timeout=10 * 60 * 5,
                                 chunk_size=1048576) as dav:                
                 await self.upload_file(meta['title'], filename, os.stat(filename).st_size, dav)
-                os.unlink(filename) # Delete file
-
                 self._set_state(TaskState.SUCCESSFULL)
         except CancelledError:
             self._set_state(TaskState.CANCELED, f"Task cancelled")
@@ -165,5 +162,10 @@ class YoutubeService(Service):
             self._set_state(
                 TaskState.ERROR,
                 f"{emoji.CROSS_MARK} Error: {traceback.format_exc()}")
+        finally:
+            try:
+                os.unlink(filename) # Delete file
+            except Exception:
+                pass
 
         return None
