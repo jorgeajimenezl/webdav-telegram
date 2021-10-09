@@ -44,7 +44,7 @@ class TorrentService(Service):
         async with aiofiles.open(path, "rb") as file:
             while True:
                 try:
-                    name = os.path.basename(path)
+                    name = utils.strip_emoji(os.path.basename(path))
                     remote_path = os.path.join(self.webdav_path, name)
 
                     await dav.upload_to(remote_path,
@@ -125,7 +125,7 @@ class TorrentService(Service):
                                 login=self.webdav_username,
                                 password=self.webdav_password,
                                 timeout=10 * 60 * 5,
-                                chunk_size=1048576) as dav:
+                                chunk_size=2097152) as dav:
                 for file in download.files:
                     if file.is_metadata or not file.selected:
                         continue

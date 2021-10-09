@@ -169,7 +169,7 @@ class WebdavModule(Module):
 
                     text = f"{description} ({current_text} / {total_text})\nSpeed: {utils.get_str(naturalsize(speed, binary=True))}/sec\nETA: {utils.get_str(naturaldelta(eta))}"
                 else:
-                    text = f"{description} (...)"
+                    text = f"{description}"
 
                 if message.text != text:
                     message.text = text

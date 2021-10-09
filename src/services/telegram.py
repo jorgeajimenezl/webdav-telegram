@@ -2,6 +2,7 @@ import asyncio
 import os
 import aiofiles.tempfile
 import traceback
+import utils
 from asyncio.exceptions import CancelledError
 
 from aiodav.client import Client as DavClient
@@ -52,7 +53,7 @@ class TelegramService(Service):
         return getattr(media, "file_name", "unknown")
 
     async def _streaming(self, filename: str, dav: DavClient):
-        remote_path = os.path.join(self.webdav_path, filename)
+        remote_path = os.path.join(self.webdav_path, utils.strip_emoji(filename))
         self._set_state(
             TaskState.WORKING,
             description=
@@ -74,7 +75,7 @@ class TelegramService(Service):
                 assert (await file.seek(0) == 0), "Impossible seek to start of stream"
 
                 remote_path = os.path.join(self.webdav_path,
-                                           f"{filename}.{i:0=3}")
+                                           f"{utils.strip_emoji(filename)}.{i:0=3}")
                 retry_count = 3
 
                 while True:
@@ -144,7 +145,7 @@ class TelegramService(Service):
                              login=self.webdav_username,
                              password=self.webdav_password,
                              timeout=10 * 60 * 5,
-                             chunk_size=1048576) as dav:
+                             chunk_size=2097152) as dav:
             try:
                 if self.split_size == 0:
                     await self._streaming(filename, dav)

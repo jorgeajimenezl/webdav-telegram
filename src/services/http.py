@@ -2,6 +2,7 @@ import asyncio
 import os
 import re
 import traceback
+import utils
 import aiofiles.tempfile
 from asyncio.exceptions import CancelledError
 
@@ -35,7 +36,7 @@ class HttpService(Service):
         )
 
     async def _streaming(self, filename: str, dav: DavClient, response: ClientResponse):
-        remote_path = os.path.join(self.webdav_path, filename)
+        remote_path = os.path.join(self.webdav_path, utils.strip_emoji(filename))
         self._set_state(
             TaskState.WORKING, description=f"{emoji.HOURGLASS_DONE} Streaming to Webdav"
         )
@@ -44,7 +45,7 @@ class HttpService(Service):
         async def file_sender():
             # TODO: delete this hardcode value
             offset = 0
-            async for chunk in response.content.iter_chunked(1048576):
+            async for chunk in response.content.iter_chunked(2097152):
                 offset += len(chunk)
                 self._make_progress(offset, response.content_length)
                 yield chunk
@@ -59,7 +60,9 @@ class HttpService(Service):
             async def upload_file(buffer_size, i):
                 assert await file.seek(0) == 0, "Impossible seek to start of stream"
 
-                remote_path = os.path.join(self.webdav_path, f"{filename}.{i:0=3}")
+                remote_path = os.path.join(
+                    self.webdav_path, f"{utils.strip_emoji(filename)}.{i:0=3}"
+                )
                 retry_count = 3
 
                 while True:
@@ -101,8 +104,8 @@ class HttpService(Service):
 
             k = 1
             # TODO: delete this hardcode value
-            offset = 0            
-            async for chunk in response.content.iter_chunked(1048576):
+            offset = 0
+            async for chunk in response.content.iter_chunked(2097152):
                 self._set_state(
                     TaskState.WORKING, description=f"{emoji.HOURGLASS_DONE} Downloading"
                 )
@@ -133,7 +136,7 @@ class HttpService(Service):
             login=self.webdav_username,
             password=self.webdav_password,
             timeout=10 * 60 * 5,
-            chunk_size=1048576,
+            chunk_size=2097152,
         ) as dav:
             try:
                 async with aiohttp.ClientSession() as session:

@@ -73,7 +73,7 @@ class YoutubeService(Service):
             if buffer_size % split_size != 0:
                 pieces += 1
 
-            name = os.path.basename(path)
+            name = utils.strip_emoji(os.path.basename(path))
             remote_path = os.path.join(self.webdav_path, name)
 
             for piece in range(pieces):
@@ -153,7 +153,7 @@ class YoutubeService(Service):
                                 login=self.webdav_username,
                                 password=self.webdav_password,
                                 timeout=10 * 60 * 5,
-                                chunk_size=1048576) as dav:                
+                                chunk_size=2097152) as dav:                
                 await self.upload_file(meta['title'], filename, os.stat(filename).st_size, dav)
                 self._set_state(TaskState.SUCCESSFULL)
         except CancelledError:
