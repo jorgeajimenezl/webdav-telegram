@@ -8,5 +8,7 @@ aiofiles
 uvloop
 apscheduler
 humanize
+lxml
+beautifulsoup4
 aria2p
 youtube-dl

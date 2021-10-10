@@ -2,6 +2,10 @@ import asyncio
 import os
 import re
 import traceback
+from typing import List
+from services.extractors.extractor import Extractor
+from services.extractors.mediafire import MediafireExtractor
+from services.extractors.zippyshare import ZippyshareExtractor
 import utils
 import aiofiles.tempfile
 from asyncio.exceptions import CancelledError
@@ -20,6 +24,8 @@ class HttpService(Service):
     """
     Download web file and upload to webdav
     """
+
+    EXTRACTORS: List[Extractor] = [ZippyshareExtractor, MediafireExtractor]
 
     def __init__(
         self, id: int, user: int, file_message: Message, *args, **kwargs
@@ -140,8 +146,15 @@ class HttpService(Service):
         ) as dav:
             try:
                 async with aiohttp.ClientSession() as session:
-                    async with session.get(self.file_message.text) as response:
-                        filename = os.path.basename(self.file_message.text)
+                    url = self.file_message.text
+
+                    for e in HttpService.EXTRACTORS:
+                        if e.check(url):
+                            url = await e.get_url(session, url)
+                            break
+
+                    async with session.get(url) as response:
+                        filename = os.path.basename(url)
 
                         if self.split_size == 0:
                             await self._streaming(filename, dav, response)

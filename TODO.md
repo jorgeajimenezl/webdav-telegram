@@ -1,8 +1,6 @@
 # General
-+ Change /list method to use similar to select directories
-+ Change all inline buttons to new system
++ Change to use a system like youtubedl extractor when each extractor only let find a url to download
 
 # File actions
 + Download
 + Rename
-+ Properties
