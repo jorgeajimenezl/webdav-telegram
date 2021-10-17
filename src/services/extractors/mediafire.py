@@ -10,7 +10,7 @@ class MediafireExtractor(object):
 
     @staticmethod
     def check(url: str) -> bool:
-        return bool(re.match(r"^https?://(www\.)?mediafire\.com", url))
+        return bool(re.match(r"^https?:\/\/(www\.)?mediafire\.com", url))
 
     @staticmethod
     async def get_url(session: ClientSession, url: str) -> str:

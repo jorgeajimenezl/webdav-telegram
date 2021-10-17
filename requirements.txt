@@ -10,5 +10,8 @@ apscheduler
 humanize
 lxml
 beautifulsoup4
+
+# Optional
 aria2p
 youtube-dl
+cloudscraper
