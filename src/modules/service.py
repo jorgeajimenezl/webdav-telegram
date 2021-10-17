@@ -156,6 +156,9 @@ class Service(Task):
 
         if isinstance(file, str):
             file = aiofiles.open(file, "rb")
+        else:
+            file.__aenter__ = lambda x: x
+            file.__aexit__ = lambda *args: None
 
         async with file:
             if split_size <= 0:
