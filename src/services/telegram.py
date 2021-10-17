@@ -53,7 +53,7 @@ class TelegramService(Service):
         return getattr(media, "file_name", "unknown")
 
     async def _streaming(self, filename: str, dav: DavClient):
-        remote_path = os.path.join(self.webdav_path, utils.strip_emoji(filename))
+        remote_path = os.path.join(self.webdav_path, utils.sanitaze_filename(filename))
         self._set_state(
             TaskState.WORKING,
             description=
@@ -75,7 +75,7 @@ class TelegramService(Service):
                 assert (await file.seek(0) == 0), "Impossible seek to start of stream"
 
                 remote_path = os.path.join(self.webdav_path,
-                                           f"{utils.strip_emoji(filename)}.{i:0=3}")
+                                           f"{utils.sanitaze_filename(filename)}.{i:0=3}")
                 retry_count = 3
 
                 while True:

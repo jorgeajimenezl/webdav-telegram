@@ -73,7 +73,7 @@ class YoutubeService(Service):
             if buffer_size % split_size != 0:
                 pieces += 1
 
-            name = utils.strip_emoji(os.path.basename(path))
+            name = utils.sanitaze_filename(os.path.basename(path))
             remote_path = os.path.join(self.webdav_path, name)
 
             for piece in range(pieces):

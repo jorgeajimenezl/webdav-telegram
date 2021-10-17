@@ -42,7 +42,7 @@ class HttpService(Service):
         )
 
     async def _streaming(self, filename: str, dav: DavClient, response: ClientResponse):
-        remote_path = os.path.join(self.webdav_path, utils.strip_emoji(filename))
+        remote_path = os.path.join(self.webdav_path, utils.sanitaze_filename(filename))
         self._set_state(
             TaskState.WORKING, description=f"{emoji.HOURGLASS_DONE} Streaming to Webdav"
         )
@@ -67,7 +67,7 @@ class HttpService(Service):
                 assert await file.seek(0) == 0, "Impossible seek to start of stream"
 
                 remote_path = os.path.join(
-                    self.webdav_path, f"{utils.strip_emoji(filename)}.{i:0=3}"
+                    self.webdav_path, f"{utils.sanitaze_filename(filename)}.{i:0=3}"
                 )
                 retry_count = 3
 
@@ -154,7 +154,11 @@ class HttpService(Service):
                             break
 
                     async with session.get(url) as response:
-                        filename = os.path.basename(url)
+                        try:
+                            d = response.headers['content-disposition']
+                            filename = re.findall("filename=(.+)", d)[0]
+                        except Exception:
+                            filename = os.path.basename(url)
 
                         if self.split_size == 0:
                             await self._streaming(filename, dav, response)

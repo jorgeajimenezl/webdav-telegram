@@ -44,7 +44,7 @@ class TorrentService(Service):
         async with aiofiles.open(path, "rb") as file:
             while True:
                 try:
-                    name = utils.strip_emoji(os.path.basename(path))
+                    name = utils.sanitaze_filename(os.path.basename(path))
                     remote_path = os.path.join(self.webdav_path, name)
 
                     await dav.upload_to(remote_path,
