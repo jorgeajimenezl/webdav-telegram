@@ -32,7 +32,7 @@ EMOJI_PATTERN = re.compile(
     "]+"
 )
 
-WEBDAV_REMOVE_CHARACTERS = "&%"
+WEBDAV_REMOVE_CHARACTERS = "&%?="
 
 
 def strip_emoji(x: str) -> str:
