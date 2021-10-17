@@ -14,12 +14,12 @@ class SettingsModule(Module):
     # Text, Description, Regex, Field name, Converter
     # yapf: disable
     MENU = {
-        f"{emoji.GLOBE_WITH_MERIDIANS} Server": ("hostname", r"https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)", 'server', None),
-        f"{emoji.BUST_IN_SILHOUETTE} Username": ("username", r"\S+", 'user', None),
-        f"{emoji.KEY} Password": ("password", r".+", 'password', None),
-        f"{emoji.STRAIGHT_RULER} Split Size": ("max file size for split (Default: 100MB)", r"\d+", 'split_size', lambda x: int(x)),
-        f"Upload Path": ("upload files path", r"[\S/]+", "upload_path", None),
-        f"{emoji.UPWARDS_BUTTON} Parallel": ("upload files concurrently", r"(on|off)", "upload_parallel", None),
+        f"{emoji.GLOBE_WITH_MERIDIANS} Server": ("Write the hostname", r"https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)", 'server', None),
+        f"{emoji.BUST_IN_SILHOUETTE} Username": ("Write the username", r"\S+", 'user', None),
+        f"{emoji.KEY} Password": ("Write the password", r".+", 'password', None),
+        f"{emoji.STRAIGHT_RULER} Split Size": ("Write the split size (max file size for split (Default: 100MB))", r"\d+", 'split_size', lambda x: int(x)),
+        f"Upload Path": ("Write the upload files path", r"[\S/]+", "upload_path", None),
+        f"{emoji.UPWARDS_BUTTON} Streaming": ("Turn on for stream directly from service to webdav", r"(on|off)", "streaming", None),
     }
     # yapf: enable
 
@@ -59,7 +59,7 @@ class SettingsModule(Module):
 
         await app.send_message(
             user,
-            f"Write a valid {description}",
+            f"{description}",
             reply_markup=ReplyKeyboardRemove(),
             disable_web_page_preview=True,
         )

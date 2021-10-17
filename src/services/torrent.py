@@ -39,30 +39,6 @@ class TorrentService(Service):
             rf'magnet:\?(&?((xt=urn:[a-z0-9]+:[\w\.]+)|(dn=[\w\+%-]+)|(xl=[^&]+)|(as=[^&]+)|(kt=[^&]+)|(xs=[^&]+)|(mt=[^&]+)|(tr=[^&]+)|(x=[^&]+)))*',
             m.text)
 
-    async def upload_file(self, path: str, buffer_size: int, dav: DavClient):
-        retry_count = 3
-        async with aiofiles.open(path, "rb") as file:
-            while True:
-                try:
-                    name = utils.sanitaze_filename(os.path.basename(path))
-                    remote_path = os.path.join(self.webdav_path, name)
-
-                    await dav.upload_to(remote_path,
-                                        buffer=file,
-                                        buffer_size=buffer_size,
-                                        progress=self._make_progress)
-                    break
-                except CancelledError:
-                    raise CancelledError
-                except Exception as e:
-                    await asyncio.sleep(5)  # Wait
-                    retry_count -= 1
-                    if retry_count < 0:
-                        raise e
-                    assert (await file.seek(
-                                0) == 0), "Impossible seek to start of stream" 
-
-
     async def options(self, aria2: aria2p.API) -> None:       
         d = aria2.add_magnet(self.file_message.text,
                              options={
@@ -130,13 +106,7 @@ class TorrentService(Service):
                     if file.is_metadata or not file.selected:
                         continue
 
-                    self._set_state(TaskState.WORKING,
-                            description=
-                            f"{emoji.HOURGLASS_DONE} Upload {os.path.basename(file.path)} to webdav server"
-                    )
-                    self.reset_stats()
-
-                    self.upload_file(file.path, file.length, dav)
+                    await self.upload_file(os.path.basename(file.path), file.path, file.length, dav)
                     os.unlink(file.path) # Delete file                   
 
                 self._set_state(TaskState.SUCCESSFULL)                

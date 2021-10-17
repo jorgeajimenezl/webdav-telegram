@@ -35,7 +35,9 @@ class AnimeFLVExtractor(Extractor):
 
     @staticmethod
     async def get_url(session: ClientSession, url: str) -> str:
-        if not re.fullmatch(r"^https?:\/\/(www[0-9]*\.)?animeflv\.net\/ver\/[A-Za-z0-9\-]+", url):
+        if not re.fullmatch(
+            r"^https?:\/\/(www[0-9]*\.)?animeflv\.net\/ver\/[A-Za-z0-9\-]+", url
+        ):
             raise Exception("Only episodes download available (send a episode url)")
 
         scrapper = cloudscraper.create_scraper()
