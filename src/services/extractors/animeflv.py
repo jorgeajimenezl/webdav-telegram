@@ -53,6 +53,6 @@ class AnimeFLVExtractor(Extractor):
                     "",
                     href,
                 )
-                return ZippyshareExtractor.get_url(session, link)
+                return await ZippyshareExtractor.get_url(session, link)
 
         raise Exception("Unable to get download stream")
