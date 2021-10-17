@@ -31,7 +31,7 @@ class AnimeFLVExtractor(Extractor):
                 )
             rows.append({h: x for h, x in zip(columns, values)})
 
-        return row
+        return rows
 
     @staticmethod
     async def get_url(session: ClientSession, url: str) -> str:
