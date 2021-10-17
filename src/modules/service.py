@@ -129,9 +129,9 @@ class Service(Task):
                         file,
                         length,
                         filename=f"{filename}.{k:0=3}",
-                        title=f"{filename} (Piece #{k})"
+                        title=f"{filename} [Piece #{k}]"
                         if pieces == None
-                        else f"{filename} ({k}/{pieces})",
+                        else f"{filename} [{k}/{pieces}]",
                     )
 
                     assert await file.seek(0) == 0, "Impossible seek to start of stream"
@@ -151,9 +151,9 @@ class Service(Task):
                     file,
                     length,
                     filename=f"{filename}.{(k + 1):0=3}" if pieces != 1 else filename,
-                    title=f"{filename} (Piece #{k})"
+                    title=f"{filename} [Piece #{k}]"
                     if pieces == None
-                    else f"{filename} ({k}/{pieces})",
+                    else f"{filename} [{k}/{pieces}]",
                 )
 
                 assert await file.seek(0) == 0, "Impossible seek to start of stream"
@@ -189,7 +189,7 @@ class Service(Task):
 
                     self._set_state(
                         TaskState.WORKING,
-                        description=f"{emoji.HOURGLASS_DONE} Uploading **{title}**",
+                        description=f"{emoji.HOURGLASS_DONE} Uploading **{title} [{piece}/{pieces}]**",
                     )
                     self.reset_stats()
                     self._make_progress(0, length)
