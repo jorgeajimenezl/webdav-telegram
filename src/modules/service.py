@@ -22,6 +22,7 @@ class Service(Task):
 
         self.pyrogram = kwargs.get("pyrogram", file_message._client)
         self.split_size = kwargs.get("split_size", 100) * 1024 * 1024  # Bytes
+        self.use_streaming = kwargs.get("streaming", False)
 
         self.webdav_hostname = kwargs.get("hostname")
         self.webdav_username = kwargs.get("username")
@@ -33,6 +34,34 @@ class Service(Task):
     @staticmethod
     def check(message: Message) -> bool:
         raise NotImplementedError
+
+    async def copy(
+        self,
+        dav: DavClient,
+        filename: str,
+        total_bytes: int,
+        generator: AsyncGenerator[bytes, None],
+    ):
+        async with aiofiles.tempfile.TemporaryFile() as file:
+            self._set_state(
+                TaskState.WORKING,
+                description=f"{emoji.HOURGLASS_DONE} Downloading to local filesystem",
+            )
+            self.reset_stats()
+            offset = 0
+
+            async for chunk in generator:
+                offset += len(chunk)
+                self._make_progress(offset, total_bytes)
+                await file.write(chunk)
+
+            await file.flush()
+            await self.upload_file(
+                dav,
+                file,
+                total_bytes,
+                filename=filename,
+            )
 
     async def streaming(
         self,
@@ -78,11 +107,11 @@ class Service(Task):
                 self._make_progress(offset, total_bytes)
 
                 await file.write(chunk)
-                await file.flush()
 
                 # reach size limit
                 length = await file.tell()
                 if length >= self.split_size:
+                    await file.flush()
                     await self.upload_file(
                         dav,
                         file,
@@ -102,6 +131,7 @@ class Service(Task):
             # has some bytes still to write
             length = await file.tell()
             if length != 0:
+                await file.flush()
                 await self.upload_file(
                     dav,
                     file,

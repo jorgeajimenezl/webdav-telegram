@@ -1,5 +1,6 @@
 import traceback
 from asyncio.exceptions import CancelledError
+from typing import Tuple
 
 from aiodav.client import Client as DavClient
 from async_executor.task import TaskState
@@ -28,7 +29,7 @@ class TelegramService(Service):
     def check(m: Message):
         return bool(m.document) | bool(m.photo) | bool(m.video) | bool(m.audio)
 
-    def __get_file_name(message: Message):
+    def __get_file_name(message: Message) -> Tuple[str, int]:
         available_media = ("audio", "document", "photo", "sticker",
                            "animation", "video", "voice", "video_note",
                            "new_chat_photo")
@@ -45,11 +46,11 @@ class TelegramService(Service):
         else:
             media = message
 
-        return getattr(media, "file_name", "unknown")
+        return (getattr(media, "file_name", "unknown"), getattr(media, "file_size", None))
 
     async def start(self) -> None:
         self._set_state(TaskState.STARTING)
-        filename = TelegramService.__get_file_name(self.file_message)
+        filename, total_bytes = TelegramService.__get_file_name(self.file_message)
 
         async with DavClient(hostname=self.webdav_hostname,
                              login=self.webdav_username,
@@ -61,11 +62,19 @@ class TelegramService(Service):
                     async for chunk, _, _ in self.file_message.iter_download():
                         yield chunk
 
-                func = self.streaming if self.split_size <= 0 else self.streaming_by_pieces
+                if self.use_streaming:
+                    func = (
+                        self.streaming
+                        if self.split_size <= 0
+                        else self.streaming_by_pieces
+                    )
+                else:
+                    func = self.copy
+
                 await func(
                     dav,
                     filename,
-                    None,
+                    total_bytes,
                     gen(),
                 )
 

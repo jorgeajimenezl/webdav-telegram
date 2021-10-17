@@ -119,6 +119,7 @@ class WebdavModule(Module):
             file_message=message,
             pyrogram=app,
             split_size=int(data["split_size"]),
+            streaming=utils.get_bool(data["streaming"]),
             hostname=data["server"],
             username=data["user"],
             password=data["password"],

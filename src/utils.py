@@ -46,8 +46,18 @@ def sanitaze_filename(x: str) -> str:
     return x
 
 
-def get_str(x: str):
+def get_str(x: str) -> str:
     return x if x != None else "Unknown"
+
+
+def get_bool(x: str) -> bool:
+    x = x.lower()
+    if x in ["on", "true", "activate", "right"]:
+        return True
+    if x in ["off", "false", "desactivate", "wrong"]:
+        return False
+        
+    raise ValueError("Impossible convert from this string to bool")
 
 
 def cut(x: str, length: int) -> List[str]:
