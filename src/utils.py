@@ -32,16 +32,17 @@ EMOJI_PATTERN = re.compile(
     "]+"
 )
 
-WEBDAV_REMOVE_CHARACTERS = '&%'
+WEBDAV_REMOVE_CHARACTERS = "&%"
+
 
 def strip_emoji(x: str) -> str:
     return EMOJI_PATTERN.sub(r"", x)
 
 
-def sanitaze_filename(x: str) -> str: 
+def sanitaze_filename(x: str) -> str:
     x = strip_emoji(x)
     for c in WEBDAV_REMOVE_CHARACTERS:
-        x = x.replace(c, '')
+        x = x.replace(c, "")
     return x
 
 

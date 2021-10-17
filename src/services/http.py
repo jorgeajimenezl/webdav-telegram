@@ -3,6 +3,7 @@ import os
 import re
 import traceback
 from typing import List
+from services.extractors.animeflv import AnimeFLVExtractor
 from services.extractors.extractor import Extractor
 from services.extractors.mediafire import MediafireExtractor
 from services.extractors.zippyshare import ZippyshareExtractor
@@ -25,7 +26,11 @@ class HttpService(Service):
     Download web file and upload to webdav
     """
 
-    EXTRACTORS: List[Extractor] = [ZippyshareExtractor, MediafireExtractor]
+    EXTRACTORS: List[Extractor] = [
+        AnimeFLVExtractor,
+        ZippyshareExtractor,
+        MediafireExtractor,
+    ]
 
     def __init__(
         self, id: int, user: int, file_message: Message, *args, **kwargs
@@ -155,7 +160,7 @@ class HttpService(Service):
 
                     async with session.get(url) as response:
                         try:
-                            d = response.headers['content-disposition']
+                            d = response.headers["content-disposition"]
                             filename = re.findall("filename=(.+)", d)[0]
                         except Exception:
                             filename = os.path.basename(url)
