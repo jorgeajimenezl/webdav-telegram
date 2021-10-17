@@ -2,12 +2,15 @@ import asyncio
 import aiofiles
 import utils
 import os
+import aiofiles.tempfile
 
 from pyrogram.types import Message
 from async_executor.task import Task, TaskState
 from aiodav.client import Client as DavClient
 from pyrogram import emoji
 from asyncio.exceptions import CancelledError
+from typing import AsyncGenerator, Union
+from io import IOBase
 
 
 class Service(Task):
@@ -31,18 +34,109 @@ class Service(Task):
     def check(message: Message) -> bool:
         raise NotImplementedError
 
-    async def upload_file(self, title: str, path: str, file_size: int, dav: DavClient):
+    async def streaming(
+        self,
+        dav: DavClient,
+        filename: str,
+        total_bytes: int,
+        generator: AsyncGenerator[bytes, None],
+    ):
+        name = utils.sanitaze_filename(filename)
+        remote_path = os.path.join(self.webdav_path, name)
+        self._set_state(
+            TaskState.WORKING, description=f"{emoji.HOURGLASS_DONE} Streaming to Webdav"
+        )
+        self.reset_stats()
+
+        async def file_sender():
+            offset = 0
+
+            async for chunk in generator:
+                offset += len(chunk)
+                self._make_progress(offset, total_bytes)
+                yield chunk
+
+        await dav.upload_to(remote_path, buffer=file_sender())
+
+    async def streaming_by_pieces(
+        self,
+        dav: DavClient,
+        filename: str,
+        total_bytes: int,
+        generator: AsyncGenerator[bytes, None],
+    ):
+        async with aiofiles.tempfile.TemporaryFile() as file:
+            k = 1
+            offset = 0
+
+            async for chunk in generator:
+                self._set_state(
+                    TaskState.WORKING, description=f"{emoji.HOURGLASS_DONE} Downloading"
+                )
+
+                offset += len(chunk)
+                self._make_progress(offset, total_bytes)
+
+                await file.write(chunk)
+                await file.flush()
+
+                # reach size limit
+                length = await file.tell()
+                if length >= self.split_size:
+                    await self.upload_file(
+                        dav,
+                        file,
+                        length,
+                        filename=f"{filename}.{k:0=3}",
+                        title=f"{filename} (Piece #{k})",
+                    )
+
+                    assert await file.seek(0) == 0, "Impossible seek to start of stream"
+                    assert (
+                        await file.truncate(0) == 0
+                    ), "Impossible truncate temporary file"
+                    k += 1
+
+                    self.reset_stats()
+
+            # has some bytes still to write
+            length = await file.tell()
+            if length != 0:
+                await self.upload_file(
+                    dav,
+                    file,
+                    length,
+                    filename=f"{filename}.{k:0=3}",
+                    title=f"{filename} (Piece #{k})",
+                )
+
+                assert await file.seek(0) == 0, "Impossible seek to start of stream"
+                assert await file.truncate(0) == 0, "Impossible truncate temporary file"
+
+    async def upload_file(
+        self,
+        dav: DavClient,
+        file: Union[str, IOBase],
+        file_size: int,
+        title: str = None,
+        filename: str = None,
+    ):
         retry_count = 3
         split_size = self.split_size
 
-        async with aiofiles.open(path, "rb") as file:
+        if isinstance(file, str):
+            file = aiofiles.open(file, "rb")
+
+        async with file:
             if split_size <= 0:
                 split_size = file_size
             pieces = file_size // split_size
             if file_size % split_size != 0:
                 pieces += 1
 
-            name = utils.sanitaze_filename(os.path.basename(path))
+            filename = filename or os.path.basename(file)
+            name = utils.sanitaze_filename(filename)
+            title = title or name
             remote_path = os.path.join(self.webdav_path, name)
 
             for piece in range(pieces):

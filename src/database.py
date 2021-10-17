@@ -25,7 +25,7 @@ class Database(object):
                 "split_size": 100,
                 "upload_path": "/",
                 "upload_parallel": "off",
-                "streaming": "off"
+                "streaming": "off",
             }
 
             self.set_data(id, **data)

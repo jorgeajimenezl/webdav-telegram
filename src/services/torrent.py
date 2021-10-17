@@ -2,18 +2,15 @@ import asyncio
 import os
 import re
 import traceback
-import aiofiles
 from asyncio.exceptions import CancelledError
 
 import aria2p
-from aiodav.client import Client as DavClient
-
-from pyrogram import emoji
-from pyrogram.types import Message
-
 import utils
+from aiodav.client import Client as DavClient
 from async_executor.task import TaskState
 from modules.service import Service
+from pyrogram import emoji
+from pyrogram.types import Message
 
 
 class TorrentService(Service):
@@ -105,8 +102,8 @@ class TorrentService(Service):
                 for file in download.files:
                     if file.is_metadata or not file.selected:
                         continue
-
-                    await self.upload_file(os.path.basename(file.path), file.path, file.length, dav)
+                    
+                    await self.upload_file(dav, file.path, file.length)
                     os.unlink(file.path) # Delete file                   
 
                 self._set_state(TaskState.SUCCESSFULL)                

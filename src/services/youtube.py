@@ -105,8 +105,8 @@ class YoutubeService(Service):
                                 login=self.webdav_username,
                                 password=self.webdav_password,
                                 timeout=10 * 60 * 5,
-                                chunk_size=2097152) as dav:                
-                await self.upload_file(meta['title'], filename, os.stat(filename).st_size, dav)
+                                chunk_size=2097152) as dav:
+                await self.upload_file(dav, filename, os.stat(filename), title=meta['title'])
                 self._set_state(TaskState.SUCCESSFULL)
         except CancelledError:
             self._set_state(TaskState.CANCELED, f"Task cancelled")
