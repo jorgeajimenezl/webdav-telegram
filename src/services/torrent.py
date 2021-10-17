@@ -2,6 +2,7 @@ import asyncio
 import os
 import re
 import traceback
+import aiofiles
 from asyncio.exceptions import CancelledError
 
 import aria2p
@@ -103,7 +104,8 @@ class TorrentService(Service):
                     if file.is_metadata or not file.selected:
                         continue
                     
-                    await self.upload_file(dav, file.path, file.length)
+                    async with aiofiles.open(file.path, 'rb') as f:
+                        await self.upload_file(dav, f, file.length)
                     os.unlink(file.path) # Delete file                   
 
                 self._set_state(TaskState.SUCCESSFULL)                

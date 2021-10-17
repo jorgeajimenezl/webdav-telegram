@@ -9,7 +9,7 @@ from async_executor.task import Task, TaskState
 from aiodav.client import Client as DavClient
 from pyrogram import emoji
 from asyncio.exceptions import CancelledError
-from typing import AsyncGenerator, Union
+from typing import AsyncGenerator, Tuple, Union
 from io import IOBase
 
 
@@ -35,13 +35,24 @@ class Service(Task):
     def check(message: Message) -> bool:
         raise NotImplementedError
 
+    def get_pieces_count(self, file_size: int) -> int:
+        if file_size == None:
+            return None
+
+        split_size = self.split_size if self.split_size > 0 else file_size
+        pieces = file_size // split_size
+        if file_size % split_size != 0:
+            pieces += 1
+
+        return pieces
+
     async def copy(
         self,
         dav: DavClient,
         filename: str,
-        total_bytes: int,
+        file_size: int,
         generator: AsyncGenerator[bytes, None],
-    ):
+    ) -> None:
         async with aiofiles.tempfile.TemporaryFile() as file:
             self._set_state(
                 TaskState.WORKING,
@@ -52,14 +63,14 @@ class Service(Task):
 
             async for chunk in generator:
                 offset += len(chunk)
-                self._make_progress(offset, total_bytes)
+                self._make_progress(offset, file_size)
                 await file.write(chunk)
 
             await file.flush()
             await self.upload_file(
                 dav,
                 file,
-                total_bytes,
+                file_size,
                 filename=filename,
             )
 
@@ -67,9 +78,9 @@ class Service(Task):
         self,
         dav: DavClient,
         filename: str,
-        total_bytes: int,
+        file_size: int,
         generator: AsyncGenerator[bytes, None],
-    ):
+    ) -> None:
         name = utils.sanitaze_filename(filename)
         remote_path = os.path.join(self.webdav_path, name)
         self._set_state(
@@ -82,7 +93,7 @@ class Service(Task):
 
             async for chunk in generator:
                 offset += len(chunk)
-                self._make_progress(offset, total_bytes)
+                self._make_progress(offset, file_size)
                 yield chunk
 
         await dav.upload_to(remote_path, buffer=file_sender())
@@ -91,12 +102,13 @@ class Service(Task):
         self,
         dav: DavClient,
         filename: str,
-        total_bytes: int,
+        file_size: int,
         generator: AsyncGenerator[bytes, None],
-    ):
+    ) -> None:
         async with aiofiles.tempfile.TemporaryFile() as file:
             k = 1
             offset = 0
+            pieces = self.get_pieces_count(file_size)
 
             async for chunk in generator:
                 self._set_state(
@@ -104,7 +116,7 @@ class Service(Task):
                 )
 
                 offset += len(chunk)
-                self._make_progress(offset, total_bytes)
+                self._make_progress(offset, file_size)
 
                 await file.write(chunk)
 
@@ -117,7 +129,9 @@ class Service(Task):
                         file,
                         length,
                         filename=f"{filename}.{k:0=3}",
-                        title=f"{filename} (Piece #{k})",
+                        title=f"{filename} (Piece #{k})"
+                        if pieces == None
+                        else f"{filename} ({k}/{pieces})",
                     )
 
                     assert await file.seek(0) == 0, "Impossible seek to start of stream"
@@ -136,8 +150,10 @@ class Service(Task):
                     dav,
                     file,
                     length,
-                    filename=f"{filename}.{k:0=3}",
-                    title=f"{filename} (Piece #{k})",
+                    filename=f"{filename}.{(k + 1):0=3}" if pieces != 1 else filename,
+                    title=f"{filename} (Piece #{k})"
+                    if pieces == None
+                    else f"{filename} ({k}/{pieces})",
                 )
 
                 assert await file.seek(0) == 0, "Impossible seek to start of stream"
@@ -146,66 +162,53 @@ class Service(Task):
     async def upload_file(
         self,
         dav: DavClient,
-        file: Union[str, IOBase],
+        file: IOBase,
         file_size: int,
         title: str = None,
         filename: str = None,
-    ):
+    ) -> None:
         retry_count = 3
-        split_size = self.split_size
 
-        if isinstance(file, str):
-            file = aiofiles.open(file, "rb")
-        else:
-            file.__aenter__ = lambda x: x
-            file.__aexit__ = lambda *args: None
+        split_size = self.split_size if self.split_size > 0 else file_size
+        pieces = self.get_pieces_count(file_size)
 
-        async with file:
-            if split_size <= 0:
-                split_size = file_size
-            pieces = file_size // split_size
-            if file_size % split_size != 0:
-                pieces += 1
+        filename = filename or os.path.basename(file.name)
+        name = utils.sanitaze_filename(filename)
+        title = title or name
+        remote_path = os.path.join(self.webdav_path, name)
 
-            filename = filename or os.path.basename(file)
-            name = utils.sanitaze_filename(filename)
-            title = title or name
-            remote_path = os.path.join(self.webdav_path, name)
+        for piece in range(pieces):
+            while True:
+                try:
+                    remote_name = f"{name}.{(piece + 1):0=3}" if pieces != 1 else name
+                    remote_path = os.path.join(self.webdav_path, remote_name)
 
-            for piece in range(pieces):
-                while True:
-                    try:
-                        remote_name = (
-                            f"{name}.{(piece + 1):0=3}" if pieces != 1 else name
-                        )
-                        remote_path = os.path.join(self.webdav_path, remote_name)
+                    pos = await file.seek(piece * split_size)
+                    assert pos == piece * split_size, "Impossible seek stream"
+                    length = min(split_size, file_size - pos)
 
-                        pos = await file.seek(piece * split_size)
-                        assert pos == piece * split_size, "Impossible seek stream"
-                        length = min(split_size, file_size - pos)
+                    self._set_state(
+                        TaskState.WORKING,
+                        description=f"{emoji.HOURGLASS_DONE} Uploading **{title}**",
+                    )
+                    self.reset_stats()
+                    self._make_progress(0, length)
+                    await dav.upload_to(
+                        remote_path,
+                        buffer=file,
+                        buffer_size=length,
+                        progress=self._make_progress,
+                    )
+                    break
+                except CancelledError:
+                    raise CancelledError
+                except Exception as e:
+                    self._set_state(
+                        TaskState.WORKING,
+                        description=f"{emoji.CLOCKWISE_VERTICAL_ARROWS} Trying again at error: {retry_count} attemps",
+                    )
 
-                        self._set_state(
-                            TaskState.WORKING,
-                            description=f"{emoji.HOURGLASS_DONE} Uploading **{title}**",
-                        )
-                        self.reset_stats()
-                        self._make_progress(0, length)
-                        await dav.upload_to(
-                            remote_path,
-                            buffer=file,
-                            buffer_size=length,
-                            progress=self._make_progress,
-                        )
-                        break
-                    except CancelledError:
-                        raise CancelledError
-                    except Exception as e:
-                        self._set_state(
-                            TaskState.WORKING,
-                            description=f"{emoji.CLOCKWISE_VERTICAL_ARROWS} Trying again at error: {retry_count} attemps",
-                        )
-
-                        await asyncio.sleep(5)  # Wait
-                        retry_count -= 1
-                        if retry_count < 0:
-                            raise e
+                    await asyncio.sleep(5)  # Wait
+                    retry_count -= 1
+                    if retry_count < 0:
+                        raise e
