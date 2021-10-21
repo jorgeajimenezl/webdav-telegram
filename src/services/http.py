@@ -35,7 +35,7 @@ class HttpService(Service):
 
     @staticmethod
     def check(m: Message) -> bool:
-        return bool(
+        return bool(m.text) and bool(
             re.fullmatch(
                 r"https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)",
                 m.text,
@@ -52,46 +52,36 @@ class HttpService(Service):
             timeout=10 * 60 * 5,
             chunk_size=2097152,
         ) as dav:
-            try:
-                async with aiohttp.ClientSession() as session:
-                    url = self.file_message.text
+            async with aiohttp.ClientSession() as session:
+                url = self.file_message.text
 
-                    for e in HttpService.EXTRACTORS:
-                        if e.check(url):
-                            url = await e.get_url(session, url)
-                            break
+                for e in HttpService.EXTRACTORS:
+                    if e.check(url):
+                        url = await e.get_url(session, url)
+                        break
 
-                    async with session.get(url) as response:
-                        try:
-                            d = response.headers["content-disposition"]
-                            filename = re.findall("filename=(.+)", d)[0]
-                        except Exception:
-                            filename = os.path.basename(url)
+                async with session.get(url) as response:
+                    try:
+                        d = response.headers["content-disposition"]
+                        filename = re.findall("filename=(.+)", d)[0]
+                    except Exception:
+                        filename = os.path.basename(url)
 
-                        gen = response.content.iter_chunked(2097152)
-                        if self.use_streaming:
-                            func = (
-                                self.streaming
-                                if self.split_size <= 0
-                                else self.streaming_by_pieces
-                            )
-                        else:
-                            func = self.copy
-
-                        await func(
-                            dav,
-                            filename,
-                            response.content_length,
-                            gen,
+                    gen = response.content.iter_chunked(2097152)
+                    if self.use_streaming:
+                        func = (
+                            self.streaming
+                            if self.split_size <= 0
+                            else self.streaming_by_pieces
                         )
+                    else:
+                        func = self.copy
 
-                self._set_state(TaskState.SUCCESSFULL)
-            except CancelledError:
-                self._set_state(TaskState.CANCELED, f"Task cancelled")
-            except Exception as e:
-                self._set_state(
-                    TaskState.ERROR,
-                    f"{emoji.CROSS_MARK} Error: {traceback.format_exc()}",
-                )
+                    await func(
+                        dav,
+                        filename,
+                        response.content_length,
+                        gen,
+                    )
 
         return None

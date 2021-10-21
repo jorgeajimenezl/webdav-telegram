@@ -1,12 +1,14 @@
 import asyncio
 import inspect
 import os
+import traceback
 from asyncio import events
 from concurrent.futures import Future, ThreadPoolExecutor
 from threading import Lock
 from typing import Callable, Optional, Tuple
 
-from async_executor.task import Task
+from async_executor.task import Task, TaskState
+from asyncio.exceptions import CancelledError
 
 
 class TaskExecutor(object):
@@ -25,7 +27,7 @@ class TaskExecutor(object):
         self._count_tasks = []
         self._threads_running = 0
 
-    def _start_loop(self):
+    def _start_loop(self) -> None:
         loop = events.new_event_loop()
         try:
             events.set_event_loop(loop)
@@ -40,13 +42,22 @@ class TaskExecutor(object):
                 events.set_event_loop(None)
                 loop.close()
 
-    async def _execute(self, task: Task, index: int):
+    async def _execute(self, task: Task, index: int) -> Tuple[int, Task]:
         async with self._semaphore:
-            await task.start()
+            try:
+                await task.start()
+                task._set_state(TaskState.SUCCESSFULL)
+            except CancelledError:
+                task._set_state(TaskState.CANCELED, f"Task cancelled")
+            except Exception as e:
+                task._set_state(TaskState.ERROR, f"{traceback.format_exc()}")
+
             return (index, task)
 
-    def shutdown():
-        raise NotImplementedError
+    def shutdown(self, wait: bool = True) -> None:
+        self._executor.shutdown(wait, cancel_futures=True)
+        self._count_tasks = 0
+        self._threads_running = 0
 
     def add(
         self,
@@ -54,7 +65,7 @@ class TaskExecutor(object):
         on_end_callback: Callable[[Task], None],
         current_thread: bool = True,
         *args,
-        **kwargs
+        **kwargs,
     ) -> Task:
         if not issubclass(cls, Task):
             raise TypeError("the task argument must be a subclass from 'Task'")

@@ -36,6 +36,9 @@ class YoutubeService(Service):
 
     @staticmethod
     def check(m: Message):
+        if not bool(m.text):
+            return False
+
         extractors = youtube_dl.extractor.gen_extractors()
         for e in extractors:
             if e.suitable(m.text) and e.IE_NAME != 'generic':
@@ -108,14 +111,8 @@ class YoutubeService(Service):
                                 chunk_size=2097152) as dav:
                 async with aiofiles.open(filename, 'rb') as file:
                     await self.upload_file(dav, file, os.stat(filename).st_size, title=meta['title'])
-
-                self._set_state(TaskState.SUCCESSFULL)
-        except CancelledError:
-            self._set_state(TaskState.CANCELED, f"Task cancelled")
         except Exception as e:
-            self._set_state(
-                TaskState.ERROR,
-                f"{emoji.CROSS_MARK} Error: {traceback.format_exc()}")
+            raise e
         finally:
             try:
                 os.unlink(filename) # Delete file

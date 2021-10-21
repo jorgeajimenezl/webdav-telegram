@@ -9,7 +9,7 @@ from async_executor.task import Task, TaskState
 from aiodav.client import Client as DavClient
 from pyrogram import emoji
 from asyncio.exceptions import CancelledError
-from typing import AsyncGenerator, Tuple, Union
+from typing import AsyncGenerator
 from io import IOBase
 
 

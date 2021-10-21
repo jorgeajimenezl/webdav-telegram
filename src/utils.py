@@ -56,7 +56,7 @@ def get_bool(x: str) -> bool:
         return True
     if x in ["off", "false", "desactivate", "wrong"]:
         return False
-        
+
     raise ValueError("Impossible convert from this string to bool")
 
 

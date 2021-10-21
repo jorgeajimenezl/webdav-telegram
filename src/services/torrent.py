@@ -33,9 +33,9 @@ class TorrentService(Service):
     @staticmethod
     def check(m: Message):
         # TODO: Improve this regex
-        return bool(m.text) and re.fullmatch(
+        return bool(m.text) and bool(re.fullmatch(
             rf'magnet:\?(&?((xt=urn:[a-z0-9]+:[\w\.]+)|(dn=[\w\+%-]+)|(xl=[^&]+)|(as=[^&]+)|(kt=[^&]+)|(xs=[^&]+)|(mt=[^&]+)|(tr=[^&]+)|(x=[^&]+)))*',
-            m.text)
+            m.text))
 
     async def options(self, aria2: aria2p.API) -> None:       
         d = aria2.add_magnet(self.file_message.text,
@@ -70,50 +70,40 @@ class TorrentService(Service):
         return [p.index for p in files]
 
     async def start(self) -> None:
-        aria2 = aria2p.API(
-            aria2p.Client(host="http://localhost", port=6800, secret=""))
+        aria2 = aria2p.API(aria2p.Client())
 
-        try:
-            # Chossing torrent files to download            
-            files = await self.options(aria2)       
+        # Chossing torrent files to download            
+        files = await self.options(aria2)       
 
-            self._set_state(TaskState.STARTING)    
-            download = aria2.add_magnet(self.file_message.text, options={'select-file': ",".join(files)})
+        self._set_state(TaskState.STARTING)    
+        download = aria2.add_magnet(self.file_message.text, options={'select-file': ",".join(files)})
 
-            # Wait for download complete
-            self._set_state(TaskState.WORKING,
-                            description=
-                            f"{emoji.HOURGLASS_DONE} Download torrent"
-                    )
-            self.reset_stats()
+        # Wait for download complete
+        self._set_state(TaskState.WORKING,
+                        description=
+                        f"{emoji.HOURGLASS_DONE} Download torrent"
+        )
+        self.reset_stats()
             
-            while not download.is_complete:
-                await asyncio.sleep(10)
-                download.update()
-                self._make_progress(download.completed_length, download.total_length)
+        while not download.is_complete:
+            await asyncio.sleep(10)
+            download.update()
+            self._make_progress(download.completed_length, download.total_length)
 
-            if download.status == 'error':
-                raise Exception(download.error_message)
+        if download.status == 'error':
+            raise Exception(download.error_message)
 
-            async with DavClient(hostname=self.webdav_hostname,
-                                login=self.webdav_username,
-                                password=self.webdav_password,
-                                timeout=10 * 60 * 5,
-                                chunk_size=2097152) as dav:
-                for file in download.files:
-                    if file.is_metadata or not file.selected:
-                        continue
+        async with DavClient(hostname=self.webdav_hostname,
+                            login=self.webdav_username,
+                            password=self.webdav_password,
+                            timeout=10 * 60 * 5,
+                            chunk_size=2097152) as dav:
+            for file in download.files:
+                if file.is_metadata or not file.selected:
+                    continue
                     
-                    async with aiofiles.open(file.path, 'rb') as f:
-                        await self.upload_file(dav, f, file.length)
-                    os.unlink(file.path) # Delete file                   
-
-                self._set_state(TaskState.SUCCESSFULL)                
-        except CancelledError:
-            self._set_state(TaskState.CANCELED, f"Task cancelled")
-        except Exception as e:
-            self._set_state(
-                TaskState.ERROR,
-                f"{emoji.CROSS_MARK} Error: {traceback.format_exc()}")
+                async with aiofiles.open(file.path, 'rb') as f:
+                    await self.upload_file(dav, f, file.length)
+                os.unlink(file.path) # Delete file
 
         return None

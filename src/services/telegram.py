@@ -57,33 +57,24 @@ class TelegramService(Service):
                              password=self.webdav_password,
                              timeout=10 * 60 * 5,
                              chunk_size=2097152) as dav:
-            try:
-                async def gen():
-                    async for chunk, _, _ in self.file_message.iter_download():
-                        yield chunk
+            async def gen():
+                async for chunk, _, _ in self.file_message.iter_download():
+                    yield chunk
 
-                if self.use_streaming:
-                    func = (
-                        self.streaming
-                        if self.split_size <= 0
-                        else self.streaming_by_pieces
-                    )
-                else:
-                    func = self.copy
-
-                await func(
-                    dav,
-                    filename,
-                    total_bytes,
-                    gen(),
+            if self.use_streaming:
+                func = (
+                    self.streaming
+                    if self.split_size <= 0
+                    else self.streaming_by_pieces
                 )
+            else:
+                func = self.copy
 
-                self._set_state(TaskState.SUCCESSFULL)
-            except CancelledError:
-                self._set_state(TaskState.CANCELED, f"Task cancelled")
-            except Exception as e:
-                self._set_state(
-                    TaskState.ERROR,
-                    f"{emoji.CROSS_MARK} Error: {traceback.format_exc()}")
+            await func(
+                dav,
+                filename,
+                total_bytes,
+                gen(),
+            )
 
         return None

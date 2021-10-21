@@ -12,16 +12,39 @@ from module import Module
 class SettingsModule(Module):
     COMMAND_NAME = "settings"
     # Text, Description, Regex, Field name, Converter
-    # yapf: disable
     MENU = {
-        f"{emoji.GLOBE_WITH_MERIDIANS} Server": ("Write the hostname", r"https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)", 'server', None),
-        f"{emoji.BUST_IN_SILHOUETTE} Username": ("Write the username", r"\S+", 'user', None),
-        f"{emoji.KEY} Password": ("Write the password", r".+", 'password', None),
-        f"{emoji.STRAIGHT_RULER} Split Size": ("Write the split size (max file size for split (Default: 100MB))", r"\d+", 'split_size', lambda x: int(x)),
-        f"Upload Path": ("Write the upload files path", r"[\S/]+", "upload_path", None),
-        f"{emoji.UPWARDS_BUTTON} Streaming": ("Turn on for stream directly from service to webdav", r"(on|off)", "streaming", None),
+        f"{emoji.GLOBE_WITH_MERIDIANS} Server": (
+            "Write the hostname",
+            r"https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)",
+            "server",
+            None,
+        ),
+        f"{emoji.BUST_IN_SILHOUETTE} Username": (
+            "Write the username",
+            r"\S+",
+            "user",
+            None,
+        ),
+        f"{emoji.KEY} Password": ("Write the password", r".+", "password", None),
+        f"{emoji.STRAIGHT_RULER} Split Size": (
+            "Write the split size (max file size for split (Default: 100MB))",
+            r"\d+",
+            "split_size",
+            lambda x: int(x),
+        ),
+        f"{emoji.FLOPPY_DISK} Upload Path": (
+            "Write the upload files path",
+            r"[\S\/]+",
+            "upload_path",
+            None,
+        ),
+        f"{emoji.UPWARDS_BUTTON} Streaming": (
+            "Turn on for stream directly from service to webdav",
+            r"(on|off|true|false)",
+            "streaming",
+            None,
+        ),
     }
-    # yapf: enable
 
     def __init__(self, context: UserContext, database: Database) -> None:
         super().__init__(context, database)

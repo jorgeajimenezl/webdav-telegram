@@ -57,13 +57,8 @@ app = PyrogramClient(
     workers=5,
 )
 
-# Register all modules callbacks
-settings_module.register_app(app)
-file_module.register_app(app)
-webdav_moduele.register_app(app)
 
-
-@app.on_message(filters.command("start") & filters.private, group=-1)
+@app.on_message(filters.command("start") & filters.private)
 async def start(_, message: Message):
     user = message.from_user.id
     context.update(user, CONTEXT["INITIALIZE"])
@@ -80,6 +75,12 @@ async def start(_, message: Message):
         context.update(user, CONTEXT["IDLE"])
     else:
         await app.send_message(user, "You are already logged")
+
+
+# Register all modules callbacks
+settings_module.register_app(app)
+file_module.register_app(app)
+webdav_moduele.register_app(app)
 
 
 async def main():
