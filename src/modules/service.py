@@ -4,6 +4,7 @@ import utils
 import os
 import aiofiles.tempfile
 
+from datetime import datetime as dt
 from pyrogram.types import Message
 from async_executor.task import Task, TaskState
 from aiodav.client import Client as DavClient
@@ -172,7 +173,11 @@ class Service(Task):
         split_size = self.split_size if self.split_size > 0 else file_size
         pieces = self.get_pieces_count(file_size)
 
-        filename = filename or os.path.basename(file.name)
+        filename = (
+            filename
+            or os.path.basename(file.name)
+            or f"file-{str(dt.now()).replace(' ', '-')}"
+        )
         name = utils.sanitaze_filename(filename)
         title = title or name
         remote_path = os.path.join(self.webdav_path, name)

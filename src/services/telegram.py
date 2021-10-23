@@ -46,7 +46,7 @@ class TelegramService(Service):
         else:
             media = message
 
-        return (getattr(media, "file_name", "unknown"), getattr(media, "file_size", None))
+        return (getattr(media, "file_name", None), getattr(media, "file_size", None))
 
     async def start(self) -> None:
         self._set_state(TaskState.STARTING)
