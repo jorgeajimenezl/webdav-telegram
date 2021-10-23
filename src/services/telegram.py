@@ -2,6 +2,7 @@ import traceback
 from asyncio.exceptions import CancelledError
 from typing import Tuple
 
+from datetime import datetime as dt
 from aiodav.client import Client as DavClient
 from async_executor.task import TaskState
 from modules.service import Service
@@ -46,7 +47,7 @@ class TelegramService(Service):
         else:
             media = message
 
-        return (getattr(media, "file_name", None), getattr(media, "file_size", None))
+        return (getattr(media, "file_name", f"file-{str(dt.now()).replace(' ', '-')}"), getattr(media, "file_size", None))
 
     async def start(self) -> None:
         self._set_state(TaskState.STARTING)
