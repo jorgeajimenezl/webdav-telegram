@@ -47,11 +47,14 @@ class TelegramService(Service):
         else:
             media = message
 
-        return (getattr(media, "file_name", f"file-{str(dt.now()).replace(' ', '-')}"), getattr(media, "file_size", None))
+        return (getattr(media, "file_name", None), getattr(media, "file_size", None))
 
     async def start(self) -> None:
         self._set_state(TaskState.STARTING)
         filename, total_bytes = TelegramService.__get_file_name(self.file_message)
+
+        if filename is None:
+            filename = f"file-{str(dt.now()).replace(' ', '-')}"
 
         async with DavClient(hostname=self.webdav_hostname,
                              login=self.webdav_username,
