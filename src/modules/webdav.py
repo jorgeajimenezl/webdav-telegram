@@ -120,6 +120,7 @@ class WebdavModule(Module):
             pyrogram=app,
             split_size=int(data["split_size"]),
             streaming=utils.get_bool(data["streaming"]),
+            parallel=utils.get_bool(data["upload_parallel"]),
             hostname=data["server"],
             username=data["user"],
             password=data["password"],

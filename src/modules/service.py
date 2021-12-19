@@ -23,12 +23,13 @@ class Service(Task):
         self.pyrogram = kwargs.get("pyrogram", file_message._client)
         self.split_size = kwargs.get("split_size", 100) * 1024 * 1024  # Bytes
         self.use_streaming = kwargs.get("streaming", False)
+        self.parallel = kwargs.get("parallel", False)
 
         self.webdav_hostname = kwargs.get("hostname")
         self.webdav_username = kwargs.get("username")
         self.webdav_password = kwargs.get("password")
         self.webdav_path = kwargs.get("path")
-        self.timeout = kwargs.get('timeout', 60 * 60 * 2)
+        self.timeout = kwargs.get("timeout", 60 * 60 * 2)
 
         super().__init__(id, *args, **kwargs)
 
@@ -47,6 +48,59 @@ class Service(Task):
 
         return pieces
 
+    def upload(self, *args, **kwargs):
+        if self.parallel:
+            func = self.copy if self.split_size <= 0 else self.streaming 
+        if self.use_streaming:
+            func = self.streaming if self.split_size <= 0 else self.streaming_by_pieces
+        else:
+            func = self.copy
+        return func(*args, **kwargs)
+
+    async def upload_parallel(
+        self,
+        dav: DavClient,
+        filename: str,
+        file_size: int,
+        generator: AsyncGenerator[bytes, None],
+    ):
+        async with aiofiles.tempfile.TemporaryDirectory() as directory:
+            k = 1
+            offset = 0
+            files = [os.path.join(directory, f"{k}")]
+            file = open(files[-1], "wb")
+
+            self._set_state(
+                TaskState.WORKING, description=f"{emoji.HOURGLASS_DONE} Downloading"
+            )
+            async for chunk in generator:
+                offset += len(chunk)
+                self._make_progress(offset, file_size)
+
+                file.write(chunk)
+
+                # reach size limit
+                length = file.tell()
+                if length >= self.split_size:
+                    file.close()
+
+                    # Change to the next file
+                    files.append(os.path.join(directory, f"{k}"))
+                    file = open(files[-1], "wb")
+
+            async def get_file(path):
+                async with aiofiles.open(path, "rb") as f:
+                    length = os.stat(path).st_size
+                    await self.upload_file(
+                        dav, f, length, filename=f"{filename}.{k:0=3}"
+                    )
+                try:
+                    os.unlink(path)
+                except Exception:
+                    pass
+
+            await asyncio.gather([get_file(x) for x in files])
+
     async def copy(
         self,
         dav: DavClient,
@@ -54,6 +108,8 @@ class Service(Task):
         file_size: int,
         generator: AsyncGenerator[bytes, None],
     ) -> None:
+        """Download the whole file before to send it to the webdav server"""
+
         async with aiofiles.tempfile.TemporaryFile() as file:
             self._set_state(
                 TaskState.WORKING,
@@ -82,6 +138,8 @@ class Service(Task):
         file_size: int,
         generator: AsyncGenerator[bytes, None],
     ) -> None:
+        """Stream from the generator to webdav server"""
+
         name = utils.sanitaze_filename(filename)
         remote_path = os.path.join(self.webdav_path, name)
         self._set_state(
@@ -106,6 +164,7 @@ class Service(Task):
         file_size: int,
         generator: AsyncGenerator[bytes, None],
     ) -> None:
+        """Download a small piece with specified size and upload it"""
         async with aiofiles.tempfile.TemporaryFile() as file:
             k = 1
             offset = 0

@@ -64,17 +64,7 @@ class TelegramService(Service):
             async def gen():
                 async for chunk, _, _ in self.file_message.iter_download():
                     yield chunk
-
-            if self.use_streaming:
-                func = (
-                    self.streaming
-                    if self.split_size <= 0
-                    else self.streaming_by_pieces
-                )
-            else:
-                func = self.copy
-
-            await func(
+            await self.upload(
                 dav,
                 filename,
                 total_bytes,

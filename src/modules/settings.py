@@ -44,6 +44,12 @@ class SettingsModule(Module):
             "streaming",
             None,
         ),
+        f"{emoji.UPWARDS_BUTTON} Parallel": (
+            "Turn on for upload parallely the pieces splied from the file",
+            r"(on|off|true|false)",
+            "upload_parallel",
+            None,
+        ),
     }
 
     def __init__(self, context: UserContext, database: Database) -> None:

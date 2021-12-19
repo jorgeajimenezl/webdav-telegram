@@ -68,16 +68,7 @@ class HttpService(Service):
                         filename = os.path.basename(url)
 
                     gen = response.content.iter_chunked(2097152)
-                    if self.use_streaming:
-                        func = (
-                            self.streaming
-                            if self.split_size <= 0
-                            else self.streaming_by_pieces
-                        )
-                    else:
-                        func = self.copy
-
-                    await func(
+                    await self.upload(
                         dav,
                         filename,
                         response.content_length,
