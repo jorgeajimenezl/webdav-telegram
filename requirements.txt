@@ -1,9 +1,10 @@
 -e git+git://github.com/jorgeajimenezl/pyrogram@iterable-download#egg=pyrogram
+-e git+git://github.com/jorgeajimenezl/aiodav@develop#egg=aiodav
+# aiodav
 tgcrypto
 pyyaml
 aiohttp
 redis
-aiodav
 aiofiles
 uvloop
 apscheduler
