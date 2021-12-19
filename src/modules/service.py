@@ -28,6 +28,7 @@ class Service(Task):
         self.webdav_username = kwargs.get("username")
         self.webdav_password = kwargs.get("password")
         self.webdav_path = kwargs.get("path")
+        self.timeout = kwargs.get('timeout', 60 * 60 * 2)
 
         super().__init__(id, *args, **kwargs)
 

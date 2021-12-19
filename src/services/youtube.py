@@ -107,7 +107,7 @@ class YoutubeService(Service):
             async with DavClient(hostname=self.webdav_hostname,
                                 login=self.webdav_username,
                                 password=self.webdav_password,
-                                timeout=10 * 60 * 5,
+                                timeout=self.timeout,
                                 chunk_size=2097152) as dav:
                 async with aiofiles.open(filename, 'rb') as file:
                     await self.upload_file(dav, file, os.stat(filename).st_size, title=meta['title'])

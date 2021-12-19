@@ -96,7 +96,7 @@ class TorrentService(Service):
         async with DavClient(hostname=self.webdav_hostname,
                             login=self.webdav_username,
                             password=self.webdav_password,
-                            timeout=10 * 60 * 5,
+                            timeout=self.timeout,
                             chunk_size=2097152) as dav:
             for file in download.files:
                 if file.is_metadata or not file.selected:

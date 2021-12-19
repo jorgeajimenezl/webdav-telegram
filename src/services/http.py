@@ -49,7 +49,7 @@ class HttpService(Service):
             hostname=self.webdav_hostname,
             login=self.webdav_username,
             password=self.webdav_password,
-            timeout=10 * 60 * 5,
+            timeout=self.timeout,
             chunk_size=2097152,
         ) as dav:
             async with aiohttp.ClientSession() as session:

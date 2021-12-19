@@ -59,7 +59,7 @@ class TelegramService(Service):
         async with DavClient(hostname=self.webdav_hostname,
                              login=self.webdav_username,
                              password=self.webdav_password,
-                             timeout=10 * 60 * 5,
+                             timeout=self.timeout,
                              chunk_size=2097152) as dav:
             async def gen():
                 async for chunk, _, _ in self.file_message.iter_download():
