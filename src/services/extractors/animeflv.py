@@ -45,6 +45,8 @@ class AnimeFLVExtractor(Extractor):
 
         page = BeautifulSoup(response.text, "lxml")
         table = page.find("table", attrs={"class": "RTbl"})
+        if table is None:
+            raise Exception("Unable to get video servers information")
 
         data = AnimeFLVExtractor.parse_table(table)
         for d in data:
