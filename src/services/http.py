@@ -24,7 +24,7 @@ class HttpService(Service):
 
     EXTRACTORS: List[Extractor] = [
         AnimeFLVExtractor,
-        ZippyshareExtractor,
+        # ZippyshareExtractor,
         MediafireExtractor,
     ]
 
