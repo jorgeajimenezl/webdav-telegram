@@ -39,13 +39,19 @@ class SettingsModule(Module):
             None,
         ),
         f"{emoji.UPWARDS_BUTTON} Streaming": (
-            "Turn on for stream directly from service to webdav",
+            "Turn on for stream directly from service to webdav (Default: False)",
             r"(on|off|true|false)",
             "streaming",
             None,
         ),
+        f"{emoji.HAMBURGER} Libcurl": (
+            "Use curl instead default python requests library (Default: False). **WARNING: This option don't support streaming or parallel downloads, are mutually exclued**",
+            r"(on|off|true|false)",
+            "use_libcurl",
+            None,
+        ),
         f"{emoji.UPWARDS_BUTTON} Parallel": (
-            "Turn on for upload parallely the pieces splied from the file",
+            "Turn on for upload parallely the pieces splied from the file (Default: False)",
             r"(on|off|true|false)",
             "upload_parallel",
             None,

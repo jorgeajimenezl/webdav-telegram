@@ -3,7 +3,7 @@ import os
 import re
 import traceback
 import aiofiles
-import youtube_dl
+import yt_dlp
 import functools
 from asyncio.exceptions import CancelledError
 
@@ -39,14 +39,14 @@ class YoutubeService(Service):
         if not bool(m.text):
             return False
 
-        extractors = youtube_dl.extractor.gen_extractors()
+        extractors = yt_dlp.extractor.gen_extractors()
         for e in extractors:
             if e.suitable(m.text) and e.IE_NAME != 'generic':
                 return True
         return False
         
     async def options(self) -> str:
-        with youtube_dl.YoutubeDL({'quiet': True}) as ydl:
+        with yt_dlp.YoutubeDL({'quiet': True}) as ydl:
             loop = asyncio.get_running_loop()
 
             meta = await loop.run_in_executor(None, 
@@ -90,7 +90,7 @@ class YoutubeService(Service):
                 'progress_hooks': [progress_wrapper]
             }
             
-            with youtube_dl.YoutubeDL(options) as ydl:  
+            with yt_dlp.YoutubeDL(options) as ydl:  
                 self._set_state(TaskState.WORKING, description=f"{emoji.HOURGLASS_DONE} Downloading video")
                 self.reset_stats()
 

@@ -14,5 +14,5 @@ beautifulsoup4
 
 # Optional
 aria2p
-youtube-dl
+yt-dlp
 cloudscraper
