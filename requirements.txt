@@ -1,6 +1,5 @@
 pyrogram
--e git+git://github.com/jorgeajimenezl/aiodav@develop#egg=aiodav
-# aiodav
+aiodav
 tgcrypto
 pyyaml
 aiohttp
