@@ -64,14 +64,14 @@ class WebdavModule(Module):
         if state == TaskState.ERROR or state == TaskState.CANCELED:
             for piece in utils.cut(description, 4096):
                 await self.app.send_message(
-                    user, piece, reply_to_message_id=task.file_message.message_id
+                    user, piece, reply_to_message_id=task.file_message.id
                 )
 
         if state == TaskState.SUCCESSFULL:
             await self.app.send_message(
                 user,
                 f"{emoji.CHECK_MARK_BUTTON} Successfull",
-                reply_to_message_id=task.file_message.message_id,
+                reply_to_message_id=task.file_message.id,
             )
 
         async with self.tasks_lock:
