@@ -1,4 +1,4 @@
--e git+git://github.com/jorgeajimenezl/pyrogram@iterable-download#egg=pyrogram
+pyrogram
 -e git+git://github.com/jorgeajimenezl/aiodav@develop#egg=aiodav
 # aiodav
 tgcrypto

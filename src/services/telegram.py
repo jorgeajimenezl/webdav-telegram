@@ -62,7 +62,7 @@ class TelegramService(Service):
                              timeout=self.timeout,
                              chunk_size=2097152) as dav:
             async def gen():
-                async for chunk, _, _ in self.file_message.iter_download():
+                async for chunk in self.pyrogram.stream_media(self.file_message):
                     yield chunk
             await self.upload(
                 dav,
