@@ -104,7 +104,7 @@ class TaskExecutor(object):
                 if inspect.iscoroutinefunction(on_end_callback):
                     asyncio.create_task(on_end_callback(task))
                 else:
-                    on_end_callback()
+                    on_end_callback(task)
                 return task
 
             def at_end(f: Future[Tuple[int, Task]]):
@@ -120,7 +120,7 @@ class TaskExecutor(object):
                     if inspect.iscoroutinefunction(on_end_callback):
                         asyncio.create_task(on_end_callback(task))
                     else:
-                        on_end_callback()
+                        on_end_callback(task)
 
             future.add_done_callback(at_end)
 
