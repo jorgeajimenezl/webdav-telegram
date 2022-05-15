@@ -88,12 +88,14 @@ async def main():
         scheduler.start()
 
         # Set Bot Commands
-        await app.set_bot_commands([
-            BotCommand("start", f"{emoji.ROBOT} Start the bot"),
-            BotCommand("settings", f"{emoji.GEAR} Bot settings"),
-            BotCommand("list", f"{emoji.OPEN_FILE_FOLDER} List cloud entries"),
-            BotCommand("free", f"{emoji.BAR_CHART} Free space on cloud"),
-        ])
+        await app.set_bot_commands(
+            [
+                BotCommand("start", f"{emoji.ROBOT} Start the bot"),
+                BotCommand("settings", f"{emoji.GEAR} Bot settings"),
+                BotCommand("list", f"{emoji.OPEN_FILE_FOLDER} List cloud entries"),
+                BotCommand("free", f"{emoji.BAR_CHART} Free space on cloud"),
+            ]
+        )
         await idle()
 
 

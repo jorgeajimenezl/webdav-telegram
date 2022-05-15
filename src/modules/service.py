@@ -50,7 +50,7 @@ class Service(Task):
 
     def upload(self, *args, **kwargs):
         if self.parallel:
-            func = self.copy if self.split_size <= 0 else self.streaming 
+            func = self.copy if self.split_size <= 0 else self.streaming
         if self.use_streaming:
             func = self.streaming if self.split_size <= 0 else self.streaming_by_pieces
         else:
