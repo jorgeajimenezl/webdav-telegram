@@ -154,7 +154,7 @@ class FileModule(Module):
             except Exception:
                 await app.send_message(user, "Unable to get free space")
 
-    def register_app(self, app: Client):
+    def register(self, app: Client):
         handlers = [
             MessageHandler(self._list, filters.command("list") & filters.private),
             MessageHandler(self.free, filters.command("free") & filters.private),

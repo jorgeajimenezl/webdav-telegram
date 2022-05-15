@@ -9,5 +9,8 @@ class Module(object):
         self.context = context
         self.database = database
 
-    def register_app(self, app: Client):
+    def register(self, app: Client):
+        raise NotImplementedError
+
+    def unregister(self, app: Client):
         raise NotImplementedError
