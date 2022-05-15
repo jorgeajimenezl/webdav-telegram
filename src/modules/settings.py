@@ -1,67 +1,116 @@
 import re
+from typing import Callable, Coroutine, Dict
 
 from pyrogram import Client, emoji, filters
 from pyrogram.handlers import MessageHandler
-from pyrogram.types import Message, ReplyKeyboardMarkup, ReplyKeyboardRemove
+from pyrogram.types import (
+    Message,
+    InlineKeyboardMarkup,
+    CallbackQuery,
+    InlineKeyboardButton,
+)
+from button import ActionButton, ButtonFactory
 
 from context import CONTEXT, UserContext
 from database import Database
 from module import Module
+import utils
 
 
 class SettingsModule(Module):
     COMMAND_NAME = "settings"
     # Text, Description, Regex, Field name, Converter
     MENU = {
-        f"{emoji.GLOBE_WITH_MERIDIANS} Server": (
+        "server-uri": (
+            f"{emoji.GLOBE_WITH_MERIDIANS} Server",
             "Write the hostname",
             r"https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)",
-            "server",
-            None,
+            str,
         ),
-        f"{emoji.BUST_IN_SILHOUETTE} Username": (
+        "username": (
+            f"{emoji.BUST_IN_SILHOUETTE} Username",
             "Write the username",
             r"\S+",
-            "user",
-            None,
+            str,
         ),
-        f"{emoji.KEY} Password": ("Write the password", r".+", "password", None),
-        f"{emoji.STRAIGHT_RULER} Split Size": (
+        "password": (
+            f"{emoji.KEY} Password",
+            "Write the password",
+            r".+",
+            str,
+        ),
+        "split-size": (
+            f"{emoji.STRAIGHT_RULER} Split Size",
             "Write the split size (max file size for split (Default: 100MB))",
             r"\d+",
-            "split_size",
-            lambda x: int(x),
+            int,
         ),
-        f"{emoji.FLOPPY_DISK} Upload Path": (
+        "upload-path": (
+            f"{emoji.FLOPPY_DISK} Upload Path",
             "Write the upload files path",
             r"[\S\/]+",
-            "upload_path",
-            None,
+            str,
         ),
-        f"{emoji.UPWARDS_BUTTON} Streaming": (
+        "streaming": (
+            f"{emoji.UPWARDS_BUTTON} Streaming",
             "Turn on for stream directly from service to webdav (Default: False)",
             r"(on|off|true|false)",
-            "streaming",
-            None,
+            bool,
         ),
-        f"{emoji.HAMBURGER} Libcurl": (
+        "use-libcurl": (
+            f"{emoji.HAMBURGER} Libcurl",
             "Use curl instead default python requests library (Default: False). **WARNING: This option don't support streaming or parallel downloads, are mutually exclued**",
             r"(on|off|true|false)",
-            "use_libcurl",
-            None,
+            bool,
         ),
-        f"{emoji.UPWARDS_BUTTON} Parallel": (
+        "upload-parallel": (
+            f"{emoji.UPWARDS_BUTTON} Parallel",
             "Turn on for upload parallely the pieces splied from the file (Default: False)",
             r"(on|off|true|false)",
-            "upload_parallel",
-            None,
+            bool,
         ),
     }
 
     def __init__(self, context: UserContext, database: Database) -> None:
         super().__init__(context, database)
+        self.factory = ButtonFactory()
+        self.buttons: Dict[str, ActionButton] = dict()
+        self.close_action = self.factory.create_action("close-action")
+        self.handlers = []
 
-    async def _settings(self, app: Client, message: Message):
+    def _get_button(self, user: int, id: str) -> InlineKeyboardButton:
+        name, _, _, cls = SettingsModule.MENU[id]
+
+        if issubclass(cls, bool):
+            data = self.database.get_data(user)
+            v = utils.get_bool(data[id])
+            return self.buttons[id].button(
+                f"[{emoji.CHECK_MARK_BUTTON if v else emoji.CROSS_MARK}] {name}"
+            )
+        return self.buttons[id].button(name)
+
+    def _get_keyboard(self, user: int):
+        return InlineKeyboardMarkup(
+            [
+                [self._get_button(user, "server-uri")],
+                [
+                    self._get_button(user, "username"),
+                    self._get_button(user, "password"),
+                ],
+                [
+                    self._get_button(user, "split-size"),
+                    self._get_button(user, "upload-path"),
+                ],
+                [
+                    self._get_button(user, "streaming"),
+                    self._get_button(user, "use-libcurl"),
+                ],
+                [self._get_button(user, "upload-parallel")],
+                [self.close_action.button(f"{emoji.LEFT_ARROW} Close")],
+            ]
+        )
+
+    async def settings(self, app: Client, message: Message):
         user = message.from_user.id
 
         if not self.database.contains_user(user):
@@ -69,76 +118,71 @@ class SettingsModule(Module):
             return
 
         self.context.update(user, CONTEXT["SETTINGS"])
-        await app.send_message(
+        return await app.send_message(
             user,
-            "Select action:",
-            reply_markup=ReplyKeyboardMarkup(
-                [[name] for name in SettingsModule.MENU.keys()] + [["Back"]]
-            ),
+            "Settings:",
+            reply_markup=self._get_keyboard(user),
         )
 
-    async def _setting_menu(self, app: Client, message: Message):
+    async def settings_handler_menu(self, app: Client, message: Message):
         user = message.from_user.id
-
-        if message.text.lower() == "back":
-            self.context.update(user, CONTEXT["IDLE"])
-            await app.send_message(user, "Home", reply_markup=ReplyKeyboardRemove())
-            return
-
-        if not message.text in SettingsModule.MENU:
-            await app.send_message(user, "Unknow option. Select **valid** action")
-            return
-
-        description, *_ = SettingsModule.MENU[message.text]
-        self.context.update(user, CONTEXT[message.text])
-
-        await app.send_message(
-            user,
-            f"{description}",
-            reply_markup=ReplyKeyboardRemove(),
-            disable_web_page_preview=True,
-        )
-
-    async def _setting_handler_menu(self, app: Client, message: Message):
-        user = message.from_user.id
-
-        context = self.context.resolve(user)
-        id = self.ids[context]
-        _, pattern, field, converter = SettingsModule.MENU[id]
+        id = self.database.get_data(user)["settings_context"]
+        text, _, pattern, converter = SettingsModule.MENU[id]
 
         if re.fullmatch(pattern, message.text):
-            payload = {field: converter(message.text) if converter else message.text}
+            payload = {id: converter(message.text) if converter else message.text}
             self.database.set_data(user, **payload)
             await app.send_message(
-                user, f"{emoji.CHECK_MARK_BUTTON} {id} successfull updated"
+                user, f"{emoji.CHECK_MARK_BUTTON} {text} successfull updated"
             )
         else:
             await app.send_message(user, f"{emoji.CROSS_MARK} Invalid value")
 
-        await self._settings(app, message)
+        await self.settings(app, message)
 
-    def register_app(self, app: Client):
-        l = len(CONTEXT)
+    async def settings_menu(self, app: Client, callback_query: CallbackQuery):
+        user = callback_query.from_user.id
 
-        self.ids = {}
-        for i, x in enumerate(SettingsModule.MENU.keys()):
-            CONTEXT[x] = 1 << (l + i)
-            self.ids[1 << (l + i)] = x
+        id = self.factory.get_value(callback_query.data)
+        _, description, _, cls = SettingsModule.MENU[id]
 
-        mask = ((1 << len(SettingsModule.MENU)) - 1) << l
+        if not issubclass(cls, bool):
+            self.database.set_data(user, settings_context=id)
+            self.context.update(user, CONTEXT["SETTINGS_EDIT"])
 
+            await callback_query.message.delete(True)
+            await app.send_message(
+                user,
+                f"{description}",
+                disable_web_page_preview=True,
+            )
+        else:
+            data = self.database.get_data(user)
+            v = utils.get_bool(data[id])
+            payload = {id: str((not v))}
+            self.database.set_data(user, **payload)
+
+            await callback_query.edit_message_reply_markup(self._get_keyboard(user))
+            await callback_query.answer(f"Set value to {not v}")
+
+    async def close(self, app: Client, callback_query: CallbackQuery):
+        user = callback_query.from_user.id
+        self.context.update(user, CONTEXT["IDLE"])
+        await callback_query.message.delete(True)
+
+    def register(self, app: Client):
         handlers = [
+            MessageHandler(self.settings, filters.command(SettingsModule.COMMAND_NAME)),
             MessageHandler(
-                self._settings, filters.command(SettingsModule.COMMAND_NAME)
+                self.settings_handler_menu,
+                filters.text & self.context.filter(CONTEXT["SETTINGS_EDIT"]),
             ),
-            MessageHandler(
-                self._setting_menu,
-                filters.text & self.context.filter(CONTEXT["SETTINGS"]),
-            ),
-            MessageHandler(
-                self._setting_handler_menu, filters.text & self.context.filter(mask)
-            ),
+            self.close_action.callback_handler(self.close),
         ]
+
+        for k in SettingsModule.MENU.keys():
+            self.buttons[k] = self.factory.create_action(k)
+            handlers.append(self.buttons[k].callback_handler(self.settings_menu))
 
         for u in handlers:
             app.add_handler(u)

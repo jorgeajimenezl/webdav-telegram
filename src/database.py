@@ -18,14 +18,14 @@ class Database(object):
     def add_user(self, id: int, force=False):
         if not self.contains_user(id) or force:
             data = {
-                "server": "",
-                "user": "",
+                "server-uri": "",
+                "username": "",
                 "password": "",
-                "cwd": "/",
-                "split_size": 100,
-                "upload_path": "/",
-                "upload_parallel": "off",
-                "streaming": "off",
+                "split-size": 100,
+                "upload-path": "/",
+                "upload-parallel": "false",
+                "streaming": "false",
+                "use-libcurl": "false"
             }
 
             self.set_data(id, **data)

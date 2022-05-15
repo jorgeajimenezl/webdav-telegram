@@ -118,13 +118,13 @@ class WebdavModule(Module):
             user=user,
             file_message=message,
             pyrogram=app,
-            split_size=int(data["split_size"]),
+            split_size=int(data["split-size"]),
             streaming=utils.get_bool(data["streaming"]),
-            parallel=utils.get_bool(data["upload_parallel"]),
-            hostname=data["server"],
-            username=data["user"],
+            parallel=utils.get_bool(data["upload-parallel"]),
+            hostname=data["server-uri"],
+            username=data["username"],
             password=data["password"],
-            path=data["upload_path"],
+            path=data["upload-path"],
         )
 
         if task == None:
@@ -188,7 +188,7 @@ class WebdavModule(Module):
                         ),
                     )
 
-    def register_app(self, app: Client):
+    def register(self, app: Client):
         self.app = app
 
         # Add to scheduler updater function

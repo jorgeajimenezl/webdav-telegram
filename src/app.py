@@ -67,7 +67,7 @@ async def start(_, message: Message):
         database.add_user(user)
         name = message.from_user.first_name or message.from_user.username
 
-        await app.send_message(user, f"Welcome **{name}**.", parse_mode="markdown")
+        await app.send_message(user, f"Welcome **{name}**.")
         await app.send_message(
             user, f"To start to use put your configuration in /settings"
         )
@@ -78,9 +78,9 @@ async def start(_, message: Message):
 
 
 # Register all modules callbacks
-settings_module.register_app(app)
-file_module.register_app(app)
-webdav_moduele.register_app(app)
+settings_module.register(app)
+file_module.register(app)
+webdav_moduele.register(app)
 
 
 async def main():

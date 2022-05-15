@@ -12,6 +12,7 @@ CONTEXT_NAMES = [
     "IDLE",
     "UPLOAD_FILE",
     "UPLOAD_URL",
+    "SETTINGS_EDIT",
 ]
 
 CONTEXT = {v: 1 << k for k, v in enumerate(CONTEXT_NAMES)}
