@@ -133,9 +133,9 @@ class FileModule(Module):
                 await app.send_message(
                     user, f"Resource **{path}** isn't longer available"
                 )
-            except Exception:
+            except Exception as e:
                 await app.send_message(
-                    user, f"Unexpected error while delete **{path}**"
+                    user, f"Unexpected error while delete **{path}**: {e}"
                 )
 
     async def free(self, app: Client, message: Message):
@@ -151,8 +151,8 @@ class FileModule(Module):
                     user,
                     f"{emoji.BAR_CHART} Free: **{naturalsize(n, binary=True, format='%.3f')}**",
                 )
-            except Exception:
-                await app.send_message(user, "Unable to get free space")
+            except Exception as e:
+                await app.send_message(user, f"Unable to get free space: {e}")
 
     def register(self, app: Client):
         handlers = [
