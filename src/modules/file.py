@@ -38,10 +38,10 @@ class FileModule(Module):
     async def list(self, user: int, app: Client, message: Message = None):
         data = self.database.get_data(user)
         cwd = "/"
-        ret = urlparse(data["server"])
+        ret = urlparse(data["server-uri"])
 
         async with DavClient(
-            hostname=data["server"], login=data["user"], password=data["password"]
+            hostname=data["server-uri"], login=data["username"], password=data["password"]
         ) as dav:
             try:
 
@@ -120,7 +120,7 @@ class FileModule(Module):
         data = self.database.get_data(user)
 
         async with DavClient(
-            hostname=data["server"], login=data["user"], password=data["password"]
+            hostname=data["server-uri"], login=data["username"], password=data["password"]
         ) as dav:
             try:
                 await dav.unlink(path)
@@ -143,7 +143,7 @@ class FileModule(Module):
         data = self.database.get_data(user)
 
         async with DavClient(
-            hostname=data["server"], login=data["user"], password=data["password"]
+            hostname=data["server-uri"], login=data["username"], password=data["password"]
         ) as dav:
             try:
                 n = await dav.free()
