@@ -7,7 +7,7 @@ from urllib.parse import urlparse
 from aiodav.client import Client as DavClient
 from aiodav.exceptions import RemoteResourceNotFound
 from pyrogram import Client, emoji, filters
-from pyrogram.handlers import CallbackQueryHandler, MessageHandler
+from pyrogram.handlers import MessageHandler
 from pyrogram.types import (
     CallbackQuery,
     InlineKeyboardButton,
@@ -31,17 +31,15 @@ class FileModule(Module):
         # Groups
         self.delete_group = self.factory.create_group("delete")
 
-    async def _list(self, app: Client, event: Message):
-        # TODO: Fix this async bug
-        asyncio.create_task(self.list(event.from_user.id, app))
-
     async def list(self, user: int, app: Client, message: Message = None):
         data = self.database.get_data(user)
         cwd = "/"
         ret = urlparse(data["server-uri"])
 
         async with DavClient(
-            hostname=data["server-uri"], login=data["username"], password=data["password"]
+            hostname=data["server-uri"],
+            login=data["username"],
+            password=data["password"],
         ) as dav:
             try:
 
@@ -111,7 +109,7 @@ class FileModule(Module):
                 # print("Error: " + str(e))
                 await app.send_message(user, f"Error getting file list: {e}")
 
-    async def _delete_file(self, app: Client, callback_query: CallbackQuery):
+    async def delete_file(self, app: Client, callback_query: CallbackQuery):
         user = callback_query.from_user.id
         path = self.factory.get_value(callback_query.data)
         assert isinstance(path, str)
@@ -120,7 +118,9 @@ class FileModule(Module):
         data = self.database.get_data(user)
 
         async with DavClient(
-            hostname=data["server-uri"], login=data["username"], password=data["password"]
+            hostname=data["server-uri"],
+            login=data["username"],
+            password=data["password"],
         ) as dav:
             try:
                 await dav.unlink(path)
@@ -143,7 +143,9 @@ class FileModule(Module):
         data = self.database.get_data(user)
 
         async with DavClient(
-            hostname=data["server-uri"], login=data["username"], password=data["password"]
+            hostname=data["server-uri"],
+            login=data["username"],
+            password=data["password"],
         ) as dav:
             try:
                 n = await dav.free()
@@ -156,9 +158,13 @@ class FileModule(Module):
 
     def register(self, app: Client):
         handlers = [
-            MessageHandler(self._list, filters.command("list") & filters.private),
+            MessageHandler(
+                # TODO: Fix this async bug
+                lambda _, e: asyncio.create_task(self.list(e.from_user.id, app)),
+                filters.command("list") & filters.private,
+            ),
             MessageHandler(self.free, filters.command("free") & filters.private),
-            self.delete_group.callback_handler(self._delete_file),
+            self.delete_group.callback_handler(self.delete_file),
         ]
 
         for u in handlers:

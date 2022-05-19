@@ -96,8 +96,8 @@ async def selection(
 
     next_button = factory.create_action("next")
     back_button = factory.create_action("back")
-    selectall_button = factory.create_action("select all")
-    unselectall_button = factory.create_action("unselect all")
+    selectall_button = factory.create_action("select-all")
+    unselectall_button = factory.create_action("unselect-all")
     done_button = factory.create_action("done")
     cancel_button = factory.create_action("cancel")
 
@@ -126,20 +126,22 @@ async def selection(
         a = ns.page * max_options_per_page
         b = min(len(options), (ns.page + 1) * max_options_per_page)
 
-        # yapf: disable
         extra = [
             [
-                selectall_button.button('Select all'),
-                unselectall_button.button('Unselect all')
+                selectall_button.button("Select all"),
+                unselectall_button.button("Unselect all"),
             ],
-            [done_button.button(f'{emoji.CHECK_MARK_BUTTON} DONE'), cancel_button.button(f'{emoji.CROSS_MARK_BUTTON} CANCEL')]
+            [
+                done_button.button(f"{emoji.CHECK_MARK_BUTTON} DONE"),
+                cancel_button.button(f"{emoji.CROSS_MARK_BUTTON} CANCEL"),
+            ],
         ]
         navigation = navigation_buttons()
         markup = InlineKeyboardMarkup(
-            [create_button(opt) for opt in items[a:b]] +
-            ([navigation] if len(navigation) > 0 else []) + (extra if multi_selection else [[cancel_button.button('Cancel')]])
+            [create_button(opt) for opt in items[a:b]]
+            + ([navigation] if len(navigation) > 0 else [])
+            + (extra if multi_selection else [[cancel_button.button("Cancel")]])
         )
-        # yapf: enable
 
         if callback_query == None:
             if message == None:

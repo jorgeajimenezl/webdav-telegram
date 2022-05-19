@@ -4,11 +4,10 @@ import utils
 from typing import List
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from pyrogram import Client, emoji, filters
-from pyrogram.handlers import CallbackQueryHandler, MessageHandler
+from pyrogram import Client, emoji
+from pyrogram.handlers import MessageHandler
 from pyrogram.types import (
     CallbackQuery,
-    InlineKeyboardButton,
     InlineKeyboardMarkup,
     Message,
 )
@@ -169,7 +168,16 @@ class WebdavModule(Module):
                     speed = task.speed()
                     eta = task.eta()
 
-                    text = f"{description} ({current_text} / {total_text})\nSpeed: {utils.get_str(naturalsize(speed, binary=True))}/sec\nETA: {utils.get_str(naturaldelta(eta))}"
+                    speed_text = (
+                        utils.get_str(naturalsize(speed, binary=True))
+                        if speed != None
+                        else "Unknown"
+                    )
+                    eta_text = (
+                        utils.get_str(naturaldelta(eta)) if eta != None else "Unknown"
+                    )
+
+                    text = f"{description} ({current_text} / {total_text})\nSpeed: {speed_text}/sec\nETA: {eta_text}"
                 else:
                     text = f"{description}"
 
