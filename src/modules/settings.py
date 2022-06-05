@@ -69,6 +69,18 @@ class SettingsModule(Module):
             r"(on|off|true|false)",
             bool,
         ),
+        "use-compression": (
+            f"{emoji.CARD_FILE_BOX} Compress",
+            "Turn on for compress all files with tar.zstd format (Default: False)",
+            r"(on|off|true|false)",
+            bool,
+        ),
+        "file-password": (
+            f"{emoji.KEYCAP_ASTERISK} File Password",
+            "Write the password to encrypt all files (Default: Empty)",
+            r".*",
+            str,
+        ),
     }
 
     def __init__(self, context: UserContext, database: Database) -> None:
@@ -92,20 +104,26 @@ class SettingsModule(Module):
     def _get_keyboard(self, user: int):
         return InlineKeyboardMarkup(
             [
-                [self._get_button(user, "server-uri")],
+                [
+                    self._get_button(user, "server-uri"),
+                    self._get_button(user, "upload-path"),
+                ],
                 [
                     self._get_button(user, "username"),
                     self._get_button(user, "password"),
                 ],
                 [
                     self._get_button(user, "split-size"),
-                    self._get_button(user, "upload-path"),
+                    self._get_button(user, "upload-parallel"),
                 ],
                 [
                     self._get_button(user, "streaming"),
                     self._get_button(user, "use-libcurl"),
                 ],
-                [self._get_button(user, "upload-parallel")],
+                [
+                    self._get_button(user, "use-compression"),
+                    self._get_button(user, "file-password"),
+                ],
                 [self.close_action.button(f"{emoji.LEFT_ARROW} Close")],
             ]
         )

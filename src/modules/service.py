@@ -1,10 +1,14 @@
 import asyncio
 import aiofiles
+from zstandard import ZstdCompressor
 import utils
 import os
-import aiofiles.tempfile
+
+# import aiofiles.tempfile
+import tempfile
 
 from pyrogram.types import Message
+from aiofiles.threadpool.binary import AsyncBufferedIOBase
 from async_executor.task import Task, TaskState
 from aiodav.client import Client as DavClient
 from pyrogram import emoji
@@ -30,6 +34,8 @@ class Service(Task):
         self.webdav_password = kwargs.get("password")
         self.webdav_path = kwargs.get("path")
         self.timeout = kwargs.get("timeout", 60 * 60 * 2)
+        if kwargs.get("compression", False):
+            self.compressor = ZstdCompressor()
 
         super().__init__(id, *args, **kwargs)
 
@@ -64,7 +70,7 @@ class Service(Task):
         file_size: int,
         generator: AsyncGenerator[bytes, None],
     ):
-        async with aiofiles.tempfile.TemporaryDirectory() as directory:
+        with tempfile.TemporaryDirectory() as directory:
             k = 1
             offset = 0
             files = [os.path.join(directory, f"{k}")]
@@ -110,7 +116,7 @@ class Service(Task):
     ) -> None:
         """Download the whole file before to send it to the webdav server"""
 
-        async with aiofiles.tempfile.TemporaryFile() as file:
+        with tempfile.TemporaryFile() as file:
             self._set_state(
                 TaskState.WORKING,
                 description=f"{emoji.HOURGLASS_DONE} Downloading to local filesystem",
@@ -121,9 +127,9 @@ class Service(Task):
             async for chunk in generator:
                 offset += len(chunk)
                 self._make_progress(offset, file_size)
-                await file.write(chunk)
+                file.write(chunk)
 
-            await file.flush()
+            file.flush()
             await self.upload_file(
                 dav,
                 file,
@@ -165,7 +171,7 @@ class Service(Task):
         generator: AsyncGenerator[bytes, None],
     ) -> None:
         """Download a small piece with specified size and upload it"""
-        async with aiofiles.tempfile.TemporaryFile() as file:
+        with tempfile.TemporaryFile() as file:
             k = 1
             offset = 0
             pieces = self.get_pieces_count(file_size)
@@ -178,12 +184,12 @@ class Service(Task):
                 offset += len(chunk)
                 self._make_progress(offset, file_size)
 
-                await file.write(chunk)
+                file.write(chunk)
 
                 # reach size limit
-                length = await file.tell()
+                length = file.tell()
                 if length >= self.split_size:
-                    await file.flush()
+                    file.flush()
                     await self.upload_file(
                         dav,
                         file,
@@ -194,18 +200,16 @@ class Service(Task):
                         else f"{filename} [{k}/{pieces}]",
                     )
 
-                    assert await file.seek(0) == 0, "Impossible seek to start of stream"
-                    assert (
-                        await file.truncate(0) == 0
-                    ), "Impossible truncate temporary file"
+                    assert file.seek(0) == 0, "Impossible seek to start of stream"
+                    assert file.truncate(0) == 0, "Impossible truncate temporary file"
                     k += 1
 
                     self.reset_stats()
 
             # has some bytes still to write
-            length = await file.tell()
+            length = file.tell()
             if length != 0:
-                await file.flush()
+                file.flush()
                 await self.upload_file(
                     dav,
                     file,
@@ -216,8 +220,8 @@ class Service(Task):
                     else f"{filename} [{k}/{pieces}]",
                 )
 
-                assert await file.seek(0) == 0, "Impossible seek to start of stream"
-                assert await file.truncate(0) == 0, "Impossible truncate temporary file"
+                assert file.seek(0) == 0, "Impossible seek to start of stream"
+                assert file.truncate(0) == 0, "Impossible truncate temporary file"
 
     async def upload_file(
         self,
@@ -227,6 +231,7 @@ class Service(Task):
         title: str = None,
         filename: str = None,
     ) -> None:
+        """Upload a file to webdav. If the file need to split, this split it"""
         retry_count = 3
 
         split_size = self.split_size if self.split_size > 0 else file_size
@@ -243,7 +248,11 @@ class Service(Task):
                     remote_name = f"{name}.{(piece + 1):0=3}" if pieces != 1 else name
                     remote_path = os.path.join(self.webdav_path, remote_name)
 
-                    pos = await file.seek(piece * split_size)
+                    pos = (
+                        (await file.seek(piece * split_size))
+                        if isinstance(file, AsyncBufferedIOBase)
+                        else file.seek(piece * split_size)
+                    )
                     assert pos == piece * split_size, "Impossible seek stream"
                     length = min(split_size, file_size - pos)
 

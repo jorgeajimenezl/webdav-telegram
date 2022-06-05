@@ -33,8 +33,8 @@ class TorrentService(Service):
     @staticmethod
     def check(m: Message):
         # TODO: Improve this regex
-        return bool(m.text) and bool(re.fullmatch(
-            rf'magnet:\?(&?((xt=urn:[a-z0-9]+:[\w\.]+)|(dn=[\w\+%-]+)|(xl=[^&]+)|(as=[^&]+)|(kt=[^&]+)|(xs=[^&]+)|(mt=[^&]+)|(tr=[^&]+)|(x=[^&]+)))*',
+        return bool(m.text) and bool(re.match(
+            rf'magnet:\?xt=urn:[a-z0-9]+:[a-zA-Z0-9]+',
             m.text))
 
     async def options(self, aria2: aria2p.API) -> None:       

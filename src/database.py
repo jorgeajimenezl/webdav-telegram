@@ -26,6 +26,8 @@ class Database(object):
                 "upload-parallel": "false",
                 "streaming": "false",
                 "use-libcurl": "false",
+                "use-compression": "false",
+                "file-password": ""
             }
 
             self.set_data(id, **data)
