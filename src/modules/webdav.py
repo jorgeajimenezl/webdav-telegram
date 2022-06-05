@@ -1,4 +1,5 @@
 import asyncio
+import imp
 from services.youtube import YoutubeService
 import utils
 from typing import List
@@ -25,12 +26,14 @@ from modules.service import Service
 from services.http import HttpService
 from services.telegram import TelegramService
 from services.torrent import TorrentService
+from services.mega import MegaService
 
 
 class WebdavModule(Module):
     SERVICES: List[Service] = [
         TorrentService,
         TelegramService,
+        MegaService,
         YoutubeService,
         HttpService,
     ]
