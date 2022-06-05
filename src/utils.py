@@ -82,8 +82,8 @@ async def selection(
     ns = SimpleNamespace()
     opt = list()
 
+    event = asyncio.Event()
     ns.page = 0
-    ns.done = False
     ns.canceled = False
 
     total_pages = len(options) // max_options_per_page + (
@@ -172,12 +172,12 @@ async def selection(
 
     async def _done(_, callback_query: CallbackQuery):
         await callback_query.message.delete(True)
-        ns.done = True
+        event.set()
 
     async def _cancel(_, callback_query: CallbackQuery):
         await callback_query.message.delete(True)
         ns.canceled = True
-        ns.done = True
+        event.set()
 
     async def _select_item(app: Client, callback_query: CallbackQuery):
         m = factory.get(callback_query.data).value
@@ -192,7 +192,7 @@ async def selection(
         else:
             if delete:
                 await callback_query.message.delete(True)
-            ns.done = True
+            event.set()
 
     handlers = [
         select_group.callback_handler(_select_item),
@@ -204,13 +204,17 @@ async def selection(
         cancel_button.callback_handler(_cancel),
     ]
 
+    # Add temporal handlers for each button type
     for u in handlers:
         app.add_handler(u)
 
+    # Send selection message
     message = await _select(app, None)
-    while not ns.done:
-        await asyncio.sleep(0.5)
 
+    # Wait to the selection
+    await event.wait()
+
+    # Delete temporal handlers
     for h in handlers:
         app.remove_handler(h)
 
