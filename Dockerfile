@@ -14,8 +14,8 @@ WORKDIR /app
 # Install requirements
 RUN pip3 install -r /app/requirements.txt
 
-# Create torrent download folder
-RUN mkdir torrent_data
+# Create download folder
+RUN mkdir data
 
 # Run with -u $(id -u):$(id -g) to avoid file permission issues
 # ENTRYPOINT ["python3", "app.py"]
