@@ -1,8 +1,6 @@
 import aiohttp
 import os
 import re
-import traceback
-from asyncio.exceptions import CancelledError
 from typing import List
 
 from aiodav.client import Client as DavClient
@@ -28,10 +26,8 @@ class HttpService(Service):
         MediafireExtractor,
     ]
 
-    def __init__(
-        self, id: int, user: int, file_message: Message, *args, **kwargs
-    ) -> None:
-        super().__init__(id, user, file_message, *args, **kwargs)
+    def __init__(self, id: int, *args, **kwargs) -> None:
+        super().__init__(id, *args, **kwargs)
 
     @staticmethod
     def check(m: Message) -> bool:
@@ -53,11 +49,22 @@ class HttpService(Service):
             chunk_size=2097152,
         ) as dav:
             async with aiohttp.ClientSession() as session:
-                url = self.file_message.text
+                url = self.kwargs.get("url", self.file_message.text)
 
                 for e in HttpService.EXTRACTORS:
                     if e.check(url):
                         url = await e.get_url(session, url)
+
+                        # Try to execute extractor own method,
+                        # else invoke default http downloader
+                        try:
+                            await e.execute(session, url, **self.kwargs)
+                            return
+                        except NotImplementedError:
+                            pass
+                        except Exception as e:
+                            raise e
+
                         break
 
                 async with session.get(url) as response:

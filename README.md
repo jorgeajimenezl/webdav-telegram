@@ -1,5 +1,14 @@
 # Telegram bot for manage your files via WebDAV
 
+## Services
++ Mega.nz
++ Telegram
++ Torrent
++ Youtube
++ Mediafire
++ ZippyShare
++ Animeflv
+
 ## Dependencies
 + Python (+3.7)
 + Redis
@@ -13,36 +22,16 @@
 ## Deploy to Heroku
 [![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/jorgeajimenezl/webdav-telegram)
 
-## Deploy to VPS
-
-### Install dependencies
+## Deploy with docker
 ```shell
 ~> sudo apt update
-~> sudo apt install -y curl build-essential tcl libssl-dev libffi-dev python3-setuptools
-~> sudo apt install -y python3.7 python3.7-dev python3.7-pip virtualenv
-~> sudo apt install -y redis
-~> sudo systemctl start redis.service
+~> sudo apt install -y docker
+~> sudo systemctl start docker.service
+~> sudo docker build --tag webdav-telegram:latest 
+~> sudo docker run -d webdav-telegram:latest
 ```
-
-### Activate
-```shell
-~> cd webdav-telegram
-~> sudo cp webdav-telegram.service /etc/systemd/system/
-~> virtualenv --python=python3 env
-~> source ./env/bin/activate
-(env) ~> pip3 install -r requirements.txt
-```
-
-### Start
-```shell
-# Start 
-~> sudo systemctl start webdav-telegram.service
-# Stop
-~> sudo systemctl stop webdav-telegram.service
-```
-
 ## License
 [MIT License](./LICENSE)
 
 ## Author
-This program was deverloped by Jorge Jimenez <<jorgeajimenezl17@gmail.com>>
+This program was developed by Jorge Alejandro Jimenez Luna <<jorgeajimenezl17@gmail.com>>

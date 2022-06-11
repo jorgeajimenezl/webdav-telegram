@@ -1,14 +1,14 @@
 import asyncio
+import imp
 from services.youtube import YoutubeService
 import utils
-from typing import List
+from typing import List, Type
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from pyrogram import Client, emoji, filters
-from pyrogram.handlers import CallbackQueryHandler, MessageHandler
+from pyrogram import Client, emoji
+from pyrogram.handlers import MessageHandler
 from pyrogram.types import (
     CallbackQuery,
-    InlineKeyboardButton,
     InlineKeyboardMarkup,
     Message,
 )
@@ -26,12 +26,14 @@ from modules.service import Service
 from services.http import HttpService
 from services.telegram import TelegramService
 from services.torrent import TorrentService
+from services.mega import MegaService
 
 
 class WebdavModule(Module):
     SERVICES: List[Service] = [
         TorrentService,
         TelegramService,
+        MegaService,
         YoutubeService,
         HttpService,
     ]
@@ -109,9 +111,14 @@ class WebdavModule(Module):
             )
             return
 
+        await self.push_task(app, user, cls, message)
+
+    async def push_task(
+        self, app: Client, user: int, cls: Type, message: Message, **kwargs
+    ):
         data = self.database.get_data(user)
 
-        # upload
+        # Add the task to the executor
         task = self.executor.add(
             cls,
             on_end_callback=self._on_task_end,
@@ -125,6 +132,8 @@ class WebdavModule(Module):
             username=data["username"],
             password=data["password"],
             path=data["upload-path"],
+            push_task_method=self.push_task,  # To allow the services push anothers services call
+            **kwargs,
         )
 
         if task == None:
@@ -169,7 +178,16 @@ class WebdavModule(Module):
                     speed = task.speed()
                     eta = task.eta()
 
-                    text = f"{description} ({current_text} / {total_text})\nSpeed: {utils.get_str(naturalsize(speed, binary=True))}/sec\nETA: {utils.get_str(naturaldelta(eta))}"
+                    speed_text = (
+                        utils.get_str(naturalsize(speed, binary=True))
+                        if speed != None
+                        else "Unknown"
+                    )
+                    eta_text = (
+                        utils.get_str(naturaldelta(eta)) if eta != None else "Unknown"
+                    )
+
+                    text = f"{description} ({current_text} / {total_text})\nSpeed: {speed_text}/sec\nETA: {eta_text}"
                 else:
                     text = f"{description}"
 

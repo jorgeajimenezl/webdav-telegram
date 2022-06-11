@@ -15,5 +15,9 @@ class Extractor(object):
         return None
 
     @staticmethod
+    async def execute(session: ClientSession, url: str, **kwargs) -> None:
+        raise NotImplementedError
+
+    @staticmethod
     async def get_url(session: ClientSession, url: str) -> str:
         raise NotImplementedError

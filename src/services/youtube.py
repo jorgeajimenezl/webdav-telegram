@@ -1,7 +1,5 @@
 import asyncio
 import os
-import re
-import traceback
 import aiofiles
 import yt_dlp
 import functools
@@ -27,12 +25,10 @@ class YoutubeService(Service):
     def __init__(
         self,
         id: int,
-        user: int,
-        file_message: Message,
         *args, **kwargs
     ) -> None:
         #yapf: enable
-        super().__init__(id, user, file_message, *args, **kwargs)
+        super().__init__(id, *args, **kwargs)
 
     @staticmethod
     def check(m: Message):
@@ -48,9 +44,9 @@ class YoutubeService(Service):
     async def options(self) -> str:
         with yt_dlp.YoutubeDL({'quiet': True}) as ydl:
             loop = asyncio.get_running_loop()
-
+            link = self.kwargs.get('url', self.file_message.text)
             meta = await loop.run_in_executor(None, 
-                functools.partial(ydl.extract_info, self.file_message.text, download=False))
+                functools.partial(ydl.extract_info, link, download=False))
             formats = meta.get('formats', [meta]) # Filter no-audio streams
 
             app = self.pyrogram
@@ -95,8 +91,9 @@ class YoutubeService(Service):
                 self.reset_stats()
 
                 loop = asyncio.get_running_loop()
+                link = self.kwargs.get('url', self.file_message.text)
                 meta = await loop.run_in_executor(None, 
-                    functools.partial(ydl.extract_info, self.file_message.text, download=True))               
+                    functools.partial(ydl.extract_info, link, download=True))               
                 filename = ydl.prepare_filename(meta)
 
             # Check if changed format

@@ -30,6 +30,7 @@ class Task(object):
         self.stop = None
         self.result = None
         self.future = None
+        self.kwargs = kwargs
 
     def cancel(self):
         if self.future != None:

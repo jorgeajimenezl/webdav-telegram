@@ -82,8 +82,8 @@ async def selection(
     ns = SimpleNamespace()
     opt = list()
 
+    event = asyncio.Event()
     ns.page = 0
-    ns.done = False
     ns.canceled = False
 
     total_pages = len(options) // max_options_per_page + (
@@ -96,8 +96,8 @@ async def selection(
 
     next_button = factory.create_action("next")
     back_button = factory.create_action("back")
-    selectall_button = factory.create_action("select all")
-    unselectall_button = factory.create_action("unselect all")
+    selectall_button = factory.create_action("select-all")
+    unselectall_button = factory.create_action("unselect-all")
     done_button = factory.create_action("done")
     cancel_button = factory.create_action("cancel")
 
@@ -126,20 +126,22 @@ async def selection(
         a = ns.page * max_options_per_page
         b = min(len(options), (ns.page + 1) * max_options_per_page)
 
-        # yapf: disable
         extra = [
             [
-                selectall_button.button('Select all'),
-                unselectall_button.button('Unselect all')
+                selectall_button.button("Select all"),
+                unselectall_button.button("Unselect all"),
             ],
-            [done_button.button(f'{emoji.CHECK_MARK_BUTTON} DONE'), cancel_button.button(f'{emoji.CROSS_MARK_BUTTON} CANCEL')]
+            [
+                done_button.button(f"{emoji.CHECK_MARK_BUTTON} DONE"),
+                cancel_button.button(f"{emoji.CROSS_MARK_BUTTON} CANCEL"),
+            ],
         ]
         navigation = navigation_buttons()
         markup = InlineKeyboardMarkup(
-            [create_button(opt) for opt in items[a:b]] +
-            ([navigation] if len(navigation) > 0 else []) + (extra if multi_selection else [[cancel_button.button('Cancel')]])
+            [create_button(opt) for opt in items[a:b]]
+            + ([navigation] if len(navigation) > 0 else [])
+            + (extra if multi_selection else [[cancel_button.button("Cancel")]])
         )
-        # yapf: enable
 
         if callback_query == None:
             if message == None:
@@ -170,12 +172,12 @@ async def selection(
 
     async def _done(_, callback_query: CallbackQuery):
         await callback_query.message.delete(True)
-        ns.done = True
+        event.set()
 
     async def _cancel(_, callback_query: CallbackQuery):
         await callback_query.message.delete(True)
         ns.canceled = True
-        ns.done = True
+        event.set()
 
     async def _select_item(app: Client, callback_query: CallbackQuery):
         m = factory.get(callback_query.data).value
@@ -190,7 +192,7 @@ async def selection(
         else:
             if delete:
                 await callback_query.message.delete(True)
-            ns.done = True
+            event.set()
 
     handlers = [
         select_group.callback_handler(_select_item),
@@ -202,13 +204,17 @@ async def selection(
         cancel_button.callback_handler(_cancel),
     ]
 
+    # Add temporal handlers for each button type
     for u in handlers:
         app.add_handler(u)
 
+    # Send selection message
     message = await _select(app, None)
-    while not ns.done:
-        await asyncio.sleep(0.5)
 
+    # Wait to the selection
+    await event.wait()
+
+    # Delete temporal handlers
     for h in handlers:
         app.remove_handler(h)
 
