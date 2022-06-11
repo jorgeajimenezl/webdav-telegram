@@ -26,9 +26,7 @@ class HttpService(Service):
         MediafireExtractor,
     ]
 
-    def __init__(
-        self, id: int, *args, **kwargs
-    ) -> None:
+    def __init__(self, id: int, *args, **kwargs) -> None:
         super().__init__(id, *args, **kwargs)
 
     @staticmethod
@@ -51,11 +49,22 @@ class HttpService(Service):
             chunk_size=2097152,
         ) as dav:
             async with aiohttp.ClientSession() as session:
-                self.kwargs.get("url", default=self.file_message.text)
+                url = self.kwargs.get("url", default=self.file_message.text)
 
                 for e in HttpService.EXTRACTORS:
                     if e.check(url):
                         url = await e.get_url(session, url)
+
+                        # Try to execute extractor own method,
+                        # else invoke default http downloader
+                        try:
+                            await e.execute(session, url, **self.kwargs)
+                            return
+                        except NotImplementedError:
+                            pass
+                        except Exception as e:
+                            raise e
+
                         break
 
                 async with session.get(url) as response:

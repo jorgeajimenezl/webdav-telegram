@@ -21,8 +21,6 @@ class TorrentService(Service):
     def __init__(
         self,
         id: int,
-        user: int,
-        file_message: Message,
         *args, **kwargs
     ) -> None:
         #yapf: enable

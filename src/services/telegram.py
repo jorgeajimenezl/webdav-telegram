@@ -13,9 +13,7 @@ class TelegramService(Service):
     Download telegram file and upload to webdav
     """
 
-    def __init__(
-        self, id: int, *args, **kwargs
-    ) -> None:
+    def __init__(self, id: int, *args, **kwargs) -> None:
         super().__init__(id, *args, **kwargs)
 
     @staticmethod

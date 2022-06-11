@@ -2,7 +2,7 @@ import asyncio
 import imp
 from services.youtube import YoutubeService
 import utils
-from typing import List
+from typing import List, Type
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from pyrogram import Client, emoji
@@ -111,6 +111,9 @@ class WebdavModule(Module):
             )
             return
 
+        await self.push_task(app, user, cls, message)
+
+    async def push_task(self, app: Client, user: int, cls: Type, message: Message):
         data = self.database.get_data(user)
 
         # Add the task to the executor
@@ -127,6 +130,7 @@ class WebdavModule(Module):
             username=data["username"],
             password=data["password"],
             path=data["upload-path"],
+            push_task_method=self.push_task,  # To allow the services push anothers services call
         )
 
         if task == None:

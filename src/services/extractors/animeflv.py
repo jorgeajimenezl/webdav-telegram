@@ -9,6 +9,8 @@ from services.extractors.extractor import Extractor
 from services.extractors.zippyshare import ZippyshareExtractor
 from urllib.parse import unquote
 
+from services.mega import MegaService
+
 
 class AnimeFLVExtractor(Extractor):
     def __init__(self) -> None:
@@ -34,6 +36,18 @@ class AnimeFLVExtractor(Extractor):
         return rows
 
     @staticmethod
+    async def execute(_, url: str, **kwargs) -> None:
+        # If match with mega url, then, drop this http service and use mega instead
+        if bool(re.match(r"^https?:\/\/(www\.)?mega\.nz", url)):
+            func = kwargs.get("push_task_method")
+            app = kwargs.get("pyrogram")
+            user = kwargs.get("user")
+            message = kwargs.get("file_message")
+            await func(app, app, user, MegaService, message)
+            return
+        raise NotImplementedError
+
+    @staticmethod
     async def get_url(session: ClientSession, url: str) -> str:
         if not re.fullmatch(
             r"^https?:\/\/(www[0-9]*\.)?animeflv\.net\/ver\/[A-Za-z0-9\-]+", url
@@ -49,17 +63,22 @@ class AnimeFLVExtractor(Extractor):
             raise Exception("Unable to get video servers information")
 
         data = AnimeFLVExtractor.parse_table(table)
+        # data.sort(key=(lambda x: x['FORMATO'].string.lower()))
+        
         for d in data:
-            if (
-                d["SERVIDOR"].string.lower() == "zippyshare"
-                and d["FORMATO"].string.lower() == "sub"
-            ):
+            if d["FORMATO"].string.lower() == "sub":
                 href = unquote(d["DESCARGAR"].a["href"])
                 link = re.sub(
                     r"^http[s]?:\/\/ouo.io/[A-Za-z0-9]+\/[A-Za-z0-9]+\?[A-Za-z0-9]+=",
                     "",
                     href,
                 )
-                return await ZippyshareExtractor.get_url(session, link)
+                match d["SERVIDOR"].string.lower():
+                    # case "zippyshare":
+                    #     return await ZippyshareExtractor.get_url(session, link)
+                    case "mega":
+                        return link
+                    case _:
+                        raise Exception("Unknown download server available")
 
         raise Exception("Unable to get download stream")
