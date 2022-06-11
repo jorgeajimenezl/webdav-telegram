@@ -8,8 +8,8 @@ RUN apt-get install -y git \
     libpthread-stubs0-dev zlib1g-dev libsqlite3-dev \
     python3-distutils
 
-RUN python -m ensurepip --default-pip \
-    pip install build setuptools wheel
+RUN python -m ensurepip --default-pip
+RUN pip install build setuptools wheel
 
 RUN git clone --recursive https://github.com/jorgeajimenezl/aiomega.git
 WORKDIR /aiomega
