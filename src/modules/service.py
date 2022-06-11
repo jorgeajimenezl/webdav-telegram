@@ -23,16 +23,16 @@ class Service(Task):
 
         self.pyrogram: Client = kwargs.get("pyrogram", self.file_message._client)
         self.split_size: int = (
-            kwargs.get("split_size", default=100) * 1024 * 1024
+            kwargs.get("split_size", 100) * 1024 * 1024
         )  # Bytes
-        self.use_streaming: bool = kwargs.get("streaming", default=False)
-        self.parallel: bool = kwargs.get("parallel", default=False)
+        self.use_streaming: bool = kwargs.get("streaming", False)
+        self.parallel: bool = kwargs.get("parallel", False)
 
         self.webdav_hostname: str = kwargs.get("hostname")
         self.webdav_username: str = kwargs.get("username")
         self.webdav_password: str = kwargs.get("password")
         self.webdav_path: str = kwargs.get("path")
-        self.timeout: int = kwargs.get("timeout", default=60 * 60 * 2)
+        self.timeout: int = kwargs.get("timeout", 60 * 60 * 2)
 
         super().__init__(id, *args, **kwargs)
 

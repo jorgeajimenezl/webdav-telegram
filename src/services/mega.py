@@ -1,4 +1,3 @@
-from email.policy import default
 import re
 import aiofiles
 
@@ -33,7 +32,7 @@ class MegaService(Service):
             chunk_size=2097152,
         ) as dav:
             async with Mega("ox8xnQZL") as mega:
-                link = self.kwargs.get("url", default=self.file_message.text)
+                link = self.kwargs.get("url", self.file_message.text)
                 node = await mega.get_public_node(link)
                 if not node.isFile():
                     raise Exception("Only can download files")

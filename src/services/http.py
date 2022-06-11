@@ -49,7 +49,7 @@ class HttpService(Service):
             chunk_size=2097152,
         ) as dav:
             async with aiohttp.ClientSession() as session:
-                url = self.kwargs.get("url", default=self.file_message.text)
+                url = self.kwargs.get("url", self.file_message.text)
 
                 for e in HttpService.EXTRACTORS:
                     if e.check(url):

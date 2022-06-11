@@ -44,7 +44,7 @@ class YoutubeService(Service):
     async def options(self) -> str:
         with yt_dlp.YoutubeDL({'quiet': True}) as ydl:
             loop = asyncio.get_running_loop()
-            link = self.kwargs.get('url', default=self.file_message.text)
+            link = self.kwargs.get('url', self.file_message.text)
             meta = await loop.run_in_executor(None, 
                 functools.partial(ydl.extract_info, link, download=False))
             formats = meta.get('formats', [meta]) # Filter no-audio streams
@@ -91,7 +91,7 @@ class YoutubeService(Service):
                 self.reset_stats()
 
                 loop = asyncio.get_running_loop()
-                link = self.kwargs.get('url', default=self.file_message.text)
+                link = self.kwargs.get('url', self.file_message.text)
                 meta = await loop.run_in_executor(None, 
                     functools.partial(ydl.extract_info, link, download=True))               
                 filename = ydl.prepare_filename(meta)

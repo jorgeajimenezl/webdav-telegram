@@ -34,7 +34,7 @@ class TorrentService(Service):
             m.text))
 
     async def options(self, aria2: aria2p.API) -> None:       
-        link = self.options.get('url', default=self.file_message.text)
+        link = self.kwargs.get('url', self.file_message.text)
         d = aria2.add_magnet(link,
                              options={
                                  'bt-metadata-only': 'true',
@@ -73,7 +73,7 @@ class TorrentService(Service):
         files = await self.options(aria2)       
 
         self._set_state(TaskState.STARTING)    
-        link = self.options.get('url', default=self.file_message.text)
+        link = self.kwargs.get('url', self.file_message.text)
         download = aria2.add_magnet(link, options={'select-file': ",".join(files)})
 
         # Wait for download complete
