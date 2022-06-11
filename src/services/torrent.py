@@ -26,7 +26,7 @@ class TorrentService(Service):
         *args, **kwargs
     ) -> None:
         #yapf: enable
-        super().__init__(id, user, file_message, *args, **kwargs)
+        super().__init__(id, *args, **kwargs)
 
     @staticmethod
     def check(m: Message):
@@ -36,7 +36,8 @@ class TorrentService(Service):
             m.text))
 
     async def options(self, aria2: aria2p.API) -> None:       
-        d = aria2.add_magnet(self.file_message.text,
+        link = self.options.get('url', default=self.file_message.text)
+        d = aria2.add_magnet(link,
                              options={
                                  'bt-metadata-only': 'true',
                                  'bt-save-metadata': 'true'
@@ -74,7 +75,8 @@ class TorrentService(Service):
         files = await self.options(aria2)       
 
         self._set_state(TaskState.STARTING)    
-        download = aria2.add_magnet(self.file_message.text, options={'select-file': ",".join(files)})
+        link = self.options.get('url', default=self.file_message.text)
+        download = aria2.add_magnet(link, options={'select-file': ",".join(files)})
 
         # Wait for download complete
         self._set_state(TaskState.WORKING,

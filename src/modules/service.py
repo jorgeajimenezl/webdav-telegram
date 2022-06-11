@@ -10,7 +10,7 @@ from pyrogram.types import Message
 from aiofiles.threadpool.binary import AsyncBufferedIOBase
 from async_executor.task import Task, TaskState
 from aiodav.client import Client as DavClient
-from pyrogram import emoji
+from pyrogram import emoji, Client
 from asyncio.exceptions import CancelledError
 from typing import AsyncGenerator
 from io import IOBase
@@ -18,21 +18,21 @@ from io import IOBase
 
 class Service(Task):
     def __init__(
-        self, id: int, user: int, file_message: Message, *args, **kwargs
+        self, id: int, *args, **kwargs
     ) -> None:
-        self.user = user
-        self.file_message = file_message
+        self.user: int = kwargs.get("user")
+        self.file_message: Message = kwargs.get("file_message")
 
-        self.pyrogram = kwargs.get("pyrogram", file_message._client)
-        self.split_size = kwargs.get("split_size", 100) * 1024 * 1024  # Bytes
-        self.use_streaming = kwargs.get("streaming", False)
-        self.parallel = kwargs.get("parallel", False)
+        self.pyrogram: Client = kwargs.get("pyrogram", self.file_message._client)
+        self.split_size: int = kwargs.get("split_size", default=100) * 1024 * 1024  # Bytes
+        self.use_streaming: bool = kwargs.get("streaming", default=False)
+        self.parallel: bool = kwargs.get("parallel", default=False)
 
-        self.webdav_hostname = kwargs.get("hostname")
-        self.webdav_username = kwargs.get("username")
-        self.webdav_password = kwargs.get("password")
-        self.webdav_path = kwargs.get("path")
-        self.timeout = kwargs.get("timeout", 60 * 60 * 2)
+        self.webdav_hostname: str = kwargs.get("hostname")
+        self.webdav_username: str = kwargs.get("username")
+        self.webdav_password: str = kwargs.get("password")
+        self.webdav_path: str = kwargs.get("path")
+        self.timeout: int = kwargs.get("timeout", default=60 * 60 * 2)
 
         super().__init__(id, *args, **kwargs)
 

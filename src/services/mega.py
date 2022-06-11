@@ -1,3 +1,4 @@
+from email.policy import default
 import re
 import aiofiles
 
@@ -17,7 +18,7 @@ class MegaService(Service):
     def __init__(
         self, id: int, user: int, file_message: Message, *args, **kwargs
     ) -> None:
-        super().__init__(id, user, file_message, *args, **kwargs)
+        super().__init__(id, *args, **kwargs)
 
     @staticmethod
     def check(m: Message):
@@ -34,7 +35,8 @@ class MegaService(Service):
             chunk_size=2097152,
         ) as dav:
             async with Mega("ox8xnQZL") as mega:
-                node = await mega.get_public_node(self.file_message.text)
+                link = self.kwargs.get("url", default=self.file_message.text)
+                node = await mega.get_public_node(link)
                 if not node.isFile():
                     raise Exception("Only can download files")
 

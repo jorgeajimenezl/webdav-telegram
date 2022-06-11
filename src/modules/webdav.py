@@ -113,7 +113,7 @@ class WebdavModule(Module):
 
         data = self.database.get_data(user)
 
-        # upload
+        # Add the task to the executor
         task = self.executor.add(
             cls,
             on_end_callback=self._on_task_end,

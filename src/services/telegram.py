@@ -14,9 +14,9 @@ class TelegramService(Service):
     """
 
     def __init__(
-        self, id: int, user: int, file_message: Message, *args, **kwargs
+        self, id: int, *args, **kwargs
     ) -> None:
-        super().__init__(id, user, file_message, *args, **kwargs)
+        super().__init__(id, *args, **kwargs)
 
     @staticmethod
     def check(m: Message):
