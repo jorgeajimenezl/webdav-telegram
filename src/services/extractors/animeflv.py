@@ -43,7 +43,7 @@ class AnimeFLVExtractor(Extractor):
             app = kwargs.get("pyrogram")
             user = kwargs.get("user")
             message = kwargs.get("file_message")
-            await func(app, user, MegaService, message)
+            await func(app, user, MegaService, message, url=url)
             return
         raise NotImplementedError
 
@@ -64,7 +64,7 @@ class AnimeFLVExtractor(Extractor):
 
         data = AnimeFLVExtractor.parse_table(table)
         # data.sort(key=(lambda x: x['FORMATO'].string.lower()))
-        
+
         for d in data:
             if d["FORMATO"].string.lower() == "sub":
                 href = unquote(d["DESCARGAR"].a["href"])

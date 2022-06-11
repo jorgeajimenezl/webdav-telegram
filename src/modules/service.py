@@ -22,9 +22,7 @@ class Service(Task):
         self.file_message: Message = kwargs.get("file_message")
 
         self.pyrogram: Client = kwargs.get("pyrogram", self.file_message._client)
-        self.split_size: int = (
-            kwargs.get("split_size", 100) * 1024 * 1024
-        )  # Bytes
+        self.split_size: int = kwargs.get("split_size", 100) * 1024 * 1024  # Bytes
         self.use_streaming: bool = kwargs.get("streaming", False)
         self.parallel: bool = kwargs.get("parallel", False)
 
