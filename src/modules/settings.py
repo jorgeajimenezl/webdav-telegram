@@ -121,7 +121,7 @@ class SettingsModule(Module):
                     self._get_button(user, "use-libcurl"),
                 ],
                 [
-                    self._get_button(user, "use-compression"),
+                    # self._get_button(user, "use-compression"),
                     self._get_button(user, "file-password"),
                 ],
                 [self.close_action.button(f"{emoji.LEFT_ARROW} Close")],
