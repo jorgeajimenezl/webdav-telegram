@@ -17,7 +17,7 @@ WORKDIR /aiomega
 RUN sh configure.sh
 RUN python -m build --wheel --no-isolation
 
-FROM python:3.10-slim AS PRODUCTION
+FROM python:3.10 AS PRODUCTION
 
 RUN apt-get update -y
 RUN apt-get install -y git ffmpeg aria2 \
