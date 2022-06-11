@@ -1,4 +1,4 @@
-import traceback, re
+import re
 import aiofiles
 
 from aiomega import Mega
@@ -33,7 +33,7 @@ class MegaService(Service):
             timeout=self.timeout,
             chunk_size=2097152,
         ) as dav:
-            async with Mega('ox8xnQZL') as mega:
+            async with Mega("ox8xnQZL") as mega:
                 node = await mega.get_public_node(self.file_message.text)
                 if not node.isFile():
                     raise Exception("Only can download files")
@@ -44,13 +44,13 @@ class MegaService(Service):
                 self.reset_stats()
                 filename = node.getName()
                 size = node.getSize()
-                self._set_state(TaskState.WORKING,
-                        description=
-                        f"{emoji.HOURGLASS_DONE} Download {filename}"
+                self._set_state(
+                    TaskState.WORKING,
+                    description=f"{emoji.HOURGLASS_DONE} Download {filename}",
                 )
-                await mega.download(node, '/app/data/', progress=progress)
+                await mega.download(node, "/app/data/", progress=progress)
 
-            async with aiofiles.open(f"/app/data/{filename}", 'rb') as file:
+            async with aiofiles.open(f"/app/data/{filename}", "rb") as file:
                 await self.upload_file(dav, file, size)
 
         return None

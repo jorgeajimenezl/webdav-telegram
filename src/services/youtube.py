@@ -1,7 +1,5 @@
 import asyncio
 import os
-import re
-import traceback
 import aiofiles
 import yt_dlp
 import functools

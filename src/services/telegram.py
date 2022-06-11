@@ -1,5 +1,3 @@
-import traceback
-from asyncio.exceptions import CancelledError
 from typing import Tuple
 
 from datetime import datetime as dt

@@ -1,9 +1,7 @@
 import asyncio
 import os
 import re
-import traceback
 import aiofiles
-from asyncio.exceptions import CancelledError
 
 import aria2p
 import utils

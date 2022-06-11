@@ -50,7 +50,10 @@ class AnimeFLVExtractor(Extractor):
 
         data = AnimeFLVExtractor.parse_table(table)
         for d in data:
-            if d["SERVIDOR"].string.lower() == "zippyshare":
+            if (
+                d["SERVIDOR"].string.lower() == "zippyshare"
+                and d["FORMATO"].string.lower() == "sub"
+            ):
                 href = unquote(d["DESCARGAR"].a["href"])
                 link = re.sub(
                     r"^http[s]?:\/\/ouo.io/[A-Za-z0-9]+\/[A-Za-z0-9]+\?[A-Za-z0-9]+=",

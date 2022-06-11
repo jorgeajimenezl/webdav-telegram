@@ -27,7 +27,7 @@ class Database(object):
                 "streaming": "false",
                 "use-libcurl": "false",
                 "use-compression": "false",
-                "file-password": ""
+                "file-password": "",
             }
 
             self.set_data(id, **data)

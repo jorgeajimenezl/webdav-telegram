@@ -50,7 +50,7 @@ class TaskExecutor(object):
             except CancelledError:
                 task._set_state(TaskState.CANCELED, f"Task cancelled")
             except Exception as e:
-                task._set_state(TaskState.ERROR, f"{traceback.format_exc()}")
+                task._set_state(TaskState.ERROR, f"`{traceback.format_exc()}`")
 
             return (index, task)
 

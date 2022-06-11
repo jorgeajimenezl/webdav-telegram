@@ -1,6 +1,5 @@
 import asyncio
 import os
-import traceback
 from typing import Dict
 from urllib.parse import urlparse
 

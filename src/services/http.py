@@ -1,8 +1,6 @@
 import aiohttp
 import os
 import re
-import traceback
-from asyncio.exceptions import CancelledError
 from typing import List
 
 from aiodav.client import Client as DavClient
