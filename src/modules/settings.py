@@ -69,12 +69,12 @@ class SettingsModule(Module):
             r"(on|off|true|false)",
             bool,
         ),
-        "use-compression": (
-            f"{emoji.CARD_FILE_BOX} Compress",
-            "Turn on for compress all files with tar.zstd format (Default: False)",
-            r"(on|off|true|false)",
-            bool,
-        ),
+        # "use-compression": (
+        #     f"{emoji.CARD_FILE_BOX} Compress",
+        #     "Turn on for compress all files with tar.zstd format (Default: False)",
+        #     r"(on|off|true|false)",
+        #     bool,
+        # ),
         "file-password": (
             f"{emoji.KEYCAP_ASTERISK} File Password",
             "Write the password to encrypt all files (Default: Empty)",
