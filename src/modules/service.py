@@ -1,6 +1,5 @@
 import asyncio
 import aiofiles
-from zstandard import ZstdCompressor
 import utils
 import os
 
@@ -34,8 +33,6 @@ class Service(Task):
         self.webdav_password = kwargs.get("password")
         self.webdav_path = kwargs.get("path")
         self.timeout = kwargs.get("timeout", 60 * 60 * 2)
-        if kwargs.get("compression", False):
-            self.compressor = ZstdCompressor()
 
         super().__init__(id, *args, **kwargs)
 
