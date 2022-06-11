@@ -43,7 +43,7 @@ class AnimeFLVExtractor(Extractor):
             app = kwargs.get("pyrogram")
             user = kwargs.get("user")
             message = kwargs.get("file_message")
-            await func(app, app, user, MegaService, message)
+            await func(app, user, MegaService, message)
             return
         raise NotImplementedError
 
