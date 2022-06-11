@@ -6,6 +6,7 @@ import os
 # import aiofiles.tempfile
 import tempfile
 
+from zstandard import ZstdCompressor
 from pyrogram.types import Message
 from aiofiles.threadpool.binary import AsyncBufferedIOBase
 from async_executor.task import Task, TaskState
@@ -31,6 +32,9 @@ class Service(Task):
         self.webdav_password: str = kwargs.get("password")
         self.webdav_path: str = kwargs.get("path")
         self.timeout: int = kwargs.get("timeout", 60 * 60 * 2)
+
+        if kwargs.get("use-compression", False):
+            self.compressor = ZstdCompressor()
 
         super().__init__(id, *args, **kwargs)
 
@@ -119,11 +123,19 @@ class Service(Task):
             self.reset_stats()
             offset = 0
 
-            async for chunk in generator:
-                offset += len(chunk)
-                self._make_progress(offset, file_size)
-                file.write(chunk)
-
+            if not self.compressor:
+                async for chunk in generator:
+                    offset += len(chunk)
+                    self._make_progress(offset, file_size)
+                    file.write(chunk)                
+            else:
+                # Write the compressed data
+                with self.compressor.stream_writer(file, closefd=False) as writer:
+                    async for chunk in generator:
+                        offset += len(chunk)
+                        self._make_progress(offset, file_size)
+                        writer.write(chunk)
+            
             file.flush()
             await self.upload_file(
                 dav,

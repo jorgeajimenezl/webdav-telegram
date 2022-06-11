@@ -10,6 +10,7 @@ apscheduler
 humanize
 lxml
 beautifulsoup4
+zstandard
 
 # Optional
 aria2p
