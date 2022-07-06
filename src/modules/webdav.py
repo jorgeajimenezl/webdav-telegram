@@ -5,7 +5,7 @@ import utils
 from typing import List, Type
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from pyrogram import Client, emoji
+from pyrogram import Client, emoji, filters
 from pyrogram.handlers import MessageHandler
 from pyrogram.types import (
     CallbackQuery,
@@ -16,7 +16,7 @@ from pyrogram.types import (
 from async_executor.executor import TaskExecutor
 from async_executor.task import Task, TaskState
 from button import ButtonFactory
-from context import UserContext
+from context import CONTEXT, UserContext
 from database import Database
 from humanize import naturalsize, naturaldelta
 from module import Module
@@ -206,6 +206,26 @@ class WebdavModule(Module):
                         ),
                     )
 
+    # async def urls_batch(self, app: Client, message: Message):
+    #     user = message.from_user.id
+    #     self.context.update(user, CONTEXT["URLS_BATCH"])
+
+    #     await app.send_message(
+    #         user,
+    #         f"{emoji.CHECK_MARK_BUTTON} Please send me a list of URLs",
+    #         reply_markup=InlineKeyboardMarkup(
+    #             [
+    #                 [
+    #                     InlineKeyboardButton(
+    #                         "Cancel",
+    #                         callback_data=self.factory.create_data("cancel"),
+    #                     )
+    #                 ]
+    #             ]
+    #         ),
+    #     )
+
+
     def register(self, app: Client):
         self.app = app
 
@@ -215,6 +235,7 @@ class WebdavModule(Module):
         handlers = [
             app.add_handler(MessageHandler(self.upload_file)),
             self.cancel_group.callback_handler(self.cancel_upload),
+            # MessageHandler(self.urls_batch, filters.command("batch")),
         ]
 
         for u in handlers:

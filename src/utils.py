@@ -1,8 +1,9 @@
 import asyncio
 import random
 import re
+import itertools
 from types import SimpleNamespace
-from typing import Any, Callable, Dict, Iterable, List, Set, Tuple, Union
+from typing import Any, Callable, Dict, Iterable, Iterator, List, Set, Tuple, Union
 
 from pyrogram import Client, emoji, filters
 from pyrogram.handlers import CallbackQueryHandler
@@ -67,6 +68,30 @@ def cut(x: str, length: int) -> List[str]:
         x = x[length:]
     return ret
 
+def expand_ranges(x: str) -> Iterator[str]:
+    ranges = []
+
+    for match in re.finditer("\{([\d\-,A-Za-z&\.]+)\}", x):
+        items = match[1].split(',')
+        r = []
+        
+        for item in items:
+            item = item.strip()
+
+            if '-' in item:
+                m = re.fullmatch("(\d+)-(\d+)", item)
+                if not m:
+                    raise Exception(f"Invalid range operation: line({match.start()})")
+                r.extend(range(int(m[1]), int(m[2]) + 1))
+            else:
+                r.append(item)
+
+        ranges.append(r)
+    x = re.sub("\{([\d\-,A-Za-z&\.]+)\}", "{}", x)
+
+    for t in itertools.product(*ranges):
+        yield x.format(*t)
+        
 
 async def selection(
     app: Client,
