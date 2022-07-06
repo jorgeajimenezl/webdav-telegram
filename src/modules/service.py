@@ -128,7 +128,7 @@ class Service(Task):
             await self.upload_file(
                 dav,
                 file,
-                file_size,
+                (file_size or offset),
                 filename=filename,
             )
 
