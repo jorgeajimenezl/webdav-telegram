@@ -8,6 +8,7 @@ from async_executor.task import TaskState
 from modules.service import Service
 from pyrogram import emoji
 from pyrogram.types import Message
+from urllib.parse import urlparse
 
 from services.extractors.animeflv import AnimeFLVExtractor
 from services.extractors.extractor import Extractor
@@ -72,7 +73,8 @@ class HttpService(Service):
                         d = response.headers["content-disposition"]
                         filename = re.findall("filename=(.+)", d)[0]
                     except Exception:
-                        filename = os.path.basename(url)
+                        req = urlparse(url)
+                        filename = os.path.basename(req.path)
 
                     gen = response.content.iter_chunked(2097152)
                     await self.upload(
