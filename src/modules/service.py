@@ -281,7 +281,12 @@ class Service(Task):
                     )
 
                     if self.checksum:
-                        # Compute the piece checksum
+                        # Compute the piece checksum                        
+                        assert (
+                            (await file.seek(piece * split_size))
+                            if isinstance(file, AsyncBufferedIOBase)
+                            else file.seek(piece * split_size)
+                        ) == piece * split_size, "Impossible seek stream"
                         self.sha1 = SHA1.new()
 
                         while length > 0:
