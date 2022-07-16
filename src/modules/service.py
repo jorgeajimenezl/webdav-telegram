@@ -281,7 +281,7 @@ class Service(Task):
                     )
 
                     if self.checksum:
-                        # Compute the piece checksum                        
+                        # Compute the piece checksum
                         assert (
                             (await file.seek(piece * split_size))
                             if isinstance(file, AsyncBufferedIOBase)

@@ -155,11 +155,14 @@ class FileModule(Module):
             except Exception as e:
                 await app.send_message(user, f"Unable to get free space: {e}")
 
+    async def list_wrapper(self, app: Client, event: Message):
+        # TODO: Fix this async bug
+        asyncio.create_task(self.list(event.from_user.id, app))
+
     def register(self, app: Client):
         handlers = [
             MessageHandler(
-                # TODO: Fix this async bug
-                lambda _, e: asyncio.create_task(self.list(e.from_user.id, app)),
+                self.list_wrapper,
                 filters.command("list") & filters.private,
             ),
             MessageHandler(self.free, filters.command("free") & filters.private),

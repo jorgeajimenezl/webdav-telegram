@@ -77,7 +77,7 @@ class WebdavModule(Module):
             )
 
             if task.checksum and len(task.sums) > 0:
-                piece = "\n".join([f"{n}: `{c}`\n" for n, c in task.sums.items()])                
+                piece = "\n".join([f"{n}: `{c}`\n" for n, c in task.sums.items()])
                 await self.app.send_message(
                     user,
                     f"{emoji.INBOX_TRAY} Checksums (SHA1):\n{piece}",
@@ -140,7 +140,7 @@ class WebdavModule(Module):
             hostname=data["server-uri"],
             username=data["username"],
             password=data["password"],
-            path=data["upload-path"],            
+            path=data["upload-path"],
             push_task_method=self.push_task,  # To allow the services push anothers services call
             **kwargs,
         )
@@ -233,7 +233,6 @@ class WebdavModule(Module):
     #             ]
     #         ),
     #     )
-
 
     def register(self, app: Client):
         self.app = app
