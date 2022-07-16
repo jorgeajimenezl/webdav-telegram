@@ -76,6 +76,14 @@ class WebdavModule(Module):
                 reply_to_message_id=task.file_message.id,
             )
 
+            if task.checksum and len(task.sums) > 0:
+                pieces = [f"{n}: `{c}`" for n, c in task.sums.items()]
+                await self.app.send_message(
+                    user,
+                    f"{emoji.INBOX_TRAY} Checksums (SHA1):\n{'\n'.join(pieces)}",
+                    reply_to_message_id=task.file_message.id,
+                )
+
         async with self.tasks_lock:
             message = self.tasks.pop(task)
             self.tasks_id.pop(task.id)
@@ -128,10 +136,11 @@ class WebdavModule(Module):
             split_size=int(data["split-size"]),
             streaming=utils.get_bool(data["streaming"]),
             parallel=utils.get_bool(data["upload-parallel"]),
+            checksum=utils.get_bool(data["checksum"]),
             hostname=data["server-uri"],
             username=data["username"],
             password=data["password"],
-            path=data["upload-path"],
+            path=data["upload-path"],            
             push_task_method=self.push_task,  # To allow the services push anothers services call
             **kwargs,
         )

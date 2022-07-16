@@ -69,6 +69,12 @@ class SettingsModule(Module):
             r"(on|off|true|false)",
             bool,
         ),
+        "checksum": (
+            f"{emoji.UPWARDS_BUTTON} Checksum",
+            "Turn on for perform a checksum of the uploaded files (Default: True)",
+            r"(on|off|true|false)",
+            bool,
+        ),
         # "use-compression": (
         #     f"{emoji.CARD_FILE_BOX} Compress",
         #     "Turn on for compress all files with tar.zstd format (Default: False)",
@@ -122,6 +128,7 @@ class SettingsModule(Module):
                 ],
                 [
                     # self._get_button(user, "use-compression"),
+                    self._get_button(user, "checksum"),
                     self._get_button(user, "file-password"),
                 ],
                 [self.close_action.button(f"{emoji.LEFT_ARROW} Close")],

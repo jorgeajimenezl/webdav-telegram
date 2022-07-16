@@ -14,6 +14,7 @@ from pyrogram import emoji, Client
 from asyncio.exceptions import CancelledError
 from typing import AsyncGenerator
 from io import IOBase
+from Cryptodome.Hash import SHA1
 
 
 class Service(Task):
@@ -25,6 +26,11 @@ class Service(Task):
         self.split_size: int = kwargs.get("split_size", 100) * 1024 * 1024  # Bytes
         self.use_streaming: bool = kwargs.get("streaming", False)
         self.parallel: bool = kwargs.get("parallel", False)
+        self.checksum: bool = kwargs.get("checksum", True)
+
+        if self.checksum:
+            self.sha1 = None
+            self.sums = dict()
 
         self.webdav_hostname: str = kwargs.get("hostname")
         self.webdav_username: str = kwargs.get("username")
@@ -154,9 +160,19 @@ class Service(Task):
             async for chunk in generator:
                 offset += len(chunk)
                 self._make_progress(offset, file_size)
+
+                if self.checksum:
+                    self.sha1.update(chunk)
+
                 yield chunk
 
+        if self.checksum:
+            self.sha1 = SHA1.new()
+
         await dav.upload_to(remote_path, buffer=file_sender())
+
+        if self.checksum:
+            self.sums[name] = self.sha1.hexdigest()
 
     async def streaming_by_pieces(
         self,
@@ -238,7 +254,7 @@ class Service(Task):
         remote_path = os.path.join(self.webdav_path, name)
 
         for piece in range(pieces):
-            while True:
+            while True:  # Try loop
                 try:
                     remote_name = f"{name}.{(piece + 1):0=3}" if pieces != 1 else name
                     remote_path = os.path.join(self.webdav_path, remote_name)
@@ -263,6 +279,23 @@ class Service(Task):
                         buffer_size=length,
                         progress=self._make_progress,
                     )
+
+                    if self.checksum:
+                        # Compute the piece checksum
+                        self.sha1 = SHA1.new()
+
+                        while length > 0:
+                            size = min(length, 65535)
+                            data = (
+                                await file.read(size)
+                                if isinstance(file, AsyncBufferedIOBase)
+                                else file.read(size)
+                            )
+                            self.sha1.update(data)
+                            length -= len(data)
+
+                        self.sums[remote_name] = self.sha1.hexdigest()
+
                     break
                 except CancelledError:
                     raise CancelledError
