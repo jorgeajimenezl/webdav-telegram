@@ -101,7 +101,7 @@ class SettingsModule(Module):
 
         if issubclass(cls, bool):
             data = self.database.get_data(user)
-            v = utils.get_bool(data[id])
+            v = utils.get_bool(data.get(id, False))
             return self.buttons[id].button(
                 f"[{emoji.CHECK_MARK_BUTTON if v else emoji.CROSS_MARK}] {name}"
             )
@@ -183,7 +183,7 @@ class SettingsModule(Module):
             )
         else:
             data = self.database.get_data(user)
-            v = utils.get_bool(data[id])
+            v = utils.get_bool(data.get(id, False))
             payload = {id: str((not v))}
             self.database.set_data(user, **payload)
 
