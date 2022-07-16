@@ -52,6 +52,9 @@ def get_str(x: str) -> str:
 
 
 def get_bool(x: str) -> bool:
+    if isinstance(x, bool):
+        return x
+        
     x = x.lower()
     if x in ["on", "true", "activate", "right"]:
         return True
