@@ -1,2 +1,2 @@
-aria2c --enable-rpc --disable-ipv6 --dir=/app/data --daemon
+aria2c --conf-path=aria2c.conf
 python3 app.py

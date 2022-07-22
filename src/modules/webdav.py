@@ -77,10 +77,10 @@ class WebdavModule(Module):
             )
 
             if task.checksum and len(task.sums) > 0:
-                piece = "\n".join([f"{n}: `{c}`\n" for n, c in task.sums.items()])
+                piece = "\n".join([f"**{n}**: `{c}`\n" for n, c in task.sums.items()])
                 await self.app.send_message(
                     user,
-                    f"{emoji.INBOX_TRAY} Checksums (SHA1):\n{piece}",
+                    f"{emoji.INBOX_TRAY} Checksums (SHA1):\n\n{piece}",
                     reply_to_message_id=task.file_message.id,
                 )
 
