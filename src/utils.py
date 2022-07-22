@@ -182,6 +182,7 @@ async def selection(
             await callback_query.edit_message_reply_markup(markup)
 
     async def _select_all(app: Client, callback_query: CallbackQuery):
+        global opt
         opt = options.copy()
         await _select(app, callback_query)
 
