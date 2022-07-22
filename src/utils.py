@@ -138,7 +138,7 @@ async def selection(
 
         if len(name) >= 20:
             name = name[:40]
-        selected = name in opt
+        selected = button.value in opt
         return [button.button(f"{emoji.CHECK_MARK if selected else ''}{name}")]
 
     def navigation_buttons():
