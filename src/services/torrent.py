@@ -84,11 +84,11 @@ class TorrentService(Service):
         self.reset_stats()
             
         while not download.is_complete:
-            await asyncio.sleep(10)
+            await asyncio.sleep(3)
             download.update()
             self._make_progress(download.completed_length, download.total_length)
 
-        if download.status == 'error':
+        if download.status != 'complete':
             raise Exception(download.error_message)
 
         async with DavClient(hostname=self.webdav_hostname,
