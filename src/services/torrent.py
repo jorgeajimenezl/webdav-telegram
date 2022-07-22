@@ -67,7 +67,7 @@ class TorrentService(Service):
         return [p.index for p in files]
 
     async def start(self) -> None:
-        aria2 = aria2p.API(aria2p.Client())
+        aria2 = aria2p.API(aria2p.Client(host="http://127.0.0.1"))
 
         # Chossing torrent files to download            
         files = await self.options(aria2)       
