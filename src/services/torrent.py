@@ -74,7 +74,7 @@ class TorrentService(Service):
 
         self._set_state(TaskState.STARTING)    
         link = self.kwargs.get('url', self.file_message.text)
-        download = aria2.add_magnet(link, options={'select-file': ",".join(files)})
+        download = aria2.add_magnet(link, options={'select-file': ",".join(map(str, files))})
 
         # Wait for download complete
         self._set_state(TaskState.WORKING,
