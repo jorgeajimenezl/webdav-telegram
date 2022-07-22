@@ -52,8 +52,7 @@ class TorrentService(Service):
                 f"{emoji.CROSS_MARK} Unable to download metadata information from magnet link"
             )
 
-        hash = d.info_hash
-        d = aria2.add_torrent(f'/app/data/{hash}.torrent',
+        d = aria2.add_torrent(f'/app/data/{d.info_hash}.torrent',
                               options={'dry-run': 'true'})
 
         app = self.pyrogram
@@ -64,17 +63,17 @@ class TorrentService(Service):
             message_text='**Select files to download**',
             name_selector=lambda x: os.path.basename(x.path))
 
-        return [p.index for p in files]
+        return d.info_hash, [p.index for p in files]
 
     async def start(self) -> None:
         aria2 = aria2p.API(aria2p.Client(host="http://127.0.0.1"))
 
         # Chossing torrent files to download            
-        files = await self.options(aria2)       
+        info_hash, files = await self.options(aria2)       
 
         self._set_state(TaskState.STARTING)    
         # link = self.kwargs.get('url', self.file_message.text)
-        download = aria2.add_torrent(f'/app/data/{hash}.torrent', options={'select-file': ",".join(map(str, files))})
+        download = aria2.add_torrent(f'/app/data/{info_hash}.torrent', options={'select-file': ",".join(map(str, files))})
 
         # Wait for download complete
         self._set_state(TaskState.WORKING,
