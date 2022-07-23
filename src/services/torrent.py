@@ -85,7 +85,10 @@ class TorrentService(Service):
         while not download.is_complete:
             await asyncio.sleep(3)
             download.update()
-            self._make_progress(download.completed_length, download.total_length)
+            self._make_progress(download.completed_length, 
+                                download.total_length, 
+                                speed=download.download_speed,
+                                eta=download.eta.seconds)
 
         self._set_state(TaskState.WAITING, description=f"{emoji.HOURGLASS_DONE} Files successfull downloaded")
 
