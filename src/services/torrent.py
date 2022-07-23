@@ -88,9 +88,6 @@ class TorrentService(Service):
             self._make_progress(download.completed_length, download.total_length)
 
         self._set_state(TaskState.WAITING, description=f"{emoji.HOURGLASS_DONE} Files successfull downloaded")
-        
-        # Update
-        download = aria2.get_download(download.gid)
 
         if download.status != 'complete':
             raise Exception(download.error_message)
