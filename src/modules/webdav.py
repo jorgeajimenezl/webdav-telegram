@@ -70,17 +70,17 @@ class WebdavModule(Module):
                 )
 
         if state == TaskState.SUCCESSFULL:
-            await self.app.send_message(
-                user,
-                f"{emoji.CHECK_MARK_BUTTON} Successfull",
-                reply_to_message_id=task.file_message.id,
-            )
-
             if task.checksum and len(task.sums) > 0:
                 piece = "\n".join([f"**{n}**: `{c}`\n" for n, c in task.sums.items()])
                 await self.app.send_message(
                     user,
-                    f"{emoji.INBOX_TRAY} Checksums (SHA1):\n\n{piece}",
+                    f"{emoji.CHECK_MARK_BUTTON} Successfull\n\n{emoji.INBOX_TRAY} Checksums (SHA1):\n\n{piece}",
+                    reply_to_message_id=task.file_message.id,
+                )
+            else:
+                await self.app.send_message(
+                    user,
+                    f"{emoji.CHECK_MARK_BUTTON} Successfull",
                     reply_to_message_id=task.file_message.id,
                 )
 

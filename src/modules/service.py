@@ -12,7 +12,7 @@ from async_executor.task import Task, TaskState
 from aiodav.client import Client as DavClient
 from pyrogram import emoji, Client
 from asyncio.exceptions import CancelledError
-from typing import AsyncGenerator
+from typing import Any, AsyncGenerator, Callable, Dict, Tuple, Union
 from io import IOBase
 from Cryptodome.Hash import SHA1
 
@@ -43,6 +43,12 @@ class Service(Task):
     @staticmethod
     def check(message: Message) -> bool:
         raise NotImplementedError
+
+    @staticmethod
+    def settings() -> Dict[
+        str, Tuple[str, str, Union[str, Dict], Callable[[str], Any]]
+    ]:
+        raise None
 
     def get_pieces_count(self, file_size: int) -> int:
         if file_size == None:
