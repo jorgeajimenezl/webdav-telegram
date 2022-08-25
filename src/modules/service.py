@@ -27,6 +27,7 @@ class Service(Task):
         self.use_streaming: bool = kwargs.get("streaming", False)
         self.parallel: bool = kwargs.get("parallel", False)
         self.checksum: bool = kwargs.get("checksum", True)
+        self.overwrite: bool = kwargs.get("overwrite", False)
 
         if self.checksum:
             self.sha1 = None
@@ -86,6 +87,8 @@ class Service(Task):
             self._set_state(
                 TaskState.WORKING, description=f"{emoji.HOURGLASS_DONE} Downloading"
             )
+
+            # Download and generate the chunks
             async for chunk in generator:
                 offset += len(chunk)
                 self._make_progress(offset, file_size)
@@ -103,7 +106,7 @@ class Service(Task):
 
             async def get_file(path):
                 async with aiofiles.open(path, "rb") as f:
-                    length = os.stat(path).st_size
+                    length = os.path.getsize(path)
                     await self.upload_file(
                         dav, f, length, filename=f"{filename}.{k:0=3}"
                     )
@@ -175,7 +178,7 @@ class Service(Task):
         if self.checksum:
             self.sha1 = SHA1.new()
 
-        await dav.upload_to(remote_path, buffer=file_sender())
+        await dav.upload_to(remote_path, buffer=file_sender(), overwrite=self.overwrite)
 
         if self.checksum:
             self.sums[name] = self.sha1.hexdigest()
@@ -283,6 +286,7 @@ class Service(Task):
                         remote_path,
                         buffer=file,
                         buffer_size=length,
+                        overwrite=self.overwrite,
                         progress=self._make_progress,
                     )
 

@@ -29,6 +29,7 @@ class Database(object):
                 "use-compression": "false",
                 "file-password": "",
                 "checksum": "true",
+                "file-overwrite": "false",
             }
 
             self.set_data(id, **data)

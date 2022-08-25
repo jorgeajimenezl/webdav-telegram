@@ -107,7 +107,7 @@ class YoutubeService(Service):
                                 timeout=self.timeout,
                                 chunk_size=2097152) as dav:
                 async with aiofiles.open(filename, 'rb') as file:
-                    await self.upload_file(dav, file, os.stat(filename).st_size, title=meta['title'])
+                    await self.upload_file(dav, file, os.path.getsize(filename), title=meta['title'])
         except Exception as e:
             raise e
         finally:

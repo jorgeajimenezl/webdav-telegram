@@ -81,6 +81,12 @@ class SettingsModule(Module):
         #     r"(on|off|true|false)",
         #     bool,
         # ),
+        "file-overwrite": (
+            f"{emoji.WRITING_HAND} File Overwrite",
+            "Turn on overwrite the files in the server (Default: False)",
+            r"(on|off|true|false)",
+            bool,
+        ),
         "file-password": (
             f"{emoji.KEYCAP_ASTERISK} File Password",
             "Write the password to encrypt all files (Default: Empty)",

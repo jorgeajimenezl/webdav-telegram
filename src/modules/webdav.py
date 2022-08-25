@@ -137,6 +137,7 @@ class WebdavModule(Module):
             streaming=utils.get_bool(data["streaming"]),
             parallel=utils.get_bool(data["upload-parallel"]),
             checksum=utils.get_bool(data["checksum"]),
+            overwrite=utils.get_bool(data["file-overwrite"]),
             hostname=data["server-uri"],
             username=data["username"],
             password=data["password"],
