@@ -143,6 +143,9 @@ class SettingsModule(Module):
                     self._get_button(user, "checksum"),
                     self._get_button(user, "file-password"),
                 ],
+                [
+                    self._get_button(user, "file-overwrite"),
+                ],
                 [self.others_action.button(f"{emoji.LEFT_ARROW} Others settings")],
                 [self.close_action.button(f"{emoji.LEFT_ARROW} Close")],
             ]
