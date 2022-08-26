@@ -126,8 +126,7 @@ class FileModule(Module):
 
                 # Notify and go back
                 await callback_query.answer(f"The item **{name}** has been deleted")
-                await asyncio.create_task(self.list(user, app, callback_query.message))
-                return
+                asyncio.create_task(self.list(user, app, callback_query.message))
             except RemoteResourceNotFound:
                 await app.send_message(
                     user, f"Resource **{path}** isn't longer available"
