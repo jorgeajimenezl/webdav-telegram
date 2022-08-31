@@ -94,7 +94,7 @@ async def main():
                 BotCommand("settings", f"{emoji.GEAR} Bot settings"),
                 BotCommand("list", f"{emoji.OPEN_FILE_FOLDER} List cloud entries"),
                 BotCommand("free", f"{emoji.BAR_CHART} Free space on cloud"),
-                # BotCommand("status", f"{emoji.SCROLL} Get bot status"),
+                BotCommand("status", f"{emoji.SCROLL} Get bot status"),
             ]
         )
         await idle()

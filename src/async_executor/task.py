@@ -1,4 +1,6 @@
 import asyncio
+import functools
+from textwrap import wrap
 import time
 from enum import Enum
 from threading import Lock
@@ -107,4 +109,7 @@ class Task(object):
         return hash(self.id)
 
 
-# async def function_to_task(coro):
+async def function_to_task(coro, *args, **kwargs) -> Task:
+    task = Task(*args, **kwargs)
+    task.start = coro
+    return task

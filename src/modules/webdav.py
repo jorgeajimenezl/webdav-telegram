@@ -266,6 +266,13 @@ class WebdavModule(Module):
     #         ),
     #     )
 
+    async def status(self, app: Client, message: Message):
+        user = message.from_user.id
+
+        active = self.executor.active_count
+        total = self.executor.total_count
+        await app.send_message(user, f"**Status:**\n{emoji.YELLOW_CIRCLE} Active: {active}\n{emoji.BLUE_CIRCLE} Total: {total}")
+
     def register(self, app: Client):
         self.app = app
 
@@ -276,6 +283,7 @@ class WebdavModule(Module):
             app.add_handler(MessageHandler(self.upload_file)),
             self.cancel_group.callback_handler(self.cancel_upload),
             # MessageHandler(self.urls_batch, filters.command("batch")),
+            MessageHandler(self.status, filters.command("status")),
         ]
 
         for u in handlers:
