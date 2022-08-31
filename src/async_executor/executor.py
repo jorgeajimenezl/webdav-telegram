@@ -111,7 +111,7 @@ class TaskExecutor(object):
             task._future = future
 
             if future.done():
-                if on_end_callback != None:
+                if on_end_callback is not None:
                     if inspect.iscoroutinefunction(on_end_callback):
                         asyncio.create_task(on_end_callback(task))
                     else:
@@ -128,7 +128,7 @@ class TaskExecutor(object):
                     if index != -1:
                         self._count_tasks[index] -= 1
 
-                    if on_end_callback != None:
+                    if on_end_callback is not None:
                         if inspect.iscoroutinefunction(on_end_callback):
                             asyncio.create_task(on_end_callback(task))
                         else:

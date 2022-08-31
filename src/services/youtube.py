@@ -56,7 +56,7 @@ class YoutubeService(Service):
                 message_text='**Select format**',
                 multi_selection=False,
                 name_selector=lambda x: f"{ydl.format_resolution(x)}({x['ext']}) - "
-                                        f"{naturalsize(x['filesize'], binary=True) if 'filesize' in x and x['filesize'] != None else 'Unknown'}")
+                                        f"{naturalsize(x['filesize'], binary=True) if 'filesize' in x and x['filesize'] is not None else 'Unknown'}")
 
             return format    
 

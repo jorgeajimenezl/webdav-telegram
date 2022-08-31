@@ -35,9 +35,9 @@ class Task(object):
         self.kwargs = kwargs
 
     def cancel(self) -> None:
-        if self._future == None:
+        if self._future is None:
             raise Exception("Unable to cancel a task that hasn't been scheduled")
-            
+
         self._future.cancel()
 
     async def start(self) -> None:
@@ -55,14 +55,14 @@ class Task(object):
         return self._childs
 
     async def wait_for_childs(self) -> None:
-        if self._future == None:
+        if self._future is None:
             raise Exception("Unable to wait a task that hasn't been scheduled")
 
         if len(self._childs) > 0:
             await asyncio.wait([asyncio.create_task(x.wait()) for x in self._childs])
 
     async def wait(self) -> None:
-        await self.wait_for_childs()        
+        await self.wait_for_childs()
         await self._future
 
     @property
@@ -103,17 +103,19 @@ class Task(object):
             self._progress = (current, total)
 
             try:
-                if self._last_time == None:
+                if self._last_time is None:
                     self._last_time = time.monotonic()
                     self._last_point = current
                     return
 
                 # compute eta
-                self._speed = kwargs.get(
-                    "speed",
-                    (current - self._last_point) / (time.monotonic() - self._last_time),
-                )
-                self._eta = kwargs.get("eta", (total - current) / self._speed)
+                if current is not None:
+                    self._speed = kwargs.get(
+                        "speed",
+                        (current - self._last_point)
+                        / (time.monotonic() - self._last_time),
+                    )
+                    self._eta = kwargs.get("eta", (total - current) / self._speed)
             except Exception:
                 self._eta = None
                 self._speed = None

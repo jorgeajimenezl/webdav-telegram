@@ -55,7 +55,7 @@ class Service(Task):
         raise None
 
     def get_pieces_count(self, file_size: int) -> int:
-        if file_size == None:
+        if file_size is None:
             return None
 
         split_size = self.split_size if self.split_size > 0 else file_size
@@ -130,6 +130,7 @@ class Service(Task):
             self.set_state(
                 TaskState.WORKING, description=f"{emoji.HOURGLASS_DONE} Uploading"
             )
+            self.make_progress(None, None)
 
             for file in files:
                 child = self.clone(child=True)  # Make a clone with this service data
@@ -238,7 +239,7 @@ class Service(Task):
                         length,
                         filename=f"{filename}.{k:0=3}",
                         title=f"{filename} [Piece #{k}]"
-                        if pieces == None
+                        if pieces is None
                         else f"{filename} [{k}/{pieces}]",
                     )
 
@@ -258,7 +259,7 @@ class Service(Task):
                     length,
                     filename=f"{filename}.{(k + 1):0=3}" if pieces != 1 else filename,
                     title=f"{filename} [Piece #{k}]"
-                    if pieces == None
+                    if pieces is None
                     else f"{filename} [{k}/{pieces}]",
                 )
 

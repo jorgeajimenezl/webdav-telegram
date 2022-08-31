@@ -48,7 +48,7 @@ def sanitaze_filename(x: str) -> str:
 
 
 def get_str(x: str) -> str:
-    return x if x != None else "Unknown"
+    return x if x is not None else "Unknown"
 
 
 def get_bool(x: str) -> bool:
@@ -172,8 +172,8 @@ async def selection(
             + (extra if multi_selection else [[cancel_button.button("Cancel")]])
         )
 
-        if callback_query == None:
-            if message == None:
+        if callback_query is None:
+            if message is None:
                 return await app.send_message(user, message_text, reply_markup=markup)
             else:
                 await message.edit(message_text, reply_markup=markup)

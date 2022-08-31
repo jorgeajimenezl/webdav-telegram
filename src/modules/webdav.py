@@ -91,7 +91,7 @@ class WebdavModule(Module):
 
             # Remove progress message
             try:
-                if message != None:
+                if message is not None:
                     await message.delete(True)
             except Exception:
                 pass
@@ -114,7 +114,7 @@ class WebdavModule(Module):
                 cls = service
                 break
 
-        if cls == None:
+        if cls is None:
             await app.send_message(
                 user, f"{emoji.CROSS_MARK} This action don't match with any service"
             )
@@ -171,19 +171,19 @@ class WebdavModule(Module):
                 if state == TaskState.ERROR or state == TaskState.SUCCESSFULL:
                     continue
 
-                if description == None:
+                if description is None:
                     continue
 
                 current, total = task.progress
-                if (current or total) != None:
+                if (current or total) is not None:
                     current_text = (
                         naturalsize(current, binary=True, format="%.3f")
-                        if current != None
+                        if current is not None
                         else "Unknown"
                     )
                     total_text = (
                         naturalsize(total, binary=True, format="%.3f")
-                        if total != None
+                        if total is not None
                         else "Unknown"
                     )
 
@@ -192,11 +192,13 @@ class WebdavModule(Module):
 
                     speed_text = (
                         utils.get_str(naturalsize(speed, binary=True))
-                        if speed != None
+                        if speed is not None
                         else "Unknown"
                     )
                     eta_text = (
-                        utils.get_str(naturaldelta(eta)) if eta != None else "Unknown"
+                        utils.get_str(naturaldelta(eta))
+                        if eta is not None
+                        else "Unknown"
                     )
 
                     text = f"[**{task.id}**]\n\n{description} ({current_text} / {total_text})\nSpeed: {speed_text}/sec\nETA: {eta_text}"
@@ -213,12 +215,12 @@ class WebdavModule(Module):
                         c, t = task.progress
                         c_text = (
                             naturalsize(c, binary=True, format="%.3f")
-                            if c != None
+                            if c is not None
                             else "Unknown"
                         )
                         t_text = (
                             naturalsize(t, binary=True, format="%.3f")
-                            if t != None
+                            if t is not None
                             else "Unknown"
                         )
 

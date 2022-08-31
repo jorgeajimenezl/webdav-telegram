@@ -72,7 +72,7 @@ class FileModule(Module):
                         message=message,
                     )
 
-                    if node == None:
+                    if node is None:
                         break
 
                     node = node[0]
