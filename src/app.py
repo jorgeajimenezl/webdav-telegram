@@ -76,6 +76,12 @@ async def start(_, message: Message):
     else:
         await app.send_message(user, "You are already logged")
 
+@app.on_message(filters.command("start") & filters.private)
+async def help(_, message: Message):
+    user = message.from_user.id
+
+    await app.send_message(user, "**Help:**\n\nComming soon... :)")
+
 
 # Register all modules callbacks
 settings_module.register(app)
@@ -95,6 +101,7 @@ async def main():
                 BotCommand("list", f"{emoji.OPEN_FILE_FOLDER} List cloud entries"),
                 BotCommand("free", f"{emoji.BAR_CHART} Free space on cloud"),
                 BotCommand("status", f"{emoji.SCROLL} Get bot status"),
+                BotCommand("help", f"{emoji.SCROLL} Help!"),
             ]
         )
         await idle()
