@@ -108,7 +108,7 @@ class TaskExecutor(object):
                 self._count_tasks[u] += 1
 
             # assign task future
-            task.future = future
+            task._future = future
 
             if future.done():
                 if on_end_callback != None:

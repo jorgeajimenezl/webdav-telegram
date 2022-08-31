@@ -1,7 +1,6 @@
+import time
 import asyncio
 import functools
-from textwrap import wrap
-import time
 from enum import Enum
 from threading import Lock
 from typing import Callable, List, Tuple, Union
@@ -19,7 +18,7 @@ class TaskState(Enum):
 
 
 class Task(object):
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, **kwargs) -> None:
         self.id: UUID = uuid4()
 
         self._state = (TaskState.UNKNOW, None)
@@ -31,29 +30,35 @@ class Task(object):
         self._speed: int = None
         self._executor = None
         self._childs: List[Task] = []
+        self._future = None
 
-        self.stop = None
-        self.result = None
-        self.future = None
         self.kwargs = kwargs
 
     def cancel(self):
-        if self.future != None:
-            self.future.cancel()
+        if self._future != None:
+            self._future.cancel()
 
     async def start(self) -> None:
+        # Body of the rutine to task execute
+
         raise NotImplementedError
 
     def schedule_child(
         self,
         task: "Task",
-        on_end_callback: Callable[["Task"], None],
     ) -> None:
-        self._executor.schedule(task, on_end_callback)
+        self._executor.schedule(task, lambda t: self._childs.remove(t))
         self._childs.append(task)
 
-    def childs(self):
-        return self._childs
+    # def childs(self):
+    #     return self._childs
+
+    async def wait(self) -> None:
+        if self._future == None:
+            raise Exception("Unable to wait a task that hasn't been scheduled")
+
+        await asyncio.wait([asyncio.create_task(x.wait()) for x in self._childs])
+        await self._future
 
     @property
     def state(self) -> Tuple[TaskState, str]:
@@ -118,3 +123,11 @@ async def function_to_task(coro, *args, **kwargs) -> Task:
     task = Task(*args, **kwargs)
     task.start = coro
     return task
+
+def to_task(func: Callable, *args, **kwargs) -> Callable:
+    @functools.wraps(func)
+    def wrapper(*x, **y):
+        task = Task(*args, **kwargs)
+        task.start = functools.partial(func, *x, **y)
+
+    return wrapper

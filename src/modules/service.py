@@ -117,9 +117,13 @@ class Service(Task):
                     pass
 
             # await asyncio.gather([get_file(x) for x in files])
+
+            # Schedule the tasks
             for file in files:
                 s = self.__copy__() # Make a shallow copy of this
                 self.schedule_child(s)
+
+            # TODO: Wait for all
 
     async def copy(
         self,
