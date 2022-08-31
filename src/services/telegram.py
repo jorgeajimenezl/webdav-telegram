@@ -47,7 +47,7 @@ class TelegramService(Service):
         return (getattr(media, "file_name", None), getattr(media, "file_size", None))
 
     async def start(self) -> None:
-        self._set_state(TaskState.STARTING)
+        self.set_state(TaskState.STARTING)
         filename, total_bytes = TelegramService.__get_file_name(self.file_message)
 
         if filename is None:

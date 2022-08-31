@@ -2,7 +2,7 @@ import asyncio
 import imp
 from services.youtube import YoutubeService
 import utils
-from typing import List, Type
+from typing import Dict, List, Type
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from pyrogram import Client, emoji, filters
@@ -46,9 +46,9 @@ class WebdavModule(Module):
         self.scheduler = scheduler
         self.app = None
 
-        self.tasks_id = dict()
+        self.tasks_id: Dict[int, Task] = dict()
         self.executor = TaskExecutor()
-        self.tasks = dict()
+        self.tasks: Dict[Task, Message] = dict()
         self.tasks_lock = asyncio.Lock()
         self.factory = ButtonFactory()
 
@@ -61,7 +61,7 @@ class WebdavModule(Module):
 
     async def _on_task_end(self, task: Service):
         user = task.user
-        state, description = task.state()
+        state, description = task.state
 
         if state == TaskState.ERROR or state == TaskState.CANCELED:
             for piece in utils.cut(description, 4096):
@@ -164,7 +164,7 @@ class WebdavModule(Module):
     async def _updater(self):
         async with self.tasks_lock:
             for task, message in self.tasks.items():
-                state, description = task.state()
+                state, description = task.state
 
                 if state == TaskState.ERROR or state == TaskState.SUCCESSFULL:
                     continue
@@ -172,7 +172,7 @@ class WebdavModule(Module):
                 if description == None:
                     continue
 
-                current, total = task.progress()
+                current, total = task.progress
                 if (current or total) != None:
                     current_text = (
                         naturalsize(current, binary=True, format="%.3f")
@@ -185,8 +185,8 @@ class WebdavModule(Module):
                         else "Unknown"
                     )
 
-                    speed = task.speed()
-                    eta = task.eta()
+                    speed = task.speed
+                    eta = task.eta
 
                     speed_text = (
                         utils.get_str(naturalsize(speed, binary=True))

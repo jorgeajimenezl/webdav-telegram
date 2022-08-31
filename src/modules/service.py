@@ -84,14 +84,14 @@ class Service(Task):
             files = [os.path.join(directory, f"{k}")]
             file = open(files[-1], "wb")
 
-            self._set_state(
+            self.set_state(
                 TaskState.WORKING, description=f"{emoji.HOURGLASS_DONE} Downloading"
             )
 
             # Download and generate the chunks
             async for chunk in generator:
                 offset += len(chunk)
-                self._make_progress(offset, file_size)
+                self.make_progress(offset, file_size)
 
                 file.write(chunk)
 
@@ -127,7 +127,7 @@ class Service(Task):
         """Download the whole file before to send it to the webdav server"""
 
         with tempfile.TemporaryFile() as file:
-            self._set_state(
+            self.set_state(
                 TaskState.WORKING,
                 description=f"{emoji.HOURGLASS_DONE} Downloading to local filesystem",
             )
@@ -136,7 +136,7 @@ class Service(Task):
 
             async for chunk in generator:
                 offset += len(chunk)
-                self._make_progress(offset, file_size)
+                self.make_progress(offset, file_size)
                 file.write(chunk)
 
             file.flush()
@@ -158,7 +158,7 @@ class Service(Task):
 
         name = utils.sanitaze_filename(filename)
         remote_path = os.path.join(self.webdav_path, name)
-        self._set_state(
+        self.set_state(
             TaskState.WORKING, description=f"{emoji.HOURGLASS_DONE} Streaming to Webdav"
         )
         self.reset_stats()
@@ -168,7 +168,7 @@ class Service(Task):
 
             async for chunk in generator:
                 offset += len(chunk)
-                self._make_progress(offset, file_size)
+                self.make_progress(offset, file_size)
 
                 if self.checksum:
                     self.sha1.update(chunk)
@@ -197,12 +197,12 @@ class Service(Task):
             pieces = self.get_pieces_count(file_size)
 
             async for chunk in generator:
-                self._set_state(
+                self.set_state(
                     TaskState.WORKING, description=f"{emoji.HOURGLASS_DONE} Downloading"
                 )
 
                 offset += len(chunk)
-                self._make_progress(offset, file_size)
+                self.make_progress(offset, file_size)
 
                 file.write(chunk)
 
@@ -276,18 +276,18 @@ class Service(Task):
                     assert pos == piece * split_size, "Impossible seek stream"
                     length = min(split_size, file_size - pos)
 
-                    self._set_state(
+                    self.set_state(
                         TaskState.WORKING,
                         description=f"{emoji.HOURGLASS_DONE} Uploading **{title} [{piece}/{pieces}]**",
                     )
                     self.reset_stats()
-                    self._make_progress(0, length)
+                    self.make_progress(0, length)
                     await dav.upload_to(
                         remote_path,
                         buffer=file,
                         buffer_size=length,
                         overwrite=self.overwrite,
-                        progress=self._make_progress,
+                        progress=self.make_progress,
                     )
 
                     if self.checksum:
@@ -315,7 +315,7 @@ class Service(Task):
                 except CancelledError:
                     raise CancelledError
                 except Exception as e:
-                    self._set_state(
+                    self.set_state(
                         TaskState.WORKING,
                         description=f"{emoji.CLOCKWISE_VERTICAL_ARROWS} Trying again at error: {retry_count} attemps",
                     )

@@ -46,11 +46,11 @@ class TaskExecutor(object):
         async with self._semaphore:
             try:
                 await task.start()
-                task._set_state(TaskState.SUCCESSFULL)
+                task.set_state(TaskState.SUCCESSFULL)
             except CancelledError:
-                task._set_state(TaskState.CANCELED, f"Task cancelled")
+                task.set_state(TaskState.CANCELED, f"Task cancelled")
             except Exception as e:
-                task._set_state(TaskState.ERROR, f"`{traceback.format_exc()}`")
+                task.set_state(TaskState.ERROR, f"`{traceback.format_exc()}`")
 
             return (index, task)
 

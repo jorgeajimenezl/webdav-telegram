@@ -72,12 +72,12 @@ class TorrentService(Service):
         # Chossing torrent files to download            
         info_hash, files = await self.options(aria2)       
 
-        self._set_state(TaskState.STARTING)    
+        self.set_state(TaskState.STARTING)    
         # link = self.kwargs.get('url', self.file_message.text)
         download = aria2.add_torrent(f'/app/data/{info_hash}.torrent', options={'select-file': ",".join(map(str, files))})
 
         # Wait for download complete
-        self._set_state(TaskState.WORKING,
+        self.set_state(TaskState.WORKING,
                         description=
                         f"{emoji.HOURGLASS_DONE} Download torrent"
         )
@@ -86,12 +86,12 @@ class TorrentService(Service):
         while not download.is_complete and not download.status != "error":
             await asyncio.sleep(3)
             download.update()
-            self._make_progress(download.completed_length, 
+            self.make_progress(download.completed_length, 
                                 download.total_length, 
                                 speed=download.download_speed,
                                 eta=download.eta.seconds)
 
-        self._set_state(TaskState.WAITING, description=f"{emoji.HOURGLASS_DONE} Files successfull downloaded")
+        self.set_state(TaskState.WAITING, description=f"{emoji.HOURGLASS_DONE} Files successfull downloaded")
 
         if download.status != 'complete':
             raise Exception(download.error_message)

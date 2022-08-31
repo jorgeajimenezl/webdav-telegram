@@ -69,10 +69,10 @@ class YoutubeService(Service):
                 raise CancelledError
             format = format[0]
 
-            self._set_state(TaskState.STARTING)
+            self.set_state(TaskState.STARTING)
 
             def progress_wrapper(d):                   
-                self._make_progress(d.get('downloaded_bytes', None), 
+                self.make_progress(d.get('downloaded_bytes', None), 
                                     d.get('total_bytes', None), 
                                     speed=d.get('speed', None), 
                                     eta=d.get('eta', None))
@@ -87,7 +87,7 @@ class YoutubeService(Service):
             }
             
             with yt_dlp.YoutubeDL(options) as ydl:  
-                self._set_state(TaskState.WORKING, description=f"{emoji.HOURGLASS_DONE} Downloading video")
+                self.set_state(TaskState.WORKING, description=f"{emoji.HOURGLASS_DONE} Downloading video")
                 self.reset_stats()
 
                 loop = asyncio.get_running_loop()

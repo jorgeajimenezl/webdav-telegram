@@ -39,18 +39,22 @@ class Task(object):
     async def start(self) -> None:
         raise NotImplementedError
 
+    @property
     def state(self) -> Tuple[TaskState, str]:
         with self._lock:
             return self._state
 
+    @property
     def progress(self) -> Tuple[int, int]:
         with self._lock:
             return self._progress
 
+    @property
     def eta(self) -> Union[float, None]:
         with self._lock:
             return self._eta
 
+    @property
     def speed(self) -> Union[float, None]:
         with self._lock:
             return self._speed
@@ -63,12 +67,12 @@ class Task(object):
             self._speed = None
             self._progress = (None, None)
 
-    def _set_state(self, state: TaskState, description: str = None) -> None:
+    def set_state(self, state: TaskState, description: str = None) -> None:
         with self._lock:
             self._state = (state, description)
         return None
 
-    def _make_progress(self, current: int, total: int, *args, **kwargs) -> None:
+    def make_progress(self, current: int, total: int, *args, **kwargs) -> None:
         with self._lock:
             self._progress = (current, total)
 

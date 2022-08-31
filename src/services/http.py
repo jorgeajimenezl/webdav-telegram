@@ -40,7 +40,7 @@ class HttpService(Service):
         )
 
     async def start(self) -> None:
-        self._set_state(TaskState.STARTING)
+        self.set_state(TaskState.STARTING)
 
         async with DavClient(
             hostname=self.webdav_hostname,
