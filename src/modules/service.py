@@ -40,7 +40,7 @@ class Service(Task):
         self.webdav_path: str = kwargs.get("path")
         self.timeout: int = kwargs.get("timeout", 60 * 60 * 2)
 
-        super().__init__(*args, **kwargs)
+        super().__init__(**kwargs)
 
     @staticmethod
     def check(message: Message) -> bool:

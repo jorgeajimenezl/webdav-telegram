@@ -124,10 +124,11 @@ async def function_to_task(coro, *args, **kwargs) -> Task:
     task.start = coro
     return task
 
-def to_task(func: Callable, *args, **kwargs) -> Callable:
+def to_task(func: Callable, **ctx) -> Callable:
     @functools.wraps(func)
-    def wrapper(*x, **y):
-        task = Task(*args, **kwargs)
-        task.start = functools.partial(func, *x, **y)
+    def wrapper(*args, **kwargs):
+        task = Task(**ctx)
+        task.start = functools.partial(func, *args, **kwargs)
+        return task
 
     return wrapper
