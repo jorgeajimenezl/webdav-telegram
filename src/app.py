@@ -77,7 +77,7 @@ async def start(_, message: Message):
         await app.send_message(user, "You are already logged")
 
 
-@app.on_message(filters.command("start") & filters.private)
+@app.on_message(filters.command("help") & filters.private)
 async def help(_, message: Message):
     user = message.from_user.id
 
