@@ -199,9 +199,9 @@ class WebdavModule(Module):
                         utils.get_str(naturaldelta(eta)) if eta != None else "Unknown"
                     )
 
-                    text = f"[**{task.id}**] {description} ({current_text} / {total_text})\nSpeed: {speed_text}/sec\nETA: {eta_text}"
+                    text = f"[**{task.id}**]\n\n{description} ({current_text} / {total_text})\nSpeed: {speed_text}/sec\nETA: {eta_text}"
                 else:
-                    text = f"[**{task.id}**] {description}"
+                    text = f"[**{task.id}**]\n\n{description}"
 
                 # Walk to task childs (1 depth level)
                 childs = task.childs()

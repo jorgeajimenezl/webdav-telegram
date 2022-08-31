@@ -1,7 +1,9 @@
 import asyncio
+import functools
 import aiofiles
 import utils
 import os
+
 # import copy
 
 # import aiofiles.tempfile
@@ -9,7 +11,7 @@ import tempfile
 
 from pyrogram.types import Message
 from aiofiles.threadpool.binary import AsyncBufferedIOBase
-from async_executor.task import Task, TaskState, function_to_task
+from async_executor.task import Task, TaskState, to_task
 from aiodav.client import Client as DavClient
 from pyrogram import emoji, Client
 from asyncio.exceptions import CancelledError
@@ -109,7 +111,11 @@ class Service(Task):
                 async with aiofiles.open(path, "rb") as f:
                     length = os.path.getsize(path)
                     await self.upload_file(
-                        dav, f, length, filename=f"{filename}.{k:0=3}"
+                        dav,
+                        f,
+                        length,
+                        title=f"Piece {k}",
+                        filename=f"{filename}.{k:0=3}",
                     )
                 try:
                     os.unlink(path)
@@ -120,10 +126,12 @@ class Service(Task):
 
             # Schedule the tasks
             for file in files:
-                s = self.__copy__() # Make a shallow copy of this
-                self.schedule_child(s)
+                child = self.clone(child=True)  # Make a clone with this service data
+                child.start = functools.partial(get_file, file)
 
-            # TODO: Wait for all
+                self.schedule_child(child)
+
+            await self.wait_for_childs()
 
     async def copy(
         self,
@@ -333,9 +341,9 @@ class Service(Task):
                     if retry_count < 0:
                         raise e
 
-    def __copy__(self) -> "Service":
+    def clone(self, child=False) -> "Service":
         service = Service()
-        
+
         service.user = self.user
         service.file_message = self.file_message
         service.pyrogram = self.pyrogram
@@ -347,7 +355,7 @@ class Service(Task):
 
         if self.checksum:
             service.sha1 = None
-            service.sums = dict()
+            service.sums = dict() if child else self.sums
 
         service.webdav_hostname = self.webdav_hostname
         service.webdav_username = self.webdav_username

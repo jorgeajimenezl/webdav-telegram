@@ -53,11 +53,15 @@ class Task(object):
     # def childs(self):
     #     return self._childs
 
-    async def wait(self) -> None:
+    async def wait_for_childs(self) -> None:
         if self._future == None:
             raise Exception("Unable to wait a task that hasn't been scheduled")
 
-        await asyncio.wait([asyncio.create_task(x.wait()) for x in self._childs])
+        if len(self._childs) > 0:
+            await asyncio.wait([asyncio.create_task(x.wait()) for x in self._childs])
+
+    async def wait(self) -> None:
+        await self.wait_for_childs()        
         await self._future
 
     @property
@@ -123,6 +127,7 @@ async def function_to_task(coro, *args, **kwargs) -> Task:
     task = Task(*args, **kwargs)
     task.start = coro
     return task
+
 
 def to_task(func: Callable, **ctx) -> Callable:
     @functools.wraps(func)
