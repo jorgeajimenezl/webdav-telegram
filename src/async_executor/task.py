@@ -43,10 +43,10 @@ class Task(object):
         raise NotImplementedError
 
     def append_child(self, task: "Task") -> None:
-        self._childs.append(task) 
+        self._childs.append(task)
 
     def childs(self):
-        return self._childs      
+        return self._childs
 
     @property
     def state(self) -> Tuple[TaskState, str]:

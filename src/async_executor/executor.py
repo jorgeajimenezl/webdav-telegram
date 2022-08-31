@@ -21,6 +21,7 @@ class TaskExecutor(object):
         self._semaphore = asyncio.Semaphore(max_tasks)
         self._lock = Lock()
         self._count = 0
+        self._active_count = 0
 
         self._futures = []
         self._loops = []
@@ -44,6 +45,7 @@ class TaskExecutor(object):
 
     async def _execute(self, task: Task, index: int) -> Tuple[int, Task]:
         async with self._semaphore:
+            self._active_count += 1
             try:
                 await task.start()
                 task.set_state(TaskState.SUCCESSFULL)
@@ -51,6 +53,7 @@ class TaskExecutor(object):
                 task.set_state(TaskState.CANCELED, f"Task cancelled")
             except Exception as e:
                 task.set_state(TaskState.ERROR, f"`{traceback.format_exc()}`")
+            self._active_count -= 1
 
             return (index, task)
 
@@ -59,22 +62,29 @@ class TaskExecutor(object):
         self._count_tasks = 0
         self._threads_running = 0
 
+    @property
+    def total_count(self) -> int:
+        return self._count
+
+    @property
+    def active_count(self) -> int:
+        return self._active_count
+
     def schedule(
         self,
-        cls: type,
+        task: Task,
         on_end_callback: Callable[[Task], None],
         current_thread: bool = True,
-        *args,
-        **kwargs,
-    ) -> Task:
-        if not issubclass(cls, Task):
-            raise TypeError("the task argument must be a subclass from 'Task'")
+    ) -> None:
+        if not isinstance(task, Task):
+            raise TypeError("the task argument must be a instance from 'Task'")
 
-        # Instantiate task
-        task: Task = cls(*args, **kwargs)
-        self._count += 1
+        # WARNING: From here, this tasks has been owned by this executor
+        # task: Task = cls(*args, **kwargs)       
 
         with self._lock:
+            self._count += 1
+
             if current_thread:
                 future = asyncio.create_task(self._execute(task, -1))
             else:
@@ -123,6 +133,6 @@ class TaskExecutor(object):
                         on_end_callback(task)
 
             future.add_done_callback(at_end)
+            task._executor = self
 
-        task._executor = self
         return task

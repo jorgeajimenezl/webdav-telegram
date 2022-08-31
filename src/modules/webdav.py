@@ -127,10 +127,8 @@ class WebdavModule(Module):
     ):
         data = self.database.get_data(user)
 
-        # Add the task to the executor
-        task = self.executor.schedule(
-            cls,
-            on_end_callback=self._on_task_end,
+        # Instantiate task
+        task: Task = cls(
             user=user,
             file_message=message,
             pyrogram=app,
@@ -146,6 +144,9 @@ class WebdavModule(Module):
             push_task_method=self.push_task,  # To allow the services push anothers services call
             **kwargs,
         )
+
+        # Add the task to the executor
+        self.executor.schedule(task, on_end_callback=self._on_task_end)
 
         if task == None:
             await app.send_message(user, f"{emoji.CROSS_MARK} Unable to start task")
