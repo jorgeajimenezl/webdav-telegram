@@ -116,7 +116,7 @@ class Service(Task):
                         dav,
                         f,
                         length,
-                        title=f"Piece {k}",
+                        description=f"Piece {k}",
                         filename=f"{filename}.{k:0=3}",
                     )
                 try:
@@ -272,6 +272,7 @@ class Service(Task):
         file: IOBase,
         file_size: int,
         title: str = None,
+        description: str = None,
         filename: str = None,
     ) -> None:
         """Upload a file to webdav. If the file need to split, this split it"""
@@ -301,7 +302,7 @@ class Service(Task):
 
                     self.set_state(
                         TaskState.WORKING,
-                        description=f"{emoji.HOURGLASS_DONE} Uploading **{title} [{piece}/{pieces}]**",
+                        description=(description or f"{emoji.HOURGLASS_DONE} Uploading **{title} [{piece}/{pieces}]**"),
                     )
                     self.reset_stats()
                     self.make_progress(0, length)
