@@ -80,7 +80,7 @@ class TaskExecutor(object):
             raise TypeError("the task argument must be a instance from 'Task'")
 
         # WARNING: From here, this tasks has been owned by this executor
-        # task: Task = cls(*args, **kwargs)       
+        # task: Task = cls(*args, **kwargs)
 
         with self._lock:
             self._count += 1

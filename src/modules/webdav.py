@@ -199,9 +199,9 @@ class WebdavModule(Module):
                         utils.get_str(naturaldelta(eta)) if eta != None else "Unknown"
                     )
 
-                    text = f"{description} ({current_text} / {total_text})\nSpeed: {speed_text}/sec\nETA: {eta_text}"
+                    text = f"[**{task.id}**] {description} ({current_text} / {total_text})\nSpeed: {speed_text}/sec\nETA: {eta_text}"
                 else:
-                    text = f"{description}"
+                    text = f"[**{task.id}**] {description}"
 
                 # Walk to task childs (1 depth level)
                 childs = task.childs()
@@ -271,7 +271,10 @@ class WebdavModule(Module):
 
         active = self.executor.active_count
         total = self.executor.total_count
-        await app.send_message(user, f"**Status:**\n{emoji.YELLOW_CIRCLE} Active: {active}\n{emoji.BLUE_CIRCLE} Total: {total}")
+        await app.send_message(
+            user,
+            f"**Status:**\n{emoji.YELLOW_CIRCLE} Active: {active}\n{emoji.BLUE_CIRCLE} Total: {total}",
+        )
 
     def register(self, app: Client):
         self.app = app
