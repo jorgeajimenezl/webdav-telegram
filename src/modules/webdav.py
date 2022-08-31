@@ -1,5 +1,6 @@
 import asyncio
 import imp
+from uuid import UUID
 from services.youtube import YoutubeService
 import utils
 from typing import Dict, List, Type
@@ -46,7 +47,7 @@ class WebdavModule(Module):
         self.scheduler = scheduler
         self.app = None
 
-        self.tasks_id: Dict[int, Task] = dict()
+        self.tasks_id: Dict[UUID, Task] = dict()
         self.executor = TaskExecutor()
         self.tasks: Dict[Task, Message] = dict()
         self.tasks_lock = asyncio.Lock()
@@ -98,7 +99,7 @@ class WebdavModule(Module):
     async def cancel_upload(self, app: Client, callback_query: CallbackQuery):
         await callback_query.answer("Scheduled stop")
         id = self.factory.get_value(callback_query.data)
-        assert isinstance(id, int)
+        assert isinstance(id, UUID)
 
         async with self.tasks_lock:
             if id in self.tasks_id:
@@ -153,7 +154,7 @@ class WebdavModule(Module):
         async with self.tasks_lock:
             self.tasks[task] = await app.send_message(
                 user,
-                f"Waiting to process this action (Task #{task.id})",
+                f"Waiting to process this action ({task.id})",
                 reply_markup=InlineKeyboardMarkup(
                     [[self.cancel_group.add(task.id, cachable=True).button("Cancel")]]
                 ),

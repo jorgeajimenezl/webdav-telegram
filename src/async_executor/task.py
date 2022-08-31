@@ -3,6 +3,7 @@ import time
 from enum import Enum
 from threading import Lock
 from typing import List, Tuple, Union
+from uuid import UUID, uuid4
 
 
 class TaskState(Enum):
@@ -16,8 +17,8 @@ class TaskState(Enum):
 
 
 class Task(object):
-    def __init__(self, id: int, *args, **kwargs) -> None:
-        self.id = id
+    def __init__(self, *args, **kwargs) -> None:
+        self.id: UUID = uuid4()
 
         self._state = (TaskState.UNKNOW, None)
         self._progress: Tuple[str, str] = (None, None)
@@ -103,7 +104,7 @@ class Task(object):
         return None
 
     def __hash__(self) -> int:
-        return self.id
+        return hash(self.id)
 
 
 # async def function_to_task(coro):

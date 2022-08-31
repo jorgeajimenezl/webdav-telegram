@@ -71,7 +71,7 @@ class TaskExecutor(object):
             raise TypeError("the task argument must be a subclass from 'Task'")
 
         # Instantiate task
-        task = cls(id=self._count, *args, **kwargs)
+        task: Task = cls(*args, **kwargs)
         self._count += 1
 
         with self._lock:
