@@ -59,7 +59,7 @@ class TaskExecutor(object):
         self._count_tasks = 0
         self._threads_running = 0
 
-    def add(
+    def schedule(
         self,
         cls: type,
         on_end_callback: Callable[[Task], None],

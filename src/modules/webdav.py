@@ -127,7 +127,7 @@ class WebdavModule(Module):
         data = self.database.get_data(user)
 
         # Add the task to the executor
-        task = self.executor.add(
+        task = self.executor.schedule(
             cls,
             on_end_callback=self._on_task_end,
             user=user,
