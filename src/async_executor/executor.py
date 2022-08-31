@@ -124,4 +124,5 @@ class TaskExecutor(object):
 
             future.add_done_callback(at_end)
 
+        task._executor = self
         return task

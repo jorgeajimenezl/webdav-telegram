@@ -201,6 +201,35 @@ class WebdavModule(Module):
                 else:
                     text = f"{description}"
 
+                # Walk to task childs (1 depth level)
+                childs = task.childs()
+                if len(childs) > 0:
+                    text += "\n\n"
+
+                    for child in childs:
+                        s, d = child.state
+                        c, t = task.progress
+                        c_text = (
+                            naturalsize(c, binary=True, format="%.3f")
+                            if c != None
+                            else "Unknown"
+                        )
+                        t_text = (
+                            naturalsize(t, binary=True, format="%.3f")
+                            if t != None
+                            else "Unknown"
+                        )
+
+                        match s:
+                            case TaskState.ERROR | TaskState.CANCELED:
+                                e = emoji.RED_CIRCLE
+                            case TaskState.SUCCESSFULL:
+                                e = emoji.GREEN_CIRCLE
+                            case TaskState.WORKING | TaskState.WAITING | TaskState.STARTING:
+                                e = emoji.YELLOW_CIRCLE
+
+                        text += f"{e} {d} [{c_text} / {t_text}]\n"
+
                 if message.text != text:
                     message.text = text
                     await message.edit_text(
@@ -210,7 +239,7 @@ class WebdavModule(Module):
                                 [
                                     self.cancel_group.add(
                                         task.id, cachable=True
-                                    ).button("Cancel")
+                                    ).button(f"{emoji.HOLLOW_RED_CIRCLE} Cancel")
                                 ]
                             ]
                         ),

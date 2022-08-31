@@ -2,7 +2,7 @@ import asyncio
 import time
 from enum import Enum
 from threading import Lock
-from typing import Tuple, Union
+from typing import List, Tuple, Union
 
 
 class TaskState(Enum):
@@ -20,12 +20,14 @@ class Task(object):
         self.id = id
 
         self._state = (TaskState.UNKNOW, None)
-        self._progress = (None, None)
+        self._progress: Tuple[str, str] = (None, None)
         self._lock = Lock()
-        self._last_point = None
-        self._last_time = None
-        self._eta = None
-        self._speed = None
+        self._last_point: int = None
+        self._last_time: int = None
+        self._eta: int = None
+        self._speed: int = None
+        self._executor = None
+        self._childs: List[Task] = []
 
         self.stop = None
         self.result = None
@@ -38,6 +40,12 @@ class Task(object):
 
     async def start(self) -> None:
         raise NotImplementedError
+
+    def append_child(self, task: "Task") -> None:
+        self._childs.append(task) 
+
+    def childs(self):
+        return self._childs      
 
     @property
     def state(self) -> Tuple[TaskState, str]:
@@ -96,3 +104,6 @@ class Task(object):
 
     def __hash__(self) -> int:
         return self.id
+
+
+# async def function_to_task(coro):
