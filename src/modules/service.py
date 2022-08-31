@@ -107,10 +107,12 @@ class Service(Task):
                     files.append(os.path.join(directory, f"{k}"))
                     file = open(files[-1], "wb")
 
-            async def get_file(path):
+            async def get_file(service: "Service", path: str):
+                service.set_state(TaskState.STARTING)
+
                 async with aiofiles.open(path, "rb") as f:
                     length = os.path.getsize(path)
-                    await self.upload_file(
+                    await service.upload_file(
                         dav,
                         f,
                         length,
@@ -123,11 +125,15 @@ class Service(Task):
                     pass
 
             # await asyncio.gather([get_file(x) for x in files])
-
             # Schedule the tasks
+            self.reset_stats()
+            self.set_state(
+                TaskState.WORKING, description=f"{emoji.HOURGLASS_DONE} Uploading"
+            )
+
             for file in files:
                 child = self.clone(child=True)  # Make a clone with this service data
-                child.start = functools.partial(get_file, file)
+                child.start = functools.partial(get_file, child, file)
 
                 self.schedule_child(child)
 
