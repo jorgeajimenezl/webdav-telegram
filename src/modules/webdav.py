@@ -288,7 +288,7 @@ class WebdavModule(Module):
             MessageHandler(self.upload_file),
             self.cancel_group.callback_handler(self.cancel_upload),
             # MessageHandler(self.urls_batch, filters.command("batch")),
-            MessageHandler(self.status, filters.command("status")),
+            MessageHandler(self.status, filters.command("status") & filters.private),
         ]
 
         for u in handlers:

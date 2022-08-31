@@ -158,6 +158,36 @@ class FileModule(Module):
         # TODO: Fix this async bug
         asyncio.create_task(self.list(event.from_user.id, app))
 
+    async def wipe(self, app: Client, message: Message):
+        user = message.from_user.id
+        data = self.database.get_data(user)
+
+        async with DavClient(
+            hostname=data["server-uri"],
+            login=data["username"],
+            password=data["password"],
+        ) as dav:
+            try:
+                if (
+                    await utils.selection(
+                        app,
+                        user,
+                        ["Yes", "No"],
+                        "Confirm to delete all the files",
+                        multi_selection=False,
+                    )
+                ) == "Yes":
+                    nodes = await dav.list()
+                    for node in nodes:
+                        await dav.unlink(node)
+                    await app.send_message(
+                        user, "All the files has been deleted successfully"
+                    )
+                else:
+                    await app.send_message(user, "Wipe cancelled")
+            except Exception as e:
+                await app.send_message(user, f"Unable to wipe the files: {e}")
+
     def register(self, app: Client):
         handlers = [
             MessageHandler(
@@ -165,6 +195,7 @@ class FileModule(Module):
                 filters.command("list") & filters.private,
             ),
             MessageHandler(self.free, filters.command("free") & filters.private),
+            MessageHandler(self.wipe, filters.command("wipe") & filters.private),
             self.delete_group.callback_handler(self.delete_file),
         ]
 

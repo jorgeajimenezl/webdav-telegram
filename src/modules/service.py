@@ -302,7 +302,10 @@ class Service(Task):
 
                     self.set_state(
                         TaskState.WORKING,
-                        description=(description or f"{emoji.HOURGLASS_DONE} Uploading **{title} [{piece}/{pieces}]**"),
+                        description=(
+                            description
+                            or f"{emoji.HOURGLASS_DONE} Uploading **{title} [{piece}/{pieces}]**"
+                        ),
                     )
                     self.reset_stats()
                     self.make_progress(0, length)
