@@ -34,13 +34,14 @@ class Task(object):
 
         self.kwargs = kwargs
 
-    def cancel(self):
-        if self._future != None:
-            self._future.cancel()
+    def cancel(self) -> None:
+        if self._future == None:
+            raise Exception("Unable to cancel a task that hasn't been scheduled")
+            
+        self._future.cancel()
 
     async def start(self) -> None:
         # Body of the rutine to task execute
-
         raise NotImplementedError
 
     def schedule_child(
@@ -50,8 +51,8 @@ class Task(object):
         self._executor.schedule(task, lambda t: self._childs.remove(t))
         self._childs.append(task)
 
-    # def childs(self):
-    #     return self._childs
+    def childs(self) -> List["Task"]:
+        return self._childs
 
     async def wait_for_childs(self) -> None:
         if self._future == None:
