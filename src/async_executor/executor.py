@@ -73,7 +73,7 @@ class TaskExecutor(object):
     def schedule(
         self,
         task: Task,
-        on_end_callback: Callable[[Task], None],
+        on_end_callback: Callable[[Task], None] = None,
         current_thread: bool = True,
     ) -> None:
         if not isinstance(task, Task):
@@ -111,10 +111,11 @@ class TaskExecutor(object):
             task.future = future
 
             if future.done():
-                if inspect.iscoroutinefunction(on_end_callback):
-                    asyncio.create_task(on_end_callback(task))
-                else:
-                    on_end_callback(task)
+                if on_end_callback != None:
+                    if inspect.iscoroutinefunction(on_end_callback):
+                        asyncio.create_task(on_end_callback(task))
+                    else:
+                        on_end_callback(task)
                 return task
 
             def at_end(f: Future[Tuple[int, Task]]):
@@ -127,10 +128,11 @@ class TaskExecutor(object):
                     if index != -1:
                         self._count_tasks[index] -= 1
 
-                    if inspect.iscoroutinefunction(on_end_callback):
-                        asyncio.create_task(on_end_callback(task))
-                    else:
-                        on_end_callback(task)
+                    if on_end_callback != None:
+                        if inspect.iscoroutinefunction(on_end_callback):
+                            asyncio.create_task(on_end_callback(task))
+                        else:
+                            on_end_callback(task)
 
             future.add_done_callback(at_end)
             task._executor = self

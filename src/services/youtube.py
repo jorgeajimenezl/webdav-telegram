@@ -24,11 +24,10 @@ class YoutubeService(Service):
     # yapf: disable
     def __init__(
         self,
-        id: int,
         *args, **kwargs
     ) -> None:
         #yapf: enable
-        super().__init__(id, *args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     @staticmethod
     def check(m: Message):

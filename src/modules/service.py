@@ -2,13 +2,14 @@ import asyncio
 import aiofiles
 import utils
 import os
+# import copy
 
 # import aiofiles.tempfile
 import tempfile
 
 from pyrogram.types import Message
 from aiofiles.threadpool.binary import AsyncBufferedIOBase
-from async_executor.task import Task, TaskState
+from async_executor.task import Task, TaskState, function_to_task
 from aiodav.client import Client as DavClient
 from pyrogram import emoji, Client
 from asyncio.exceptions import CancelledError
@@ -18,7 +19,7 @@ from Cryptodome.Hash import SHA1
 
 
 class Service(Task):
-    def __init__(self, id: int, *args, **kwargs) -> None:
+    def __init__(self, *args, **kwargs) -> None:
         self.user: int = kwargs.get("user")
         self.file_message: Message = kwargs.get("file_message")
 
@@ -39,7 +40,7 @@ class Service(Task):
         self.webdav_path: str = kwargs.get("path")
         self.timeout: int = kwargs.get("timeout", 60 * 60 * 2)
 
-        super().__init__(id, *args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     @staticmethod
     def check(message: Message) -> bool:
@@ -115,7 +116,10 @@ class Service(Task):
                 except Exception:
                     pass
 
-            await asyncio.gather([get_file(x) for x in files])
+            # await asyncio.gather([get_file(x) for x in files])
+            for file in files:
+                s = self.__copy__() # Make a shallow copy of this
+                self.schedule_child(s)
 
     async def copy(
         self,
@@ -324,3 +328,25 @@ class Service(Task):
                     retry_count -= 1
                     if retry_count < 0:
                         raise e
+
+    def __copy__(self) -> "Service":
+        service = Service()
+        
+        service.user = self.user
+        service.file_message = self.file_message
+        service.pyrogram = self.pyrogram
+        service.split_size = self.split_size
+        service.use_streaming = self.use_streaming
+        service.parallel = self.parallel
+        service.checksum = self.checksum
+        service.overwrite = self.overwrite
+
+        if self.checksum:
+            service.sha1 = None
+            service.sums = dict()
+
+        service.webdav_hostname = self.webdav_hostname
+        service.webdav_username = self.webdav_username
+        service.webdav_password = self.webdav_password
+        service.webdav_path = self.webdav_path
+        service.timeout = self.timeout

@@ -4,7 +4,7 @@ from textwrap import wrap
 import time
 from enum import Enum
 from threading import Lock
-from typing import List, Tuple, Union
+from typing import Callable, List, Tuple, Union
 from uuid import UUID, uuid4
 
 
@@ -44,7 +44,12 @@ class Task(object):
     async def start(self) -> None:
         raise NotImplementedError
 
-    def append_child(self, task: "Task") -> None:
+    def schedule_child(
+        self,
+        task: "Task",
+        on_end_callback: Callable[["Task"], None],
+    ) -> None:
+        self._executor.schedule(task, on_end_callback)
         self._childs.append(task)
 
     def childs(self):

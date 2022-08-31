@@ -6,8 +6,8 @@ from aiodav.client import Client as DavClient
 
 
 class DriveService(Service):
-    def __init__(self, id: int, *args, **kwargs) -> None:
-        super().__init__(id, *args, **kwargs)
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
 
     @staticmethod
     def check(m: Message):
