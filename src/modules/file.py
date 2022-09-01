@@ -162,31 +162,32 @@ class FileModule(Module):
         user = message.from_user.id
         data = self.database.get_data(user)
 
-        async with DavClient(
-            hostname=data["server-uri"],
-            login=data["username"],
-            password=data["password"],
-        ) as dav:
-            try:
-                if (
-                    await utils.selection(
-                        app,
-                        user,
-                        ["Yes", "No"],
-                        "Confirm to delete all the files",
-                        multi_selection=False,
-                    )
-                ) == "Yes":
+        if (
+            await utils.selection(
+                app,
+                user,
+                ["Yes", "No"],
+                "Confirm to delete all the files",
+                multi_selection=False,
+            )
+        ) == "Yes":
+            async with DavClient(
+                hostname=data["server-uri"],
+                login=data["username"],
+                password=data["password"],
+            ) as dav:
+                try:
+
                     nodes = await dav.list()
                     for node in nodes:
                         await dav.unlink(node)
                     await app.send_message(
                         user, "All the files has been deleted successfully"
                     )
-                else:
-                    await app.send_message(user, "Wipe cancelled")
-            except Exception as e:
-                await app.send_message(user, f"Unable to wipe the files: {e}")
+                except Exception as e:
+                    await app.send_message(user, f"Unable to wipe the files: {e}")
+        else:
+            await app.send_message(user, "Wipe cancelled")
 
     def register(self, app: Client):
         handlers = [
