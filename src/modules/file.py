@@ -162,15 +162,15 @@ class FileModule(Module):
         user = message.from_user.id
         data = self.database.get_data(user)
 
-        if (
-            await utils.selection(
-                app,
-                user,
-                ["Yes", "No"],
-                "Confirm to delete all the files",
-                multi_selection=False,
-            )
-        ) == "Yes":
+        answer = await utils.selection(
+            app,
+            user,
+            ["Yes", "No"],
+            "Confirm to delete all the files",
+            multi_selection=False,
+        )
+
+        if answer is not None and answer[0] == "Yes":
             async with DavClient(
                 hostname=data["server-uri"],
                 login=data["username"],
