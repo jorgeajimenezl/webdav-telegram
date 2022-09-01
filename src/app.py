@@ -105,7 +105,7 @@ async def main():
                     "wipe", f"{emoji.BROOM} Delete all the files in the cloud"
                 ),
                 BotCommand("status", f"{emoji.SCROLL} Get bot status"),
-                BotCommand("help", f"{emoji.TAG_QUESTION_MARK} Help!"),
+                BotCommand("help", f"{emoji.RED_QUESTION_MARK} Help!"),
             ]
         )
         await idle()

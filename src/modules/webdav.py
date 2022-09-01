@@ -201,9 +201,9 @@ class WebdavModule(Module):
                         else "Unknown"
                     )
 
-                    text = f"[**{task.id}**]\n\n{description} ({current_text} / {total_text})\nSpeed: {speed_text}/sec\nETA: {eta_text}"
+                    text = f"{description} ({current_text} / {total_text})\nSpeed: {speed_text}/sec\nETA: {eta_text}"
                 else:
-                    text = f"[**{task.id}**]\n\n{description}"
+                    text = f"{description}"
 
                 # Walk to task childs (1 depth level)
                 childs = task.childs()
