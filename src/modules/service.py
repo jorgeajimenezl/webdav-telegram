@@ -353,7 +353,7 @@ class Service(Task):
                         raise e
 
     def clone(self, child=False) -> "Service":
-        service = Service(self.kwargs)
+        service = Service(**self.kwargs)
 
         if self.checksum and not child:
             service.sums = self.sums
