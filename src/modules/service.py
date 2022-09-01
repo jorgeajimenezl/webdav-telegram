@@ -353,23 +353,7 @@ class Service(Task):
                         raise e
 
     def clone(self, child=False) -> "Service":
-        service = Service()
+        service = Service(self.kwargs)
 
-        service.user = self.user
-        service.file_message = self.file_message
-        service.pyrogram = self.pyrogram
-        service.split_size = self.split_size
-        service.use_streaming = self.use_streaming
-        service.parallel = self.parallel
-        service.checksum = self.checksum
-        service.overwrite = self.overwrite
-
-        if self.checksum:
-            service.sha1 = None
-            service.sums = dict() if child else self.sums
-
-        service.webdav_hostname = self.webdav_hostname
-        service.webdav_username = self.webdav_username
-        service.webdav_password = self.webdav_password
-        service.webdav_path = self.webdav_path
-        service.timeout = self.timeout
+        if self.checksum and not child:
+            service.sums = self.sums
