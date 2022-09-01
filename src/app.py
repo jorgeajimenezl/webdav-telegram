@@ -102,10 +102,10 @@ async def main():
                 BotCommand("list", f"{emoji.OPEN_FILE_FOLDER} List cloud entries"),
                 BotCommand("free", f"{emoji.BAR_CHART} Free space on cloud"),
                 BotCommand(
-                    "wipe", f"{emoji.BAR_CHART} Delete all the files in the cloud"
+                    "wipe", f"{emoji.BROOM} Delete all the files in the cloud"
                 ),
                 BotCommand("status", f"{emoji.SCROLL} Get bot status"),
-                BotCommand("help", f"{emoji.SCROLL} Help!"),
+                BotCommand("help", f"{emoji.TAG_QUESTION_MARK} Help!"),
             ]
         )
         await idle()

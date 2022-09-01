@@ -285,10 +285,10 @@ class WebdavModule(Module):
         self.scheduler.add_job(self._updater, "interval", seconds=3, max_instances=1)
 
         handlers = [
-            MessageHandler(self.upload_file),
-            self.cancel_group.callback_handler(self.cancel_upload),
             # MessageHandler(self.urls_batch, filters.command("batch")),
             MessageHandler(self.status, filters.command("status") & filters.private),
+            self.cancel_group.callback_handler(self.cancel_upload),
+            MessageHandler(self.upload_file),
         ]
 
         for u in handlers:
