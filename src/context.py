@@ -13,6 +13,7 @@ CONTEXT_NAMES = [
     "UPLOAD_FILE",
     "UPLOAD_URL",
     "SETTINGS_EDIT",
+    "URLS_BATCH",
 ]
 
 CONTEXT = {v: 1 << k for k, v in enumerate(CONTEXT_NAMES)}

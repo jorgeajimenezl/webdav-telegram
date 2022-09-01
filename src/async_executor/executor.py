@@ -21,6 +21,7 @@ class TaskExecutor(object):
         self._semaphore = asyncio.Semaphore(max_tasks)
         self._lock = Lock()
         self._count = 0
+        self._active_count = 0
 
         self._futures = []
         self._loops = []
@@ -44,13 +45,15 @@ class TaskExecutor(object):
 
     async def _execute(self, task: Task, index: int) -> Tuple[int, Task]:
         async with self._semaphore:
+            self._active_count += 1
             try:
                 await task.start()
-                task._set_state(TaskState.SUCCESSFULL)
+                task.set_state(TaskState.SUCCESSFULL)
             except CancelledError:
-                task._set_state(TaskState.CANCELED, f"Task cancelled")
+                task.set_state(TaskState.CANCELED, f"Task cancelled")
             except Exception as e:
-                task._set_state(TaskState.ERROR, f"`{traceback.format_exc()}`")
+                task.set_state(TaskState.ERROR, f"`{traceback.format_exc()}`")
+            self._active_count -= 1
 
             return (index, task)
 
@@ -59,22 +62,29 @@ class TaskExecutor(object):
         self._count_tasks = 0
         self._threads_running = 0
 
-    def add(
-        self,
-        cls: type,
-        on_end_callback: Callable[[Task], None],
-        current_thread: bool = True,
-        *args,
-        **kwargs,
-    ) -> Task:
-        if not issubclass(cls, Task):
-            raise TypeError("the task argument must be a subclass from 'Task'")
+    @property
+    def total_count(self) -> int:
+        return self._count
 
-        # Instantiate task
-        task = cls(id=self._count, *args, **kwargs)
-        self._count += 1
+    @property
+    def active_count(self) -> int:
+        return self._active_count
+
+    def schedule(
+        self,
+        task: Task,
+        on_end_callback: Callable[[Task], None] = None,
+        current_thread: bool = True,
+    ) -> None:
+        if not isinstance(task, Task):
+            raise TypeError("the task argument must be a instance from 'Task'")
+
+        # WARNING: From here, this tasks has been owned by this executor
+        # task: Task = cls(*args, **kwargs)
 
         with self._lock:
+            self._count += 1
+
             if current_thread:
                 future = asyncio.create_task(self._execute(task, -1))
             else:
@@ -98,13 +108,14 @@ class TaskExecutor(object):
                 self._count_tasks[u] += 1
 
             # assign task future
-            task.future = future
+            task._future = future
 
             if future.done():
-                if inspect.iscoroutinefunction(on_end_callback):
-                    asyncio.create_task(on_end_callback(task))
-                else:
-                    on_end_callback(task)
+                if on_end_callback is not None:
+                    if inspect.iscoroutinefunction(on_end_callback):
+                        asyncio.create_task(on_end_callback(task))
+                    else:
+                        on_end_callback(task)
                 return task
 
             def at_end(f: Future[Tuple[int, Task]]):
@@ -117,11 +128,13 @@ class TaskExecutor(object):
                     if index != -1:
                         self._count_tasks[index] -= 1
 
-                    if inspect.iscoroutinefunction(on_end_callback):
-                        asyncio.create_task(on_end_callback(task))
-                    else:
-                        on_end_callback(task)
+                    if on_end_callback is not None:
+                        if inspect.iscoroutinefunction(on_end_callback):
+                            asyncio.create_task(on_end_callback(task))
+                        else:
+                            on_end_callback(task)
 
             future.add_done_callback(at_end)
+            task._executor = self
 
         return task

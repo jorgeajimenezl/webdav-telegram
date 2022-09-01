@@ -72,7 +72,7 @@ class FileModule(Module):
                         message=message,
                     )
 
-                    if node == None:
+                    if node is None:
                         break
 
                     node = node[0]
@@ -127,7 +127,6 @@ class FileModule(Module):
                 # Notify and go back
                 await callback_query.answer(f"The item **{name}** has been deleted")
                 asyncio.create_task(self.list(user, app, callback_query.message))
-                return
             except RemoteResourceNotFound:
                 await app.send_message(
                     user, f"Resource **{path}** isn't longer available"
@@ -155,14 +154,49 @@ class FileModule(Module):
             except Exception as e:
                 await app.send_message(user, f"Unable to get free space: {e}")
 
+    async def list_wrapper(self, app: Client, event: Message):
+        # TODO: Fix this async bug
+        asyncio.create_task(self.list(event.from_user.id, app))
+
+    async def wipe(self, app: Client, message: Message):
+        user = message.from_user.id
+        data = self.database.get_data(user)
+
+        if (
+            await utils.selection(
+                app,
+                user,
+                ["Yes", "No"],
+                "Confirm to delete all the files",
+                multi_selection=False,
+            )
+        ) == "Yes":
+            async with DavClient(
+                hostname=data["server-uri"],
+                login=data["username"],
+                password=data["password"],
+            ) as dav:
+                try:
+
+                    nodes = await dav.list()
+                    for node in nodes:
+                        await dav.unlink(node)
+                    await app.send_message(
+                        user, "All the files has been deleted successfully"
+                    )
+                except Exception as e:
+                    await app.send_message(user, f"Unable to wipe the files: {e}")
+        else:
+            await app.send_message(user, "Wipe cancelled")
+
     def register(self, app: Client):
         handlers = [
             MessageHandler(
-                # TODO: Fix this async bug
-                lambda _, e: asyncio.create_task(self.list(e.from_user.id, app)),
+                self.list_wrapper,
                 filters.command("list") & filters.private,
             ),
             MessageHandler(self.free, filters.command("free") & filters.private),
+            MessageHandler(self.wipe, filters.command("wipe") & filters.private),
             self.delete_group.callback_handler(self.delete_file),
         ]
 

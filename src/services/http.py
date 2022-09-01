@@ -8,6 +8,7 @@ from async_executor.task import TaskState
 from modules.service import Service
 from pyrogram import emoji
 from pyrogram.types import Message
+from urllib.parse import urlparse
 
 from services.extractors.animeflv import AnimeFLVExtractor
 from services.extractors.extractor import Extractor
@@ -26,20 +27,20 @@ class HttpService(Service):
         MediafireExtractor,
     ]
 
-    def __init__(self, id: int, *args, **kwargs) -> None:
-        super().__init__(id, *args, **kwargs)
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
 
     @staticmethod
     def check(m: Message) -> bool:
         return bool(m.text) and bool(
             re.fullmatch(
-                r"https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)",
+                r"https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=\[\]]*)",
                 m.text,
             )
         )
 
     async def start(self) -> None:
-        self._set_state(TaskState.STARTING)
+        self.set_state(TaskState.STARTING)
 
         async with DavClient(
             hostname=self.webdav_hostname,
@@ -72,7 +73,8 @@ class HttpService(Service):
                         d = response.headers["content-disposition"]
                         filename = re.findall("filename=(.+)", d)[0]
                     except Exception:
-                        filename = os.path.basename(url)
+                        req = urlparse(url)
+                        filename = os.path.basename(req.path)
 
                     gen = response.content.iter_chunked(2097152)
                     await self.upload(

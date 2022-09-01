@@ -1,11 +1,12 @@
 import asyncio
 import imp
+from uuid import UUID
 from services.youtube import YoutubeService
 import utils
-from typing import List, Type
+from typing import Dict, List, Type
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from pyrogram import Client, emoji
+from pyrogram import Client, emoji, filters
 from pyrogram.handlers import MessageHandler
 from pyrogram.types import (
     CallbackQuery,
@@ -16,7 +17,7 @@ from pyrogram.types import (
 from async_executor.executor import TaskExecutor
 from async_executor.task import Task, TaskState
 from button import ButtonFactory
-from context import UserContext
+from context import CONTEXT, UserContext
 from database import Database
 from humanize import naturalsize, naturaldelta
 from module import Module
@@ -31,7 +32,7 @@ from services.mega import MegaService
 
 class WebdavModule(Module):
     SERVICES: List[Service] = [
-        TorrentService,
+        # TorrentService,
         TelegramService,
         MegaService,
         YoutubeService,
@@ -46,9 +47,9 @@ class WebdavModule(Module):
         self.scheduler = scheduler
         self.app = None
 
-        self.tasks_id = dict()
+        self.tasks_id: Dict[UUID, Task] = dict()
         self.executor = TaskExecutor()
-        self.tasks = dict()
+        self.tasks: Dict[Task, Message] = dict()
         self.tasks_lock = asyncio.Lock()
         self.factory = ButtonFactory()
 
@@ -61,7 +62,7 @@ class WebdavModule(Module):
 
     async def _on_task_end(self, task: Service):
         user = task.user
-        state, description = task.state()
+        state, description = task.state
 
         if state == TaskState.ERROR or state == TaskState.CANCELED:
             for piece in utils.cut(description, 4096):
@@ -70,11 +71,19 @@ class WebdavModule(Module):
                 )
 
         if state == TaskState.SUCCESSFULL:
-            await self.app.send_message(
-                user,
-                f"{emoji.CHECK_MARK_BUTTON} Successfull",
-                reply_to_message_id=task.file_message.id,
-            )
+            if task.checksum and len(task.sums) > 0:
+                piece = "\n".join([f"**{n}**: `{c}`\n" for n, c in task.sums.items()])
+                await self.app.send_message(
+                    user,
+                    f"{emoji.CHECK_MARK_BUTTON} Successfull\n\n{emoji.INBOX_TRAY} Checksums (SHA1):\n\n{piece}",
+                    reply_to_message_id=task.file_message.id,
+                )
+            else:
+                await self.app.send_message(
+                    user,
+                    f"{emoji.CHECK_MARK_BUTTON} Successfull",
+                    reply_to_message_id=task.file_message.id,
+                )
 
         async with self.tasks_lock:
             message = self.tasks.pop(task)
@@ -82,7 +91,7 @@ class WebdavModule(Module):
 
             # Remove progress message
             try:
-                if message != None:
+                if message is not None:
                     await message.delete(True)
             except Exception:
                 pass
@@ -90,7 +99,7 @@ class WebdavModule(Module):
     async def cancel_upload(self, app: Client, callback_query: CallbackQuery):
         await callback_query.answer("Scheduled stop")
         id = self.factory.get_value(callback_query.data)
-        assert isinstance(id, int)
+        assert isinstance(id, UUID)
 
         async with self.tasks_lock:
             if id in self.tasks_id:
@@ -105,7 +114,7 @@ class WebdavModule(Module):
                 cls = service
                 break
 
-        if cls == None:
+        if cls is None:
             await app.send_message(
                 user, f"{emoji.CROSS_MARK} This action don't match with any service"
             )
@@ -118,16 +127,16 @@ class WebdavModule(Module):
     ):
         data = self.database.get_data(user)
 
-        # Add the task to the executor
-        task = self.executor.add(
-            cls,
-            on_end_callback=self._on_task_end,
+        # Instantiate task
+        task: Task = cls(
             user=user,
             file_message=message,
             pyrogram=app,
             split_size=int(data["split-size"]),
             streaming=utils.get_bool(data["streaming"]),
             parallel=utils.get_bool(data["upload-parallel"]),
+            checksum=utils.get_bool(data["checksum"]),
+            overwrite=utils.get_bool(data["file-overwrite"]),
             hostname=data["server-uri"],
             username=data["username"],
             password=data["password"],
@@ -136,6 +145,9 @@ class WebdavModule(Module):
             **kwargs,
         )
 
+        # Add the task to the executor
+        self.executor.schedule(task, on_end_callback=self._on_task_end)
+
         if task == None:
             await app.send_message(user, f"{emoji.CROSS_MARK} Unable to start task")
             return
@@ -143,7 +155,7 @@ class WebdavModule(Module):
         async with self.tasks_lock:
             self.tasks[task] = await app.send_message(
                 user,
-                f"Waiting to process this action (Task #{task.id})",
+                f"Waiting to process this action ({task.id})",
                 reply_markup=InlineKeyboardMarkup(
                     [[self.cancel_group.add(task.id, cachable=True).button("Cancel")]]
                 ),
@@ -154,42 +166,73 @@ class WebdavModule(Module):
     async def _updater(self):
         async with self.tasks_lock:
             for task, message in self.tasks.items():
-                state, description = task.state()
+                state, description = task.state
 
                 if state == TaskState.ERROR or state == TaskState.SUCCESSFULL:
                     continue
 
-                if description == None:
+                if description is None:
                     continue
 
-                current, total = task.progress()
-                if (current or total) != None:
+                current, total = task.progress
+                if (current or total) is not None:
                     current_text = (
                         naturalsize(current, binary=True, format="%.3f")
-                        if current != None
+                        if current is not None
                         else "Unknown"
                     )
                     total_text = (
                         naturalsize(total, binary=True, format="%.3f")
-                        if total != None
+                        if total is not None
                         else "Unknown"
                     )
 
-                    speed = task.speed()
-                    eta = task.eta()
+                    speed = task.speed
+                    eta = task.eta
 
                     speed_text = (
                         utils.get_str(naturalsize(speed, binary=True))
-                        if speed != None
+                        if speed is not None
                         else "Unknown"
                     )
                     eta_text = (
-                        utils.get_str(naturaldelta(eta)) if eta != None else "Unknown"
+                        utils.get_str(naturaldelta(eta))
+                        if eta is not None
+                        else "Unknown"
                     )
 
                     text = f"{description} ({current_text} / {total_text})\nSpeed: {speed_text}/sec\nETA: {eta_text}"
                 else:
                     text = f"{description}"
+
+                # Walk to task childs (1 depth level)
+                childs = task.childs()
+                if len(childs) > 0:
+                    text += "\n\n"
+
+                    for child in childs:
+                        s, d = child.state
+                        c, t = task.progress
+                        c_text = (
+                            naturalsize(c, binary=True, format="%.3f")
+                            if c is not None
+                            else "Unknown"
+                        )
+                        t_text = (
+                            naturalsize(t, binary=True, format="%.3f")
+                            if t is not None
+                            else "Unknown"
+                        )
+
+                        match s:
+                            case TaskState.ERROR | TaskState.CANCELED:
+                                e = emoji.RED_CIRCLE
+                            case TaskState.SUCCESSFULL:
+                                e = emoji.GREEN_CIRCLE
+                            case TaskState.WORKING | TaskState.WAITING | TaskState.STARTING:
+                                e = emoji.YELLOW_CIRCLE
+
+                        text += f"{e} {d} [{c_text} / {t_text}]\n"
 
                 if message.text != text:
                     message.text = text
@@ -200,11 +243,40 @@ class WebdavModule(Module):
                                 [
                                     self.cancel_group.add(
                                         task.id, cachable=True
-                                    ).button("Cancel")
+                                    ).button(f"{emoji.HOLLOW_RED_CIRCLE} Cancel")
                                 ]
                             ]
                         ),
                     )
+
+    # async def urls_batch(self, app: Client, message: Message):
+    #     user = message.from_user.id
+    #     self.context.update(user, CONTEXT["URLS_BATCH"])
+
+    #     await app.send_message(
+    #         user,
+    #         f"{emoji.CHECK_MARK_BUTTON} Please send me a list of URLs",
+    #         reply_markup=InlineKeyboardMarkup(
+    #             [
+    #                 [
+    #                     InlineKeyboardButton(
+    #                         "Cancel",
+    #                         callback_data=self.factory.create_data("cancel"),
+    #                     )
+    #                 ]
+    #             ]
+    #         ),
+    #     )
+
+    async def status(self, app: Client, message: Message):
+        user = message.from_user.id
+
+        active = self.executor.active_count
+        total = self.executor.total_count
+        await app.send_message(
+            user,
+            f"**Status:**\n{emoji.YELLOW_CIRCLE} Active: {active}\n{emoji.BLUE_CIRCLE} Total: {total}",
+        )
 
     def register(self, app: Client):
         self.app = app
@@ -213,8 +285,10 @@ class WebdavModule(Module):
         self.scheduler.add_job(self._updater, "interval", seconds=3, max_instances=1)
 
         handlers = [
-            app.add_handler(MessageHandler(self.upload_file)),
+            # MessageHandler(self.urls_batch, filters.command("batch")),
+            MessageHandler(self.status, filters.command("status") & filters.private),
             self.cancel_group.callback_handler(self.cancel_upload),
+            MessageHandler(self.upload_file),
         ]
 
         for u in handlers:

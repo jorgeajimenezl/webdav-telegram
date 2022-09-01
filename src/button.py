@@ -1,5 +1,6 @@
 import random
 from dataclasses import dataclass, field
+import string
 from typing import Any, Callable, Union
 
 from pyrogram import filters
@@ -85,8 +86,9 @@ class ButtonFactory(object):
         self.buttons = dict()
         self.groups = dict()
 
-    def create_action(self, name: str) -> ActionButton:
+    def create_action(self, name: str = None) -> ActionButton:
         u = random.randbytes(64)
+        name = name or random.choices(string.ascii_lowercase, k=10)
         self.buttons[u] = ActionButton(name, u)
         return self.buttons[u]
 

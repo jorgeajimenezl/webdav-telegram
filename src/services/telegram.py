@@ -13,8 +13,8 @@ class TelegramService(Service):
     Download telegram file and upload to webdav
     """
 
-    def __init__(self, id: int, *args, **kwargs) -> None:
-        super().__init__(id, *args, **kwargs)
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
 
     @staticmethod
     def check(m: Message):
@@ -47,7 +47,7 @@ class TelegramService(Service):
         return (getattr(media, "file_name", None), getattr(media, "file_size", None))
 
     async def start(self) -> None:
-        self._set_state(TaskState.STARTING)
+        self.set_state(TaskState.STARTING)
         filename, total_bytes = TelegramService.__get_file_name(self.file_message)
 
         if filename is None:

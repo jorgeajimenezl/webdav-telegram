@@ -14,15 +14,15 @@ class MegaService(Service):
     Download Mega file and upload to webdav
     """
 
-    def __init__(self, id: int, *args, **kwargs) -> None:
-        super().__init__(id, *args, **kwargs)
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
 
     @staticmethod
     def check(m: Message):
         return bool(m.text) and bool(re.match(r"^https?:\/\/(www\.)?mega\.nz", m.text))
 
     async def start(self) -> None:
-        self._set_state(TaskState.STARTING)
+        self.set_state(TaskState.STARTING)
 
         async with DavClient(
             hostname=self.webdav_hostname,
@@ -38,12 +38,12 @@ class MegaService(Service):
                     raise Exception("Only can download files")
 
                 async def progress(c, t, s):
-                    self._make_progress(c, t, speed=s)
+                    self.make_progress(c, t, speed=s)
 
                 self.reset_stats()
                 filename = node.getName()
                 size = node.getSize()
-                self._set_state(
+                self.set_state(
                     TaskState.WORKING,
                     description=f"{emoji.HOURGLASS_DONE} Download {filename}",
                 )

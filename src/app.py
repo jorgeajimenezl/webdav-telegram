@@ -77,6 +77,13 @@ async def start(_, message: Message):
         await app.send_message(user, "You are already logged")
 
 
+@app.on_message(filters.command("help") & filters.private)
+async def help(_, message: Message):
+    user = message.from_user.id
+
+    await app.send_message(user, "**Help:**\n\nComming soon... :)")
+
+
 # Register all modules callbacks
 settings_module.register(app)
 file_module.register(app)
@@ -94,6 +101,11 @@ async def main():
                 BotCommand("settings", f"{emoji.GEAR} Bot settings"),
                 BotCommand("list", f"{emoji.OPEN_FILE_FOLDER} List cloud entries"),
                 BotCommand("free", f"{emoji.BAR_CHART} Free space on cloud"),
+                BotCommand(
+                    "wipe", f"{emoji.BROOM} Delete all the files in the cloud"
+                ),
+                BotCommand("status", f"{emoji.SCROLL} Get bot status"),
+                BotCommand("help", f"{emoji.RED_QUESTION_MARK} Help!"),
             ]
         )
         await idle()

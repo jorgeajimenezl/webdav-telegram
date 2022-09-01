@@ -1,5 +1,5 @@
 import re
-from typing import Callable, Coroutine, Dict
+from typing import Any, Callable, Coroutine, Dict, Tuple, Union
 
 from pyrogram import Client, emoji, filters
 from pyrogram.handlers import MessageHandler
@@ -19,7 +19,7 @@ import utils
 
 class SettingsModule(Module):
     COMMAND_NAME = "settings"
-    # Text, Description, Regex, Field name, Converter
+    # Caption, Description, Regex, Converter
     MENU = {
         "server-uri": (
             f"{emoji.GLOBE_WITH_MERIDIANS} Server",
@@ -69,9 +69,21 @@ class SettingsModule(Module):
             r"(on|off|true|false)",
             bool,
         ),
+        "checksum": (
+            f"{emoji.UPWARDS_BUTTON} Checksum",
+            "Turn on for perform a checksum of the uploaded files (Default: True)",
+            r"(on|off|true|false)",
+            bool,
+        ),
         "use-compression": (
             f"{emoji.CARD_FILE_BOX} Compress",
             "Turn on for compress all files with tar.zstd format (Default: False)",
+            r"(on|off|true|false)",
+            bool,
+        ),
+        "file-overwrite": (
+            f"{emoji.WRITING_HAND} File Overwrite",
+            "Turn on overwrite the files in the server (Default: False)",
             r"(on|off|true|false)",
             bool,
         ),
@@ -88,18 +100,24 @@ class SettingsModule(Module):
         self.factory = ButtonFactory()
         self.buttons: Dict[str, ActionButton] = dict()
         self.close_action = self.factory.create_action("close-action")
-        self.handlers = []
+        self.others_action = self.factory.create_action("others-action")
+        # self.handlers = []
+        self.entries = dict()
 
     def _get_button(self, user: int, id: str) -> InlineKeyboardButton:
         name, _, _, cls = SettingsModule.MENU[id]
+        parts = id.split("::")
+        button = self.buttons
+        for p in parts:
+            button = button[p]
 
         if issubclass(cls, bool):
             data = self.database.get_data(user)
-            v = utils.get_bool(data[id])
-            return self.buttons[id].button(
+            v = utils.get_bool(data.get(id, False))
+            return button.button(
                 f"[{emoji.CHECK_MARK_BUTTON if v else emoji.CROSS_MARK}] {name}"
             )
-        return self.buttons[id].button(name)
+        return button.button(name)
 
     def _get_keyboard(self, user: int):
         return InlineKeyboardMarkup(
@@ -122,8 +140,13 @@ class SettingsModule(Module):
                 ],
                 [
                     self._get_button(user, "use-compression"),
+                    self._get_button(user, "checksum"),
                     self._get_button(user, "file-password"),
                 ],
+                [
+                    self._get_button(user, "file-overwrite"),
+                ],
+                [self.others_action.button(f"{emoji.LEFT_ARROW} Others settings")],
                 [self.close_action.button(f"{emoji.LEFT_ARROW} Close")],
             ]
         )
@@ -176,7 +199,7 @@ class SettingsModule(Module):
             )
         else:
             data = self.database.get_data(user)
-            v = utils.get_bool(data[id])
+            v = utils.get_bool(data.get(id, False))
             payload = {id: str((not v))}
             self.database.set_data(user, **payload)
 
@@ -188,6 +211,11 @@ class SettingsModule(Module):
         self.context.update(user, CONTEXT["IDLE"])
         await callback_query.message.delete(True)
 
+    async def others_settings(self, app: Client, callback_query: CallbackQuery):
+        user = callback_query.from_user.id
+
+        # await callback_query.edit_message_reply_markup(InlineKeyboardMarkup([[self._get_button(None) for x in ]]))
+
     def register(self, app: Client):
         handlers = [
             MessageHandler(self.settings, filters.command(SettingsModule.COMMAND_NAME)),
@@ -196,11 +224,30 @@ class SettingsModule(Module):
                 filters.text & self.context.filter(CONTEXT["SETTINGS_EDIT"]),
             ),
             self.close_action.callback_handler(self.close),
+            self.others_action.callback_handler(self.others_settings),
         ]
 
         for k in SettingsModule.MENU.keys():
             self.buttons[k] = self.factory.create_action(k)
             handlers.append(self.buttons[k].callback_handler(self.settings_menu))
 
+        # for (name, d) in self.entries.values():
+        #     self.buttons[name] = dict()
+
+        #     for k in d:
+        #         self.buttons[name][k] = self.factory.create_action()
+        #         handlers.append(
+        #             self.buttons[self.buttons[name][k]].callback_handler(
+        #                 self.settings_menu
+        #             )
+        #         )
+
         for u in handlers:
             app.add_handler(u)
+
+    def register_entry(
+        self,
+        name: str,
+        entries: Dict[str, Tuple[str, str, Union[str, Dict], Callable[[str], Any]]],
+    ):
+        self.entries[name] = entries.copy()

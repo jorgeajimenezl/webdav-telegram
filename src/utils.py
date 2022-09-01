@@ -1,8 +1,9 @@
 import asyncio
 import random
 import re
+import itertools
 from types import SimpleNamespace
-from typing import Any, Callable, Dict, Iterable, List, Set, Tuple, Union
+from typing import Any, Callable, Dict, Iterable, Iterator, List, Set, Tuple, Union
 
 from pyrogram import Client, emoji, filters
 from pyrogram.handlers import CallbackQueryHandler
@@ -47,10 +48,13 @@ def sanitaze_filename(x: str) -> str:
 
 
 def get_str(x: str) -> str:
-    return x if x != None else "Unknown"
+    return x if x is not None else "Unknown"
 
 
 def get_bool(x: str) -> bool:
+    if isinstance(x, bool):
+        return x
+
     x = x.lower()
     if x in ["on", "true", "activate", "right"]:
         return True
@@ -66,6 +70,31 @@ def cut(x: str, length: int) -> List[str]:
         ret.append(x[:length])
         x = x[length:]
     return ret
+
+
+def expand_ranges(x: str) -> Iterator[str]:
+    ranges = []
+
+    for match in re.finditer("\{([\d\-,A-Za-z&\.]+)\}", x):
+        items = match[1].split(",")
+        r = []
+
+        for item in items:
+            item = item.strip()
+
+            if "-" in item:
+                m = re.fullmatch("(\d+)-(\d+)", item)
+                if not m:
+                    raise Exception(f"Invalid range operation: line({match.start()})")
+                r.extend(range(int(m[1]), int(m[2]) + 1))
+            else:
+                r.append(item)
+
+        ranges.append(r)
+    x = re.sub("\{([\d\-,A-Za-z&\.]+)\}", "{}", x)
+
+    for t in itertools.product(*ranges):
+        yield x.format(*t)
 
 
 async def selection(
@@ -109,7 +138,7 @@ async def selection(
 
         if len(name) >= 20:
             name = name[:40]
-        selected = name in opt
+        selected = button.value in opt
         return [button.button(f"{emoji.CHECK_MARK if selected else ''}{name}")]
 
     def navigation_buttons():
@@ -143,8 +172,8 @@ async def selection(
             + (extra if multi_selection else [[cancel_button.button("Cancel")]])
         )
 
-        if callback_query == None:
-            if message == None:
+        if callback_query is None:
+            if message is None:
                 return await app.send_message(user, message_text, reply_markup=markup)
             else:
                 await message.edit(message_text, reply_markup=markup)
@@ -153,6 +182,7 @@ async def selection(
             await callback_query.edit_message_reply_markup(markup)
 
     async def _select_all(app: Client, callback_query: CallbackQuery):
+        global opt
         opt = options.copy()
         await _select(app, callback_query)
 

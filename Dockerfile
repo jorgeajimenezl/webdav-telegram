@@ -31,6 +31,7 @@ COPY ./src /app
 COPY ./requirements.txt /app
 COPY --from=BUILD /aiomega/dist/*.whl /app
 COPY ./run.sh /app
+COPY ./aria2c.conf /app
 WORKDIR /app
 
 # Install requirements

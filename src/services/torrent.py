@@ -20,11 +20,10 @@ class TorrentService(Service):
     # yapf: disable
     def __init__(
         self,
-        id: int,
         *args, **kwargs
     ) -> None:
         #yapf: enable
-        super().__init__(id, *args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     @staticmethod
     def check(m: Message):
@@ -46,14 +45,14 @@ class TorrentService(Service):
             await asyncio.sleep(0.5)
             d.update()
 
-        if d.status == 'error':
-            await self.pyrogram.send_message(
-                self.user,
-                f"{emoji.CROSS_MARK} Unable to download metadata information from magnet link"
-            )
+            if d.status == 'error':
+                await self.pyrogram.send_message(
+                    self.user,
+                    f"{emoji.CROSS_MARK} Unable to download metadata information from magnet link"
+                )
+                break
 
-        hash = d.info_hash
-        d = aria2.add_torrent(f'/app/data/{hash}.torrent',
+        d = aria2.add_torrent(f'/app/data/{d.info_hash}.torrent',
                               options={'dry-run': 'true'})
 
         app = self.pyrogram
@@ -64,32 +63,38 @@ class TorrentService(Service):
             message_text='**Select files to download**',
             name_selector=lambda x: os.path.basename(x.path))
 
-        return [p.index for p in files]
+        return d.info_hash, [p.index for p in files]
 
     async def start(self) -> None:
-        aria2 = aria2p.API(aria2p.Client())
+        aria2 = aria2p.API(aria2p.Client(host="http://127.0.0.1"))
 
         # Chossing torrent files to download            
-        files = await self.options(aria2)       
+        info_hash, files = await self.options(aria2)       
 
-        self._set_state(TaskState.STARTING)    
-        link = self.kwargs.get('url', self.file_message.text)
-        download = aria2.add_magnet(link, options={'select-file': ",".join(files)})
+        self.set_state(TaskState.STARTING)    
+        # link = self.kwargs.get('url', self.file_message.text)
+        download = aria2.add_torrent(f'/app/data/{info_hash}.torrent', options={'select-file': ",".join(map(str, files))})
 
         # Wait for download complete
-        self._set_state(TaskState.WORKING,
+        self.set_state(TaskState.WORKING,
                         description=
                         f"{emoji.HOURGLASS_DONE} Download torrent"
         )
         self.reset_stats()
             
-        while not download.is_complete:
-            await asyncio.sleep(10)
+        while not download.is_complete and not download.status != "error":
+            await asyncio.sleep(3)
             download.update()
-            self._make_progress(download.completed_length, download.total_length)
+            self.make_progress(download.completed_length, 
+                                download.total_length, 
+                                speed=download.download_speed,
+                                eta=download.eta.seconds)
 
-        if download.status == 'error':
+        self.set_state(TaskState.WAITING, description=f"{emoji.HOURGLASS_DONE} Files successfull downloaded")
+
+        if download.status != 'complete':
             raise Exception(download.error_message)
+        
 
         async with DavClient(hostname=self.webdav_hostname,
                             login=self.webdav_username,

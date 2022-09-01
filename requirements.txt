@@ -10,6 +10,7 @@ apscheduler
 humanize
 lxml
 beautifulsoup4
+pycryptodomex
 zstandard
 
 # Optional
