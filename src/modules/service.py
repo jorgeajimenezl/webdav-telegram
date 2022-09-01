@@ -84,8 +84,8 @@ class Service(Task):
         with tempfile.TemporaryDirectory() as directory:
             k = 1
             offset = 0
-            files = [os.path.join(directory, f"{k}")]
-            file = open(files[-1], "wb")
+            paths = [os.path.join(directory, f"{k}")]
+            file = open(paths[-1], "wb")
 
             self.set_state(
                 TaskState.WORKING, description=f"{emoji.HOURGLASS_DONE} Downloading"
@@ -104,20 +104,21 @@ class Service(Task):
                     file.close()
 
                     # Change to the next file
-                    files.append(os.path.join(directory, f"{k}"))
-                    file = open(files[-1], "wb")
+                    paths.append(os.path.join(directory, f"{k}"))
+                    file = open(paths[-1], "wb")
+            file.close()
 
-            async def get_file(service: "Service", path: str):
+            async def get_file(service: "Service", path: str, index: int):
                 service.set_state(TaskState.STARTING)
 
-                async with aiofiles.open(path, "rb") as f:
+                async with aiofiles.open(path, "rb") as file:
                     length = os.path.getsize(path)
                     await service.upload_file(
                         dav,
-                        f,
+                        file,
                         length,
-                        description=f"Piece {k}",
-                        filename=f"{filename}.{k:0=3}",
+                        description=f"Piece {index}",
+                        filename=f"{filename}.{index:0=3}",
                     )
                 try:
                     os.unlink(path)
@@ -132,9 +133,9 @@ class Service(Task):
             )
             self.make_progress(None, None)
 
-            for file in files:
+            for i, path in enumerate(paths):
                 child = self.clone(child=True)  # Make a clone with this service data
-                child.start = functools.partial(get_file, child, file)
+                child.start = functools.partial(get_file, child, path, i + 1)
 
                 self.schedule_child(child)
 
@@ -356,5 +357,5 @@ class Service(Task):
         service = Service(**self.kwargs)
         if self.checksum and child:
             service.sums = self.sums
-            
+
         return service

@@ -35,10 +35,15 @@ class Task(object):
         self.kwargs = kwargs
 
     def cancel(self) -> None:
+        self.cancel_childs()
+        self._future.cancel()
+
+    def cancel_childs(self) -> None:
         if self._future is None:
             raise Exception("Unable to cancel a task that hasn't been scheduled")
-
-        self._future.cancel()
+        if len(self._childs) > 0:
+            for child in self._childs:
+                child.cancel()
 
     async def start(self) -> None:
         # Body of the rutine to task execute
