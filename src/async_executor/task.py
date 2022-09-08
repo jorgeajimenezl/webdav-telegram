@@ -1,3 +1,4 @@
+import inspect
 import time
 import asyncio
 import functools
@@ -52,8 +53,20 @@ class Task(object):
     def schedule_child(
         self,
         task: "Task",
+        remove_on_complete: bool = True,
+        on_end_callback: Callable[["Task"], None] = None,
     ) -> None:
-        self._executor.schedule(task, lambda t: self._childs.remove(t))
+        if remove_on_complete:
+            def remove(t):
+                self._childs.remove(t)
+                if inspect.iscoroutinefunction(on_end_callback):
+                    asyncio.create_task(on_end_callback(t))
+                else:
+                    on_end_callback(t)
+
+            self._executor.schedule(task, lambda t: remove(t))
+        else:
+            self._executor.schedule(task, on_end_callback)
         self._childs.append(task)
 
     def childs(self) -> List["Task"]:

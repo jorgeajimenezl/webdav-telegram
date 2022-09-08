@@ -32,7 +32,7 @@ from services.mega import MegaService
 
 class WebdavModule(Module):
     SERVICES: List[Service] = [
-        # TorrentService,
+        TorrentService,
         TelegramService,
         MegaService,
         YoutubeService,
