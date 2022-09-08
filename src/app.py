@@ -5,9 +5,10 @@ uvloop.install()
 import os
 import yaml
 
+from warnings import warn
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from pyrogram import Client as PyrogramClient
-from pyrogram import emoji, filters, idle
+from pyrogram import emoji, filters, idle, StopPropagation
 from pyrogram.types import (
     BotCommand,
     Message,
@@ -37,7 +38,25 @@ with open("config.yml", "r") as file:
         os.getenv("TELEGRAM_BOT_TOKEN") or CONFIG["telegram"]["bot-token"]
     )
     CONFIG["redis"]["host"] = os.getenv("REDIS_HOST") or CONFIG["redis"]["host"]
+    CONFIG["bot"]["acl-users"] = os.getenv("ACL_USERS") or CONFIG["bot"]["acl-users"]
+    CONFIG["bot"]["acl-mode"] = os.getenv("ACL_MODE") or CONFIG["bot"]["acl-mode"]
 
+# Parse acl users
+def create_filter():
+    u = []
+    for user in CONFIG["bot"]["acl-users"].split(","):
+        user = user.strip()
+        if not user.startswith("@"):  # ID
+            u.append(int(user))
+        else:  # Username
+            u.append(user.removeprefix("@"))
+
+    if len(u) == 0 and CONFIG["bot"]["acl-mode"].lower() == "whitelist":
+        warn("No one can access to the bot")
+
+    return filters.user(u)
+
+acl_filter = create_filter()
 
 scheduler = AsyncIOScheduler()
 database = Database(db=0, config=CONFIG)
@@ -58,7 +77,17 @@ app = PyrogramClient(
 )
 
 
-@app.on_message(filters.command("start") & filters.private)
+@app.on_message(group=-1)
+async def acl_check(_, message: Message):
+    r = await acl_filter(_, message)
+
+    if (CONFIG["bot"]["acl-mode"].lower() == "blacklist" and r) or (
+        CONFIG["bot"]["acl-mode"].lower() == "whitelist" and not r
+    ):
+        raise StopPropagation()
+
+
+@app.on_message(filters.command("start"))
 async def start(_, message: Message):
     user = message.from_user.id
     context.update(user, CONTEXT["INITIALIZE"])
@@ -77,7 +106,7 @@ async def start(_, message: Message):
         await app.send_message(user, "You are already logged")
 
 
-@app.on_message(filters.command("help") & filters.private)
+@app.on_message(filters.command("help"))
 async def help(_, message: Message):
     user = message.from_user.id
 

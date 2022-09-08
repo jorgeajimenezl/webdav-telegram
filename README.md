@@ -18,6 +18,8 @@
 - `TELEGRAM_API_HASH`: Get from [Telegram](https://my.telegram.org)
 - `TELEGRAM_BOT_TOKEN`: Get from [Bot Father](https://t.me/BotFather)
 - `REDIS_HOST`: Redis server in format `[username:password]@hostname[:port]`
+- `ACL_USERS`: A list of users that will be used in ACL check in format `123456789,@jorgeajimenezl,@JimScope`
+- `ACL_MODE`: ACL mode for users. Must be `whitelist` or `blacklist`. Default to `blacklist`
 
 ## Deploy to Heroku
 [![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/jorgeajimenezl/webdav-telegram)

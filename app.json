@@ -20,6 +20,14 @@
         "REDIS_HOST": {
             "description": "Redis server in format `[username:password]@hostname[:port]`",
             "required": true
+        },
+        "ACL_USERS": {
+            "description": "A list of users that will be used in ACL check in format `123456789,@jorgeajimenezl,@JimScope`",
+            "required": false
+        },
+        "ACL_MODE": {
+            "description": "ACL mode for users. Must be `whitelist` or `blacklist`. Default to `blacklist`",
+            "required": false
         }
     },
     "formation": {

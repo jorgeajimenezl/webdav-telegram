@@ -193,10 +193,10 @@ class FileModule(Module):
         handlers = [
             MessageHandler(
                 self.list_wrapper,
-                filters.command("list") & filters.private,
+                filters.command("list"),
             ),
-            MessageHandler(self.free, filters.command("free") & filters.private),
-            MessageHandler(self.wipe, filters.command("wipe") & filters.private),
+            MessageHandler(self.free, filters.command("free")),
+            MessageHandler(self.wipe, filters.command("wipe")),
             self.delete_group.callback_handler(self.delete_file),
         ]
 

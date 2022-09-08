@@ -2,6 +2,10 @@ telegram:
   api-id: TELEGRAM_API_ID
   api-hash: TELEGRAM_API_HASH
   bot-token: TELEGRAM_BOT_TOKEN
+
+bot:
+  acl-users:
+  acl-mode: blacklist
   
 redis:
   host: REDIS_HOST

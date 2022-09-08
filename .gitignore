@@ -8,6 +8,9 @@ test/
 # VSCode
 .vscode
 
+# Fly config
+fly.toml
+
 # Enviroment
 env/
 

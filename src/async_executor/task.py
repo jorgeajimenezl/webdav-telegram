@@ -57,6 +57,7 @@ class Task(object):
         on_end_callback: Callable[["Task"], None] = None,
     ) -> None:
         if remove_on_complete:
+
             def remove(t):
                 self._childs.remove(t)
                 if inspect.iscoroutinefunction(on_end_callback):
