@@ -4,7 +4,7 @@ import re
 import aiofiles
 
 import aria2p
-import utils
+import dialogs
 from aiodav.client import Client as DavClient
 from async_executor.task import TaskState
 from modules.service import Service
@@ -56,11 +56,11 @@ class TorrentService(Service):
                               options={'dry-run': 'true'})
 
         app = self.pyrogram
-        files = await utils.selection(
+        files = await dialogs.selection(
             app,
             self.user,
             options=d.files,
-            message_text='**Select files to download**',
+            description='**Select files to download**',
             name_selector=lambda x: os.path.basename(x.path))
 
         return d.info_hash, [p.index for p in files]

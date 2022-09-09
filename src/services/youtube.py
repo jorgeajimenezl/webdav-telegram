@@ -10,7 +10,7 @@ from aiodav.client import Client as DavClient
 from pyrogram import emoji
 from pyrogram.types import Message
 
-import utils
+import dialogs
 from async_executor.task import TaskState
 from modules.service import Service
 from humanize import naturalsize
@@ -49,11 +49,11 @@ class YoutubeService(Service):
             formats = meta.get('formats', [meta]) # Filter no-audio streams
 
             app = self.pyrogram
-            format = await utils.selection(
+            format = await dialogs.selection(
                 app,
                 self.user,
                 options=formats,
-                message_text='**Select format**',
+                description='**Select format**',
                 multi_selection=False,
                 name_selector=lambda x: f"{ydl.format_resolution(x)}({x['ext']}) - "
                                         f"{naturalsize(x['filesize'], binary=True) if 'filesize' in x and x['filesize'] is not None else 'Unknown'}")

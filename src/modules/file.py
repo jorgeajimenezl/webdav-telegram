@@ -14,7 +14,7 @@ from pyrogram.types import (
     Message,
 )
 
-import utils
+import dialogs
 from context import CONTEXT, UserContext
 from database import Database
 from humanize import naturalsize
@@ -61,11 +61,11 @@ class FileModule(Module):
 
                 while True:
                     nodes = await dav.list(cwd, get_info=True)
-                    node, message = await utils.selection(
+                    node, message = await dialogs.selection(
                         app,
                         user,
                         options=nodes,
-                        message_text="**Select your file**",
+                        description="**Select your file**",
                         multi_selection=False,
                         name_selector=create_button,
                         delete=False,
@@ -162,7 +162,7 @@ class FileModule(Module):
         user = message.from_user.id
         data = self.database.get_data(user)
 
-        answer = await utils.selection(
+        answer = await dialogs.selection(
             app,
             user,
             ["Yes", "No"],
