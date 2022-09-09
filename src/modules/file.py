@@ -75,7 +75,6 @@ class FileModule(Module):
                     if node is None:
                         break
 
-                    node = node[0]
                     cwd, _ = get_path(node["path"])
 
                     if not node["isdir"]:
@@ -168,9 +167,10 @@ class FileModule(Module):
             ["Yes", "No"],
             "Confirm to delete all the files",
             multi_selection=False,
+            cancellable=False,
         )
 
-        if answer is not None and answer[0] == "Yes":
+        if answer == "Yes":
             async with DavClient(
                 hostname=data["server-uri"],
                 login=data["username"],

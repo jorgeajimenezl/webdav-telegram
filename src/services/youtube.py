@@ -66,7 +66,6 @@ class YoutubeService(Service):
             format = await self.options()
             if format is None:
                 raise CancelledError
-            format = format[0]
 
             self.set_state(TaskState.STARTING)
 

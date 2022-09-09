@@ -1,6 +1,6 @@
 import asyncio
 from types import SimpleNamespace
-from typing import Any, Callable, List, Tuple, Union
+from typing import Any, Callable, List, Tuple, TypeVar, Union
 import contextvars
 
 from pyrogram import Client, emoji
@@ -12,24 +12,25 @@ from pyrogram.types import (
 
 from button import ButtonFactory, GroupButton
 
+T = TypeVar("T")
+
 
 async def selection(
     app: Client,
     user: int,
-    options: List[Any],
+    options: List[T],
     description: str = "Select",
     multi_selection: bool = True,
-    name_selector: Callable[[Any], str] = None,
+    name_selector: Callable[[T], str] = None,
     max_options_per_page: int = 8,
     message: Message = None,
     delete: bool = True,
-) -> Union[List[Any], Tuple[List[Any], Message]]:
+    cancellable: bool = True,
+) -> Union[T, List[T], Tuple[List[T], Message]]:
     page_var = contextvars.ContextVar("page", default=0)
     cancelled_var = contextvars.ContextVar("cancelled", default=False)
     options_var = contextvars.ContextVar("opt", default=list())
 
-    # ns = SimpleNamespace()
-    # opt = list()
     event = asyncio.Event()
     total_pages = len(options) // max_options_per_page + (
         1 if len(options) % max_options_per_page != 0 else 0
@@ -78,16 +79,24 @@ async def selection(
                 selectall_button.button("Select all"),
                 unselectall_button.button("Unselect all"),
             ],
-            [
-                done_button.button(f"{emoji.CHECK_MARK_BUTTON} DONE"),
-                cancel_button.button(f"{emoji.CROSS_MARK_BUTTON} CANCEL"),
-            ],
+            (
+                [
+                    done_button.button(f"{emoji.CHECK_MARK_BUTTON} DONE"),
+                    cancel_button.button(f"{emoji.CROSS_MARK_BUTTON} CANCEL"),
+                ]
+                if cancellable
+                else [done_button.button(f"{emoji.CHECK_MARK_BUTTON} DONE")]
+            ),
         ]
         navigation = navigation_buttons()
         markup = InlineKeyboardMarkup(
             [create_button(opt) for opt in items[a:b]]
             + ([navigation] if len(navigation) > 0 else [])
-            + (extra if multi_selection else [[cancel_button.button("Cancel")]])
+            + (
+                extra
+                if multi_selection
+                else ([[cancel_button.button("Cancel")]] if cancellable else [[]])
+            )
         )
 
         if callback_query is None:
@@ -169,6 +178,13 @@ async def selection(
     for h in handlers:
         app.remove_handler(h)
 
-    if delete:
-        return options_var.get() if not cancelled_var.get() else None
-    return (options_var.get() if not cancelled_var.get() else None, message)
+    opt = options_var.get()
+    cancelled = cancelled_var.get()
+
+    if cancelled:
+        opt = None
+    elif not multi_selection:
+        assert len(opt) == 1, "The selection must have only one element"
+        opt = opt[0]
+
+    return opt if delete else (opt, message)
