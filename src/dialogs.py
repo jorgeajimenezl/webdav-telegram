@@ -38,7 +38,7 @@ async def selection(
 
     factory = ButtonFactory()
     select_group = factory.create_group("select")
-    items = [select_group.add(k, cachable=True) for k in options]
+    items = [select_group.add(k) for k in options]
 
     next_button = factory.create_action("next")
     back_button = factory.create_action("back")
