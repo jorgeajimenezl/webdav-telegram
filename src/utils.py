@@ -66,7 +66,7 @@ def get_bool(x: str) -> bool:
 
 def cut(x: str, length: int) -> List[str]:
     ret = []
-    while x != "":
+    while x is not None and x != "":
         ret.append(x[:length])
         x = x[length:]
     return ret

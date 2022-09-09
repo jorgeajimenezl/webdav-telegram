@@ -204,7 +204,7 @@ class SettingsModule(Module):
             self.database.set_data(user, **payload)
 
             await callback_query.edit_message_reply_markup(self._get_keyboard(user))
-            await callback_query.answer(f"Set value to {not v}")
+            await callback_query.answer(f"Set value to {not v}", show_alert=True)
 
     async def close(self, app: Client, callback_query: CallbackQuery):
         user = callback_query.from_user.id

@@ -50,7 +50,7 @@ class TaskExecutor(object):
                 await task.start()
                 task.set_state(TaskState.SUCCESSFULL)
             except CancelledError:
-                task.set_state(TaskState.CANCELED, f"Task cancelled")
+                task.set_state(TaskState.CANCELLED, f"Task cancelled")
             except Exception as e:
                 task.set_state(TaskState.ERROR, f"`{traceback.format_exc()}`")
             self._active_count -= 1

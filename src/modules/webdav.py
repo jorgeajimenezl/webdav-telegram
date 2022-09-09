@@ -64,26 +64,28 @@ class WebdavModule(Module):
         user = task.user
         state, description = task.state
 
-        if state == TaskState.ERROR or state == TaskState.CANCELED:
-            for piece in utils.cut(description, 4096):
-                await self.app.send_message(
-                    user, piece, reply_to_message_id=task.file_message.id
-                )
-
-        if state == TaskState.SUCCESSFULL:
-            if task.checksum and len(task.sums) > 0:
-                piece = "\n".join([f"**{n}**: `{c}`\n" for n, c in task.sums.items()])
-                await self.app.send_message(
-                    user,
-                    f"{emoji.CHECK_MARK_BUTTON} Successfull\n\n{emoji.INBOX_TRAY} Checksums (SHA1):\n\n{piece}",
-                    reply_to_message_id=task.file_message.id,
-                )
-            else:
-                await self.app.send_message(
-                    user,
-                    f"{emoji.CHECK_MARK_BUTTON} Successfull",
-                    reply_to_message_id=task.file_message.id,
-                )
+        match state:
+            case TaskState.ERROR | TaskState.CANCELLED:
+                for piece in utils.cut(description, 4096):
+                    await self.app.send_message(
+                        user, piece, reply_to_message_id=task.file_message.id
+                    )
+            case TaskState.SUCCESSFULL:
+                if task.checksum and len(task.sums) > 0:
+                    piece = "\n".join(
+                        [f"**{n}**: `{c}`\n" for n, c in task.sums.items()]
+                    )
+                    await self.app.send_message(
+                        user,
+                        f"{emoji.CHECK_MARK_BUTTON} Successfull\n\n{emoji.INBOX_TRAY} Checksums (SHA1):\n\n{piece}",
+                        reply_to_message_id=task.file_message.id,
+                    )
+                else:
+                    await self.app.send_message(
+                        user,
+                        f"{emoji.CHECK_MARK_BUTTON} Successfull",
+                        reply_to_message_id=task.file_message.id,
+                    )
 
         async with self.tasks_lock:
             message = self.tasks.pop(task)
@@ -97,7 +99,7 @@ class WebdavModule(Module):
                 pass
 
     async def cancel_upload(self, app: Client, callback_query: CallbackQuery):
-        await callback_query.answer("Scheduled stop")
+        await callback_query.answer("Scheduled stop", show_alert=True)
         id = self.factory.get_value(callback_query.data)
         assert isinstance(id, UUID)
 
@@ -225,7 +227,7 @@ class WebdavModule(Module):
                         )
 
                         match s:
-                            case TaskState.ERROR | TaskState.CANCELED:
+                            case TaskState.ERROR | TaskState.CANCELLED:
                                 e = emoji.RED_CIRCLE
                             case TaskState.SUCCESSFULL:
                                 e = emoji.GREEN_CIRCLE

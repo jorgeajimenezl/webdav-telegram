@@ -15,7 +15,7 @@ class TaskState(Enum):
     SUCCESSFULL = 3
     WAITING = 4
     ERROR = 5
-    CANCELED = 6
+    CANCELLED = 6
 
 
 class Task(object):
