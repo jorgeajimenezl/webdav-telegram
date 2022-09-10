@@ -1,5 +1,4 @@
 import asyncio
-from types import SimpleNamespace
 from typing import Any, Callable, List, Tuple, TypeVar, Union
 import contextvars
 
@@ -30,6 +29,7 @@ async def selection(
     page_var = contextvars.ContextVar("page", default=0)
     cancelled_var = contextvars.ContextVar("cancelled", default=False)
     options_var = contextvars.ContextVar("opt", default=list())
+    lock = asyncio.Lock()
 
     event = asyncio.Event()
     total_pages = len(options) // max_options_per_page + (
@@ -70,89 +70,96 @@ async def selection(
         return ret
 
     async def select_callback(app: Client, callback_query: CallbackQuery):
-        page = page_var.get()
-        a = page * max_options_per_page
-        b = min(len(options), (page + 1) * max_options_per_page)
+        async with lock:
+            page = page_var.get()
+            a = page * max_options_per_page
+            b = min(len(options), (page + 1) * max_options_per_page)
 
-        extra = [
-            [
-                selectall_button.button("Select all"),
-                unselectall_button.button("Unselect all"),
-            ],
-            (
+            extra = [
                 [
-                    done_button.button(f"{emoji.CHECK_MARK_BUTTON} DONE"),
-                    cancel_button.button(f"{emoji.CROSS_MARK_BUTTON} CANCEL"),
-                ]
-                if cancellable
-                else [done_button.button(f"{emoji.CHECK_MARK_BUTTON} DONE")]
-            ),
-        ]
-        navigation = navigation_buttons()
-        markup = InlineKeyboardMarkup(
-            [create_button(opt) for opt in items[a:b]]
-            + ([navigation] if len(navigation) > 0 else [])
-            + (
-                extra
-                if multi_selection
-                else ([[cancel_button.button("Cancel")]] if cancellable else [[]])
+                    selectall_button.button("Select all"),
+                    unselectall_button.button("Unselect all"),
+                ],
+                (
+                    [
+                        done_button.button(f"{emoji.CHECK_MARK_BUTTON} DONE"),
+                        cancel_button.button(f"{emoji.CROSS_MARK_BUTTON} CANCEL"),
+                    ]
+                    if cancellable
+                    else [done_button.button(f"{emoji.CHECK_MARK_BUTTON} DONE")]
+                ),
+            ]
+            navigation = navigation_buttons()
+            markup = InlineKeyboardMarkup(
+                [create_button(opt) for opt in items[a:b]]
+                + ([navigation] if len(navigation) > 0 else [])
+                + (
+                    extra
+                    if multi_selection
+                    else ([[cancel_button.button("Cancel")]] if cancellable else [[]])
+                )
             )
-        )
 
-        if callback_query is None:
-            if message is None:
-                return await app.send_message(user, description, reply_markup=markup)
+            if callback_query is None:
+                if message is None:
+                    return await app.send_message(user, description, reply_markup=markup)
+                else:
+                    await message.edit(description, reply_markup=markup)
+                    return message
             else:
-                await message.edit(description, reply_markup=markup)
-                return message
-        else:
-            await callback_query.edit_message_reply_markup(markup)
+                await callback_query.edit_message_reply_markup(markup)
 
     async def select_all_callback(app: Client, callback_query: CallbackQuery):
-        options_var.set(options.copy())
+        async with lock:
+            options_var.set(options.copy())
         await select_callback(app, callback_query)
 
     async def unselect_all_callback(app: Client, callback_query: CallbackQuery):
-        opt = options_var.get()
-        opt.clear()
+        async with lock:
+            options_var.get().clear()
         await select_callback(app, callback_query)
 
     async def next_page_callback(app: Client, callback_query: CallbackQuery):
-        page = page_var.get()
-        if page < total_pages - 1:
-            page_var.set(page + 1)
+        async with lock:
+            page = page_var.get()
+            if page < total_pages - 1:
+                page_var.set(page + 1)
         await select_callback(app, callback_query)
 
     async def back_page_callback(app: Client, callback_query: CallbackQuery):
-        page = page_var.get()
-        if page > 0:
-            page_var.set(page - 1)
+        async with lock:
+            page = page_var.get()
+            if page > 0:
+                page_var.set(page - 1)
         await select_callback(app, callback_query)
 
     async def done_callback(_, callback_query: CallbackQuery):
-        await callback_query.message.delete(True)
+        if delete:
+            await callback_query.message.delete(True)
         event.set()
 
     async def cancel_callback(_, callback_query: CallbackQuery):
-        await callback_query.message.delete(True)
-        cancelled_var.set(True)
+        if delete:
+            await callback_query.message.delete(True)
+        async with lock:
+            cancelled_var.set(True)
         event.set()
 
     async def select_item_callback(app: Client, callback_query: CallbackQuery):
         m = factory.get(callback_query.data).value
-        opt = options_var.get()
+        
+        async with lock:
+            opt = options_var.get()
 
-        if m in opt:
-            opt.remove(m)
-        else:
-            opt.append(m)
+            if m in opt:
+                opt.remove(m)
+            else:
+                opt.append(m)
 
         if multi_selection:
             await select_callback(app, callback_query)
         else:
-            if delete:
-                await callback_query.message.delete(True)
-            event.set()
+            await done_callback(app, callback_query)
 
     handlers = [
         select_group.callback_handler(select_item_callback),
@@ -183,8 +190,9 @@ async def selection(
 
     if cancelled:
         opt = None
-    elif not multi_selection:
-        assert len(opt) == 1, "The selection must have only one element"
-        opt = opt[0]
+    else:
+        if not multi_selection:
+            assert len(opt) == 1, "The selection must have only one element"
+            opt = opt[0]
 
     return opt if delete else (opt, message)
