@@ -1,6 +1,6 @@
 import asyncio
+from types import SimpleNamespace
 from typing import Any, Callable, List, Tuple, TypeVar, Union
-import contextvars
 
 from pyrogram import Client, emoji
 from pyrogram.types import (
@@ -26,12 +26,11 @@ async def selection(
     delete: bool = True,
     cancellable: bool = True,
 ) -> Union[T, List[T], Tuple[List[T], Message]]:
-    page_var = contextvars.ContextVar("page", default=0)
-    cancelled_var = contextvars.ContextVar("cancelled", default=False)
-    options_var = contextvars.ContextVar("opt", default=list())
-    lock = asyncio.Lock()
+    ns = SimpleNamespace({"page": 0, "cancelled": False, "options": []})
 
+    lock = asyncio.Lock()
     event = asyncio.Event()
+
     total_pages = len(options) // max_options_per_page + (
         1 if len(options) % max_options_per_page != 0 else 0
     )
@@ -55,25 +54,23 @@ async def selection(
 
         if len(name) >= 20:
             name = name[:40]
-        selected = button.value in options_var.get()
+        selected = button.value in ns.options
         return [button.button(f"{emoji.CHECK_MARK if selected else ''}{name}")]
 
     def navigation_buttons():
         ret = []
-        page = page_var.get()
 
-        if page > 0:
-            ret.append(back_button.button(f"{emoji.LEFT_ARROW} {page - 1}"))
-        if page < total_pages - 1:
-            ret.append(next_button.button(f"{page + 1} {emoji.RIGHT_ARROW}"))
+        if ns.page > 0:
+            ret.append(back_button.button(f"{emoji.LEFT_ARROW} {ns.page - 1}"))
+        if ns.page < total_pages - 1:
+            ret.append(next_button.button(f"{ns.page + 1} {emoji.RIGHT_ARROW}"))
 
         return ret
 
     async def select_callback(app: Client, callback_query: CallbackQuery):
         async with lock:
-            page = page_var.get()
-            a = page * max_options_per_page
-            b = min(len(options), (page + 1) * max_options_per_page)
+            a = ns.page * max_options_per_page
+            b = min(len(options), (ns.page + 1) * max_options_per_page)
 
             extra = [
                 [
@@ -102,7 +99,9 @@ async def selection(
 
             if callback_query is None:
                 if message is None:
-                    return await app.send_message(user, description, reply_markup=markup)
+                    return await app.send_message(
+                        user, description, reply_markup=markup
+                    )
                 else:
                     await message.edit(description, reply_markup=markup)
                     return message
@@ -111,26 +110,24 @@ async def selection(
 
     async def select_all_callback(app: Client, callback_query: CallbackQuery):
         async with lock:
-            options_var.set(options.copy())
+            ns.options = options.copy()
         await select_callback(app, callback_query)
 
     async def unselect_all_callback(app: Client, callback_query: CallbackQuery):
         async with lock:
-            options_var.get().clear()
+            ns.options.clear()
         await select_callback(app, callback_query)
 
     async def next_page_callback(app: Client, callback_query: CallbackQuery):
         async with lock:
-            page = page_var.get()
-            if page < total_pages - 1:
-                page_var.set(page + 1)
+            if ns.page < total_pages - 1:
+                ns.page += 1
         await select_callback(app, callback_query)
 
     async def back_page_callback(app: Client, callback_query: CallbackQuery):
         async with lock:
-            page = page_var.get()
-            if page > 0:
-                page_var.set(page - 1)
+            if ns.page > 0:
+                ns.page -= 1
         await select_callback(app, callback_query)
 
     async def done_callback(_, callback_query: CallbackQuery):
@@ -142,19 +139,17 @@ async def selection(
         if delete:
             await callback_query.message.delete(True)
         async with lock:
-            cancelled_var.set(True)
+            ns.cancelled = True
         event.set()
 
     async def select_item_callback(app: Client, callback_query: CallbackQuery):
         m = factory.get(callback_query.data).value
-        
-        async with lock:
-            opt = options_var.get()
 
-            if m in opt:
-                opt.remove(m)
+        async with lock:
+            if m in ns.options:
+                ns.options.remove(m)
             else:
-                opt.append(m)
+                ns.options.append(m)
 
         if multi_selection:
             await select_callback(app, callback_query)
@@ -185,10 +180,9 @@ async def selection(
     for h in handlers:
         app.remove_handler(h)
 
-    opt = options_var.get()
-    cancelled = cancelled_var.get()
+    opt = ns.options
 
-    if cancelled:
+    if ns.cancelled:
         opt = None
     else:
         if not multi_selection:
