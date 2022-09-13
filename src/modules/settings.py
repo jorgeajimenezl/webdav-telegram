@@ -1,7 +1,7 @@
 import re
 from typing import Any, Callable, Coroutine, Dict, Tuple, Union
 
-from pyrogram import Client, emoji, filters
+from pyrogram import Client, emoji, filters, StopPropagation
 from pyrogram.handlers import MessageHandler
 from pyrogram.types import (
     Message,
@@ -180,12 +180,13 @@ class SettingsModule(Module):
             await app.send_message(user, f"{emoji.CROSS_MARK} Invalid value")
 
         await self.settings(app, message)
+        raise StopPropagation() # Stop
 
     async def settings_menu(self, app: Client, callback_query: CallbackQuery):
         user = callback_query.from_user.id
 
         id = self.factory.get_value(callback_query.data)
-        _, description, _, cls = SettingsModule.MENU[id]
+        caption, description, _, cls = SettingsModule.MENU[id]
 
         if not issubclass(cls, bool):
             self.database.set_data(user, settings_context=id)
@@ -204,7 +205,7 @@ class SettingsModule(Module):
             self.database.set_data(user, **payload)
 
             await callback_query.edit_message_reply_markup(self._get_keyboard(user))
-            await callback_query.answer(f"Set value to {not v}", show_alert=True)
+            await callback_query.answer(f"Setted {caption} to {not v}")
 
     async def close(self, app: Client, callback_query: CallbackQuery):
         user = callback_query.from_user.id
