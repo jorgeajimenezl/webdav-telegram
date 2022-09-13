@@ -26,7 +26,7 @@ async def selection(
     delete: bool = True,
     cancellable: bool = True,
 ) -> Union[T, List[T], Tuple[List[T], Message]]:
-    ns = SimpleNamespace({"page": 0, "cancelled": False, "options": []})
+    ns = SimpleNamespace(page=0, cancelled=False, options=[])
 
     lock = asyncio.Lock()
     event = asyncio.Event()
