@@ -189,7 +189,7 @@ class FileModule(Module):
             await app.send_message(user, "Wipe cancelled")
 
     def register(self, app: Client):
-        def coro_wrapper(self, func: Callable[[Client, Message], None], **kwargs):
+        def coro_wrapper(func: Callable[[Client, Message], None], **kwargs):
             async def wrapper(app: Client, event: Message):
                 asyncio.create_task(func(app, event, **kwargs))
 
