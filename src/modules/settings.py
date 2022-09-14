@@ -180,7 +180,7 @@ class SettingsModule(Module):
             await app.send_message(user, f"{emoji.CROSS_MARK} Invalid value")
 
         await self.settings(app, message)
-        raise StopPropagation() # Stop
+        raise StopPropagation()  # Stop
 
     async def settings_menu(self, app: Client, callback_query: CallbackQuery):
         user = callback_query.from_user.id

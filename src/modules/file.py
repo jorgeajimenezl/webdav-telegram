@@ -1,6 +1,6 @@
 import asyncio
 import os
-from typing import Dict
+from typing import Callable, Dict
 from urllib.parse import urlparse
 
 from aiodav.client import Client as DavClient
@@ -30,7 +30,8 @@ class FileModule(Module):
         # Groups
         self.delete_group = self.factory.create_group("delete")
 
-    async def list(self, user: int, app: Client, message: Message = None):
+    async def list(self, app: Client, message: Message, edit_message=False):
+        user = message.from_user.id
         data = self.database.get_data(user)
         cwd = "/"
         ret = urlparse(data["server-uri"])
@@ -55,7 +56,7 @@ class FileModule(Module):
 
                     return partial, name
 
-                def create_button(info: Dict[str, str]):
+                def get_button_label(info: Dict[str, str]):
                     _, name = get_path(info["path"])
                     return f"{emoji.OPEN_FILE_FOLDER if info['isdir'] else emoji.PACKAGE} {name}"
 
@@ -67,9 +68,9 @@ class FileModule(Module):
                         options=nodes,
                         description="**Select your file**",
                         multi_selection=False,
-                        name_selector=create_button,
+                        name_selector=get_button_label,
                         delete=False,
-                        message=message,
+                        message=(message if edit_message else None),
                     )
 
                     if node is None:
@@ -104,7 +105,6 @@ class FileModule(Module):
 
                         break
             except Exception as e:
-                # print("Error: " + str(e))
                 await app.send_message(user, f"Error getting file list: {e}")
 
     async def delete_file(self, app: Client, callback_query: CallbackQuery):
@@ -125,7 +125,10 @@ class FileModule(Module):
 
                 # Notify and go back
                 await callback_query.answer(f"The item **{name}** has been deleted")
-                asyncio.create_task(self.list(user, app, callback_query.message))
+                # Schedule this task
+                asyncio.create_task(
+                    self.list(app, callback_query.message, edit_message=True)
+                )
             except RemoteResourceNotFound:
                 await app.send_message(
                     user, f"Resource **{path}** isn't longer available"
@@ -152,10 +155,6 @@ class FileModule(Module):
                 )
             except Exception as e:
                 await app.send_message(user, f"Unable to get free space: {e}")
-
-    async def list_wrapper(self, app: Client, event: Message):
-        # TODO: Fix this async bug
-        asyncio.create_task(self.list(event.from_user.id, app))
 
     async def wipe(self, app: Client, message: Message):
         user = message.from_user.id
@@ -190,13 +189,16 @@ class FileModule(Module):
             await app.send_message(user, "Wipe cancelled")
 
     def register(self, app: Client):
+        def coro_wrapper(self, func: Callable[[Client, Message], None], **kwargs):
+            async def wrapper(app: Client, event: Message):
+                asyncio.create_task(func(app, event, **kwargs))
+
+            return wrapper
+
         handlers = [
-            MessageHandler(
-                self.list_wrapper,
-                filters.command("list"),
-            ),
+            MessageHandler(coro_wrapper(self.list), filters.command("list")),
             MessageHandler(self.free, filters.command("free")),
-            MessageHandler(self.wipe, filters.command("wipe")),
+            MessageHandler(coro_wrapper(self.wipe), filters.command("wipe")),
             self.delete_group.callback_handler(self.delete_file),
         ]
 
