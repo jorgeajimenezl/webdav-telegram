@@ -82,3 +82,8 @@ def expand_ranges(x: str) -> Iterator[str]:
 
     for t in itertools.product(*ranges):
         yield x.format(*t)
+
+
+def escape_markdown(x: str) -> str:
+    escape_chars = r"_*[]()~`>#+-=|{}.!"
+    return re.sub(f"([{re.escape(escape_chars)}])", r"\\\1", x)

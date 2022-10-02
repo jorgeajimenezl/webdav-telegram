@@ -72,12 +72,15 @@ class WebdavModule(Module):
                     )
             case TaskState.SUCCESSFULL:
                 if task.checksum and len(task.sums) > 0:
-                    piece = "\n".join(
-                        [f"**{n}**: `{c}`\n" for n, c in task.sums.items()]
+                    checksums = "\n".join(
+                        [
+                            f"**{utils.escape_markdown(filename)}**: `{checksum}`\n"
+                            for filename, checksum in task.sums.items()
+                        ]
                     )
                     await self.app.send_message(
                         user,
-                        f"{emoji.CHECK_MARK_BUTTON} Successfull\n\n{emoji.INBOX_TRAY} Checksums (SHA1):\n\n{piece}",
+                        f"{emoji.CHECK_MARK_BUTTON} Successfull\n\n{emoji.INBOX_TRAY} Checksums (SHA1):\n\n{checksums}",
                         reply_to_message_id=task.file_message.id,
                     )
                 else:
