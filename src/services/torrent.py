@@ -93,7 +93,7 @@ class TorrentService(Service):
         self.set_state(TaskState.WAITING, description=f"{emoji.HOURGLASS_DONE} Files successfull downloaded")
 
         if download.status != 'complete':
-            raise Exception(download.error_message)
+            raise Exception(f"{download.status}: {download.error_message}")
         
 
         async with DavClient(hostname=self.webdav_hostname,

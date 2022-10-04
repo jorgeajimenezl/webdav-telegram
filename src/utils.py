@@ -92,7 +92,7 @@ def escape_markdown(x: str) -> str:
 
 async def execute_process(program: str, *args: List[str]) -> None:
     proc = await asyncio.create_subprocess_exec(
-        program=program,
+        program,
         *args,
         stderr=asyncio.subprocess.PIPE,
     )
