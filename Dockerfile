@@ -23,7 +23,7 @@ RUN apt-get update -y
 RUN apt-get install -y git ffmpeg aria2 \
     libcurl4-openssl-dev libsodium-dev libssl-dev \
     libcrypto++-dev libc-ares-dev libpthread-stubs0-dev \
-    zlib1g-dev libsqlite3-dev
+    zlib1g-dev libsqlite3-dev zstd
 
 # Copy all files
 RUN mkdir /app
