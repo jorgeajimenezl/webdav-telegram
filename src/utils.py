@@ -1,5 +1,6 @@
 import re
 import itertools
+import asyncio
 from typing import Iterator, List
 
 
@@ -87,3 +88,17 @@ def expand_ranges(x: str) -> Iterator[str]:
 def escape_markdown(x: str) -> str:
     escape_chars = r"_*[]()~`>#+-=|{}.!"
     return re.sub(f"([{re.escape(escape_chars)}])", r"\\\1", x)
+
+
+async def execute_process(program: str, *args: List[str]) -> None:
+    proc = await asyncio.create_subprocess_exec(
+        program=program,
+        *args,
+        stderr=asyncio.subprocess.PIPE,
+    )
+
+    _, stderr = await proc.communicate()
+    if proc.returncode != 0:
+        raise Exception(
+            f"Process return code: {proc.returncode} Stderr: {stderr or ''}"
+        )

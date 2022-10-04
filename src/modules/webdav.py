@@ -1,7 +1,6 @@
 import asyncio
 import imp
 from uuid import UUID
-from services.youtube import YoutubeService
 import utils
 from typing import Dict, List, Type
 
@@ -28,6 +27,8 @@ from services.http import HttpService
 from services.telegram import TelegramService
 from services.torrent import TorrentService
 from services.mega import MegaService
+from services.git import GitService
+from services.youtube import YoutubeService
 
 
 class WebdavModule(Module):
@@ -36,6 +37,7 @@ class WebdavModule(Module):
         TelegramService,
         MegaService,
         YoutubeService,
+        GitService,
         HttpService,
     ]
 
