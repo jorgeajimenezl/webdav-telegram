@@ -54,15 +54,14 @@ class GitService(Service):
                     description=f"{emoji.HOURGLASS_DONE} Compressing the repository",
                 )
 
-                # Compressing file
+                # Archiving file
                 await utils.execute_process(
                     "tar",
-                    "--zstd",
                     "-cf",
-                    f"{path}.tar.zstd",
+                    f"{path}.tar",
                     path,
                 )
 
-                file_size = os.path.getsize(f"{path}.tar.zstd")
-                async with aiofiles.open(f"{path}.tar.zstd", "rb") as file:
+                file_size = os.path.getsize(f"{path}.tar")
+                async with aiofiles.open(f"{path}.tar", "rb") as file:
                     await self.upload_file(dav, file, file_size, filename=filename)
