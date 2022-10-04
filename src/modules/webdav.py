@@ -76,7 +76,7 @@ class WebdavModule(Module):
                 if task.checksum and len(task.sums) > 0:
                     checksums = "\n".join(
                         [
-                            f"**{utils.escape_markdown(filename)}**: `{checksum}`\n"
+                            f"**{filename}**: `{checksum}`\n"
                             for filename, checksum in task.sums.items()
                         ]
                     )
