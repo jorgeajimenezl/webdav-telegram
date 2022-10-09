@@ -82,7 +82,7 @@ class TorrentService(Service):
         )
         self.reset_stats()
             
-        while not download.is_complete and not download.status != "error":
+        while not download.is_complete and download.status != "error":
             await asyncio.sleep(3)
             download.update()
             self.make_progress(download.completed_length, 
