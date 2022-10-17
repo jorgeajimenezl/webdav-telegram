@@ -30,8 +30,8 @@ class FileModule(Module):
         # Groups
         self.delete_group = self.factory.create_group("delete")
 
-    async def list(self, app: Client, message: Message, edit_message=False):
-        user = message.from_user.id
+    async def list(self, app: Client, message: Message, **kwargs):
+        user = kwargs.get("user", message.from_user.id)
         data = self.database.get_data(user)
         cwd = "/"
         ret = urlparse(data["server-uri"])
@@ -70,7 +70,7 @@ class FileModule(Module):
                         multi_selection=False,
                         name_selector=get_button_label,
                         delete=False,
-                        message=(message if edit_message else None),
+                        message=None,
                     )
 
                     if node is None:
@@ -124,10 +124,10 @@ class FileModule(Module):
                 await dav.unlink(path)
 
                 # Notify and go back
-                await callback_query.answer(f"The item **{name}** has been deleted")
+                await callback_query.message.edit(f"**{name}** has been deleted", reply_markup=None)
                 # Schedule this task
                 asyncio.create_task(
-                    self.list(app, callback_query.message, edit_message=True)
+                    self.list(app, None, user=user)
                 )
             except RemoteResourceNotFound:
                 await app.send_message(
