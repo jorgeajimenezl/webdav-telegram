@@ -11,6 +11,7 @@ humanize
 lxml
 beautifulsoup4
 pycryptodomex
+psutil
 
 # Optional
 aria2p

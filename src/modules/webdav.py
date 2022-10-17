@@ -1,7 +1,7 @@
 import asyncio
-import imp
 from uuid import UUID
 import utils
+import psutil
 from typing import Dict, List, Type
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
@@ -280,9 +280,20 @@ class WebdavModule(Module):
 
         active = self.executor.active_count
         total = self.executor.total_count
+
+        memory = psutil.virtual_memory()
+        disk = psutil.disk_usage("/")
+
         await app.send_message(
             user,
-            f"**Status:**\n{emoji.YELLOW_CIRCLE} Active: {active}\n{emoji.BLUE_CIRCLE} Total: {total}",
+            "**Status:**\n\n"
+            f"Boot time: {naturaldelta(psutil.boot_time())}"
+            f"CPU: {psutil.cpu_count()} cores"
+            f"RAM: {naturalsize(memory.used)} used of {naturalsize(memory.total)} [{memory.percent}%]"
+            f"Disk: {naturalsize(disk.used)} used of {naturalsize(disk.total)}"
+            "\n"
+            f"{emoji.YELLOW_CIRCLE} Active tasks: {active}\n"
+            f"{emoji.BLUE_CIRCLE} Total tasks: {total}",
         )
 
     def register(self, app: Client):
