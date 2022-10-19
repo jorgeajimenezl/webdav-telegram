@@ -287,10 +287,10 @@ class WebdavModule(Module):
         await app.send_message(
             user,
             "**Status:**\n\n"
-            f"Boot time: {naturaldelta(psutil.boot_time())}"
-            f"CPU: {psutil.cpu_count()} cores"
-            f"RAM: {naturalsize(memory.used)} used of {naturalsize(memory.total)} [{memory.percent}%]"
-            f"Disk: {naturalsize(disk.used)} used of {naturalsize(disk.total)}"
+            f"{emoji.CLOCKWISE_VERTICAL_ARROWS} Boot time: {naturaldelta(psutil.boot_time())}\n"
+            f"{emoji.ELECTRIC_PLUG} CPU: {psutil.cpu_count()} cores\n"
+            f"{emoji.BATTERY} RAM: {naturalsize(memory.used)} used of {naturalsize(memory.total)} [{memory.percent}%]\n"
+            f"{emoji.FILE_FOLDER} Disk: {naturalsize(disk.used)} used of {naturalsize(disk.total)}\n"
             "\n"
             f"{emoji.YELLOW_CIRCLE} Active tasks: {active}\n"
             f"{emoji.BLUE_CIRCLE} Total tasks: {total}",
