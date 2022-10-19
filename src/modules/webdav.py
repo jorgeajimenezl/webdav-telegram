@@ -68,7 +68,7 @@ class WebdavModule(Module):
 
         match state:
             case TaskState.ERROR | TaskState.CANCELLED:
-                for piece in utils.cut(description, 4096):
+                for piece in utils.cut(description, 4095):
                     await self.app.send_message(
                         user, piece, reply_to_message_id=task.file_message.id
                     )
