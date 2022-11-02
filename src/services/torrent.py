@@ -11,6 +11,8 @@ from modules.service import Service
 from pyrogram import emoji
 from pyrogram.types import Message
 
+DATA_FOLDER_PATH = "/app/data/"
+
 
 class TorrentService(Service):
     """
@@ -28,31 +30,35 @@ class TorrentService(Service):
     @staticmethod
     def check(m: Message):
         # TODO: Improve this regex
-        return bool(m.text) and bool(re.match(
-            rf'magnet:\?xt=urn:[a-z0-9]+:[a-zA-Z0-9]+',
-            m.text))
+        return (bool(m.text) and bool(re.match(rf'magnet:\?xt=urn:[a-z0-9]+:[a-zA-Z0-9]+', m.text))) or\
+                (bool(m.document) and m.document.file_name.endswith(".torrent"))
 
-    async def options(self, aria2: aria2p.API) -> None:       
-        link = self.kwargs.get('url', self.file_message.text)
-        d = aria2.add_magnet(link,
-                             options={
-                                 'bt-metadata-only': 'true',
-                                 'bt-save-metadata': 'true'
-                             })        
+    async def options(self, aria2: aria2p.API) -> None:
+        if self.file_message.document is None:
+            link = self.kwargs.get('url', self.file_message.text)
+            d = aria2.add_magnet(link,
+                                options={
+                                    'bt-metadata-only': 'true',
+                                    'bt-save-metadata': 'true'
+                                })        
 
-        # Wait while get download information
-        while not d.is_complete:
-            await asyncio.sleep(0.5)
-            d.update()
+            # Wait while get download information
+            while not d.is_complete:
+                await asyncio.sleep(0.5)
+                d.update()
 
-            if d.status == 'error':
-                await self.pyrogram.send_message(
-                    self.user,
-                    f"{emoji.CROSS_MARK} Unable to download metadata information from magnet link"
-                )
-                break
+                if d.status == 'error':
+                    await self.pyrogram.send_message(
+                        self.user,
+                        f"{emoji.CROSS_MARK} Unable to download metadata information from magnet link"
+                    )
+                    break
+            torrent_path = os.path.join(DATA_FOLDER_PATH, f"{d.info_hash}.torrent")
+        else:
+            torrent_path = await self.file_message.download(DATA_FOLDER_PATH)
 
-        d = aria2.add_torrent(f'/app/data/{d.info_hash}.torrent',
+
+        d = aria2.add_torrent(torrent_path,
                               options={'dry-run': 'true'})
 
         app = self.pyrogram
@@ -63,17 +69,16 @@ class TorrentService(Service):
             description='**Select files to download**',
             name_selector=lambda x: os.path.basename(x.path))
 
-        return d.info_hash, [p.index for p in files]
+        return torrent_path, d.info_hash, [p.index for p in files]
 
     async def start(self) -> None:
         aria2 = aria2p.API(aria2p.Client(host="http://127.0.0.1"))
 
-        # Chossing torrent files to download            
-        info_hash, files = await self.options(aria2)       
+        # Choosing torrent files to download            
+        torrent_path, info_hash, files = await self.options(aria2)       
 
-        self.set_state(TaskState.STARTING)    
-        # link = self.kwargs.get('url', self.file_message.text)
-        download = aria2.add_torrent(f'/app/data/{info_hash}.torrent', options={'select-file': ",".join(map(str, files))})
+        self.set_state(TaskState.STARTING)
+        download = aria2.add_torrent(torrent_path, options={'select-file': ",".join(map(str, files))})
 
         # Wait for download complete
         self.set_state(TaskState.WORKING,

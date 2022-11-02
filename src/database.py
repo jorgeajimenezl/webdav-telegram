@@ -1,11 +1,12 @@
 from urllib.parse import urlparse
 
 from redis import Redis
+import config
 
 
 class Database(object):
     def __init__(self, db: int = 0, **kwargs):
-        ret = urlparse(kwargs.get("config")["redis"]["host"])
+        ret = urlparse(config.REDIS_HOST)
 
         self._redis = Redis(
             host=ret.hostname,

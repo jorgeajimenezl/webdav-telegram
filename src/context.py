@@ -3,6 +3,7 @@ from urllib.parse import urlparse
 from pyrogram import filters
 from pyrogram.types import CallbackQuery
 from redis import Redis
+import config
 
 CONTEXT_NAMES = [
     "INITIALIZE",
@@ -21,7 +22,7 @@ CONTEXT = {v: 1 << k for k, v in enumerate(CONTEXT_NAMES)}
 
 class UserContext(object):
     def __init__(self, db: int = 0, **kwargs):
-        ret = urlparse(kwargs.get("config")["redis"]["host"])
+        ret = urlparse(config.REDIS_HOST)
 
         self._redis = Redis(
             host=ret.hostname,

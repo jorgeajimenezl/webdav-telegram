@@ -124,11 +124,11 @@ class FileModule(Module):
                 await dav.unlink(path)
 
                 # Notify and go back
-                await callback_query.message.edit(f"**{name}** has been deleted", reply_markup=None)
-                # Schedule this task
-                asyncio.create_task(
-                    self.list(app, None, user=user)
+                await callback_query.message.edit(
+                    f"**{name}** has been deleted", reply_markup=None
                 )
+                # Schedule this task
+                asyncio.create_task(self.list(app, None, user=user))
             except RemoteResourceNotFound:
                 await app.send_message(
                     user, f"Resource **{path}** isn't longer available"

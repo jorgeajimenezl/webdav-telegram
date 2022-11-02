@@ -64,4 +64,6 @@ class GitService(Service):
 
                 file_size = os.path.getsize(f"{path}.tar")
                 async with aiofiles.open(f"{path}.tar", "rb") as file:
-                    await self.upload_file(dav, file, file_size, filename=f"{filename}.tar")
+                    await self.upload_file(
+                        dav, file, file_size, filename=f"{filename}.tar"
+                    )

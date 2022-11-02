@@ -3,7 +3,7 @@ import uvloop
 uvloop.install()
 
 import os
-import yaml
+import config
 
 from warnings import warn
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
@@ -22,36 +22,17 @@ from modules.file import FileModule
 from modules.settings import SettingsModule
 from modules.webdav import WebdavModule
 
-DATA_FOLDER_PATH = "./data/"
-
-# Read config file
-with open("config.yml", "r") as file:
-    CONFIG = yaml.load(file.read(), Loader=yaml.Loader)
-
-    CONFIG["telegram"]["api-id"] = (
-        os.getenv("TELEGRAM_API_ID") or CONFIG["telegram"]["api-id"]
-    )
-    CONFIG["telegram"]["api-hash"] = (
-        os.getenv("TELEGRAM_API_HASH") or CONFIG["telegram"]["api-hash"]
-    )
-    CONFIG["telegram"]["bot-token"] = (
-        os.getenv("TELEGRAM_BOT_TOKEN") or CONFIG["telegram"]["bot-token"]
-    )
-    CONFIG["redis"]["host"] = os.getenv("REDIS_HOST") or CONFIG["redis"]["host"]
-    CONFIG["bot"]["acl-users"] = os.getenv("ACL_USERS") or CONFIG["bot"]["acl-users"]
-    CONFIG["bot"]["acl-mode"] = os.getenv("ACL_MODE") or CONFIG["bot"]["acl-mode"]
-
 # Parse acl users
 def create_filter():
     u = []
-    for user in CONFIG["bot"]["acl-users"].split(","):
+    for user in config.ACL_USERS.split(","):
         user = user.strip()
         if not user.startswith("@"):  # ID
             u.append(int(user))
         else:  # Username
             u.append(user.removeprefix("@"))
 
-    if len(u) == 0 and CONFIG["bot"]["acl-mode"].lower() == "whitelist":
+    if len(u) == 0 and config.ACL_MODE.lower() == "whitelist":
         warn("No one can access to the bot")
 
     return filters.user(u)
@@ -60,8 +41,8 @@ def create_filter():
 acl_filter = create_filter()
 
 scheduler = AsyncIOScheduler()
-database = Database(db=0, config=CONFIG)
-context = UserContext(db=0, config=CONFIG)
+database = Database(db=0)
+context = UserContext(db=0)
 
 # Modules instantiation
 settings_module = SettingsModule(context, database)
@@ -71,9 +52,9 @@ webdav_moduele = WebdavModule(context, database, scheduler)
 # WARNING: workers parameter pushed because that will run in a 1-CPU
 app = PyrogramClient(
     "deverlop",
-    api_id=CONFIG["telegram"]["api-id"],
-    api_hash=CONFIG["telegram"]["api-hash"],
-    bot_token=CONFIG["telegram"]["bot-token"],
+    api_id=config.TELEGRAM_API_ID,
+    api_hash=config.TELEGRAM_API_HASH,
+    bot_token=config.TELEGRAM_BOT_TOKEN,
     workers=5,
 )
 
@@ -82,8 +63,8 @@ app = PyrogramClient(
 async def acl_check(_, message: Message):
     r = await acl_filter(_, message)
 
-    if (CONFIG["bot"]["acl-mode"].lower() == "blacklist" and r) or (
-        CONFIG["bot"]["acl-mode"].lower() == "whitelist" and not r
+    if (config.ACL_MODE.lower() == "blacklist" and r) or (
+        config.ACL_MODE.lower() == "whitelist" and not r
     ):
         raise StopPropagation()
 

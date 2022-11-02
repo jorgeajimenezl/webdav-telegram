@@ -31,6 +31,7 @@ from services.git import GitService
 from services.youtube import YoutubeService
 from services.urlbatch import URLBatchService
 
+
 class WebdavModule(Module):
     SERVICES: List[Service] = [
         URLBatchService,

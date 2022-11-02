@@ -42,7 +42,8 @@ class URLBatchService(Service):
                             filename = os.path.basename(req.path)
 
                         self.set_state(
-                            TaskState.WORKING, description=f"{emoji.HOURGLASS_DONE} Downloading {filename}"
+                            TaskState.WORKING,
+                            description=f"{emoji.HOURGLASS_DONE} Downloading {filename}",
                         )
 
                         # Download file
