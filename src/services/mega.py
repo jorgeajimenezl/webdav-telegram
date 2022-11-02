@@ -1,5 +1,7 @@
 import re
+import os
 import aiofiles
+import tempfile
 
 from aiomega import Mega
 from aiodav.client import Client as DavClient
@@ -31,25 +33,27 @@ class MegaService(Service):
             timeout=self.timeout,
             chunk_size=2097152,
         ) as dav:
-            async with Mega("ox8xnQZL") as mega:
-                link = self.kwargs.get("url", self.file_message.text)
-                node = await mega.get_public_node(link)
-                if not node.isFile():
-                    raise Exception("Only can download files")
+            with tempfile.TemporaryDirectory() as directory:
+                async with Mega("ox8xnQZL") as mega:
+                    link = self.kwargs.get("url", self.file_message.text)
+                    node = await mega.get_public_node(link)
+                    if not node.isFile():
+                        raise Exception("Only can download files")
 
-                async def progress(c, t, s):
-                    self.make_progress(c, t, speed=s)
+                    async def progress(c, t, s):
+                        self.make_progress(c, t, speed=s)
 
-                self.reset_stats()
-                filename = node.getName()
-                size = node.getSize()
-                self.set_state(
-                    TaskState.WORKING,
-                    description=f"{emoji.HOURGLASS_DONE} Download {filename}",
-                )
-                await mega.download(node, "/app/data/", progress=progress)
+                    self.reset_stats()
+                    filename = node.getName()
+                    size = node.getSize()
+                    self.set_state(
+                        TaskState.WORKING,
+                        description=f"{emoji.HOURGLASS_DONE} Download {filename}",
+                    )
+                    await mega.download(node, directory, progress=progress)
 
-            async with aiofiles.open(f"/app/data/{filename}", "rb") as file:
-                await self.upload_file(dav, file, size)
+                path = os.path.join(directory, filename)
+                async with aiofiles.open(path, "rb") as file:
+                    await self.upload_file(dav, file, size)
 
         return None
