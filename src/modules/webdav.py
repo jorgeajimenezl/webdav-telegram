@@ -2,6 +2,7 @@ import asyncio
 from uuid import UUID
 import utils
 import psutil
+import time
 from typing import Dict, List, Type
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
@@ -258,25 +259,6 @@ class WebdavModule(Module):
                         ),
                     )
 
-    # async def urls_batch(self, app: Client, message: Message):
-    #     user = message.from_user.id
-    #     self.context.update(user, CONTEXT["URLS_BATCH"])
-
-    #     await app.send_message(
-    #         user,
-    #         f"{emoji.CHECK_MARK_BUTTON} Please send me a list of URLs",
-    #         reply_markup=InlineKeyboardMarkup(
-    #             [
-    #                 [
-    #                     InlineKeyboardButton(
-    #                         "Cancel",
-    #                         callback_data=self.factory.create_data("cancel"),
-    #                     )
-    #                 ]
-    #             ]
-    #         ),
-    #     )
-
     async def status(self, app: Client, message: Message):
         user = message.from_user.id
 
@@ -286,10 +268,12 @@ class WebdavModule(Module):
         memory = psutil.virtual_memory()
         disk = psutil.disk_usage("/")
 
+        me = psutil.Process()
+
         await app.send_message(
             user,
             "**Status:**\n\n"
-            f"{emoji.CLOCKWISE_VERTICAL_ARROWS} Boot time: {naturaldelta(psutil.boot_time())}\n"
+            f"{emoji.CLOCKWISE_VERTICAL_ARROWS} Boot time: {naturaldelta(time.time() - me.create_time())}\n"
             f"{emoji.ELECTRIC_PLUG} CPU: {psutil.cpu_count()} cores\n"
             f"{emoji.BATTERY} RAM: {naturalsize(memory.used)} used of {naturalsize(memory.total)} [{memory.percent}%]\n"
             f"{emoji.FILE_FOLDER} Disk: {naturalsize(disk.used)} used of {naturalsize(disk.total)}\n"
@@ -305,7 +289,6 @@ class WebdavModule(Module):
         self.scheduler.add_job(self._updater, "interval", seconds=3, max_instances=1)
 
         handlers = [
-            # MessageHandler(self.urls_batch, filters.command("batch")),
             MessageHandler(self.status, filters.command("status")),
             self.cancel_group.callback_handler(self.cancel_upload),
             MessageHandler(self.upload_file),
