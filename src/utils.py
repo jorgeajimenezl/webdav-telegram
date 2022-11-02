@@ -90,10 +90,11 @@ def escape_markdown(x: str) -> str:
     return re.sub(f"([{re.escape(escape_chars)}])", r"\\\1", x)
 
 
-async def execute_process(program: str, *args: List[str]) -> None:
+async def execute_process(program: str, *args: List[str], cwd: str = None) -> None:
     proc = await asyncio.create_subprocess_exec(
         program,
         *args,
+        cwd=cwd,
         stderr=asyncio.subprocess.PIPE,
     )
 

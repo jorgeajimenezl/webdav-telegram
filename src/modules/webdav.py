@@ -29,10 +29,11 @@ from services.torrent import TorrentService
 from services.mega import MegaService
 from services.git import GitService
 from services.youtube import YoutubeService
-
+from services.urlbatch import URLBatchService
 
 class WebdavModule(Module):
     SERVICES: List[Service] = [
+        URLBatchService,
         TorrentService,
         TelegramService,
         MegaService,
@@ -68,7 +69,7 @@ class WebdavModule(Module):
 
         match state:
             case TaskState.ERROR | TaskState.CANCELLED:
-                for piece in utils.cut(description, 4095):
+                for piece in utils.cut(description, 4096):
                     await self.app.send_message(
                         user, piece, reply_to_message_id=task.file_message.id
                     )
