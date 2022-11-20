@@ -53,7 +53,7 @@ class MegaService(Service):
                     
                     # Fix bug
                     directory = f"{directory}/" if directory[-1] != "/" else directory
-                    await mega.download(node, os.pat, progress=progress)
+                    await mega.download(node, directory, progress=progress)
 
                 path = os.path.join(directory, filename)
                 async with aiofiles.open(path, "rb") as file:
