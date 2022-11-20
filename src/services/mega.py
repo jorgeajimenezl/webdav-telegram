@@ -50,7 +50,10 @@ class MegaService(Service):
                         TaskState.WORKING,
                         description=f"{emoji.HOURGLASS_DONE} Download {filename}",
                     )
-                    await mega.download(node, directory, progress=progress)
+                    
+                    # Fix bug
+                    directory = f"{directory}/" if directory[-1] != "/" else directory
+                    await mega.download(node, os.pat, progress=progress)
 
                 path = os.path.join(directory, filename)
                 async with aiofiles.open(path, "rb") as file:
