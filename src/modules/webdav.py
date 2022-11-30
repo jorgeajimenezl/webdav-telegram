@@ -31,7 +31,7 @@ from services.mega import MegaService
 from services.git import GitService
 from services.youtube import YoutubeService
 from services.urlbatch import URLBatchService
-
+from services.drive import DriveService
 
 class WebdavModule(Module):
     SERVICES: List[Service] = [
@@ -41,6 +41,7 @@ class WebdavModule(Module):
         MegaService,
         YoutubeService,
         GitService,
+        DriveService,
         HttpService,
     ]
 
