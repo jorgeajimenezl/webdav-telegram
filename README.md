@@ -1,14 +1,5 @@
 # Telegram bot for manage your files via WebDAV
 
-## Services
-+ Mega.nz
-+ Telegram
-+ Torrent
-+ Youtube
-+ Mediafire
-+ ZippyShare
-+ Animeflv
-
 ## Dependencies
 + Python (+3.9)
 + Redis
@@ -32,8 +23,19 @@
 ~> sudo docker build --tag webdav-telegram:latest 
 ~> sudo docker run -d webdav-telegram:latest
 ```
+
+## Services
+- [X] Mega.nz
+- [X] Telegram
+- [X] Torrent
+- [X] Youtube (and a lot of videos webs support by [youtube-dl](https://github.com/ytdl-org/youtube-dl/))
+- [X] Mediafire
+- [ ] ZippyShare
+- [X] Animeflv.net
+- [X] Git repositories
+
 ## License
 [MIT License](./LICENSE)
 
 ## Author
-This program was developed by Jorge Alejandro Jimenez Luna <<jorgeajimenezl17@gmail.com>>
+This program was developed by Jorge Alejandro Jiménez Luna <<jorgeajimenezl17@gmail.com>>
