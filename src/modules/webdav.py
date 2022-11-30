@@ -38,10 +38,10 @@ class WebdavModule(Module):
         URLBatchService,
         TorrentService,
         TelegramService,
+        DriveService,
         MegaService,
         YoutubeService,
-        GitService,
-        DriveService,
+        GitService,        
         HttpService,
     ]
 
