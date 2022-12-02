@@ -32,7 +32,7 @@ class DriveService(Service):
             chunk_size=2097152,
         ) as dav:
             with tempfile.TemporaryDirectory() as directory:
-                link = self.kwargs.get("url", self.file_message.text)                
+                link = self.kwargs.get("url", self.file_message.text)
 
                 self.reset_stats()
                 self.set_state(
@@ -44,8 +44,7 @@ class DriveService(Service):
                 path = os.path.join(directory, name)
 
                 output = gdown.download(link, path, quiet=True)
-                
+
                 async with aiofiles.open(output, "rb") as file:
                     size = os.path.getsize(path)
                     await self.upload_file(dav, file, size)
-

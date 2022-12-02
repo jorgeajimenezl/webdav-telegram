@@ -1,7 +1,8 @@
 import re
 import itertools
 import asyncio
-from typing import Iterator, List
+import time
+from typing import Any, Callable, Iterator, List, TypeVar
 
 
 EMOJI_PATTERN = re.compile(
@@ -103,3 +104,23 @@ async def execute_process(program: str, *args: List[str], cwd: str = None) -> No
         raise Exception(
             f"Process return code: {proc.returncode} Stderr: {stderr or ''}"
         )
+
+
+X = TypeVar("X")
+
+
+def wrap_request_non_empty(func: Callable[[Any], X], *args, count: int = 5) -> X:
+    notes = []
+
+    for _ in range(count):
+        try:
+            r = func(*args)
+            if "__len__" in dir(r):
+                if len(r) <= 0:
+                    continue
+            return r
+        except Exception as e:
+            notes.append(e)
+            time.sleep(5)
+    else:  # If the loop doesn't `break`, raise the Exception
+        raise Exception(notes)

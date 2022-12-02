@@ -14,6 +14,7 @@ pycryptodomex
 psutil
 
 # Optional
+animeflv
 gdown
 aria2p
 yt-dlp

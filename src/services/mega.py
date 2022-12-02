@@ -50,7 +50,7 @@ class MegaService(Service):
                         TaskState.WORKING,
                         description=f"{emoji.HOURGLASS_DONE} Download {filename}",
                     )
-                    
+
                     # Fix bug
                     directory = f"{directory}/" if directory[-1] != "/" else directory
                     await mega.download(node, directory, progress=progress)
