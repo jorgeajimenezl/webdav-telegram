@@ -3,7 +3,7 @@ from uuid import UUID
 import utils
 import psutil
 import time
-from typing import Dict, List, Type
+from typing import Type
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from pyrogram import Client, emoji, filters
@@ -35,7 +35,7 @@ from services.drive import DriveService
 
 
 class WebdavModule(Module):
-    SERVICES: List[Service] = [
+    SERVICES: list[Service] = [
         URLBatchService,
         TorrentService,
         TelegramService,
@@ -54,9 +54,9 @@ class WebdavModule(Module):
         self.scheduler = scheduler
         self.app = None
 
-        self.tasks_id: Dict[UUID, Task] = dict()
+        self.tasks_id: dict[UUID, Task] = dict()
         self.executor = TaskExecutor()
-        self.tasks: Dict[Task, Message] = dict()
+        self.tasks: dict[Task, Message] = dict()
         self.tasks_lock = asyncio.Lock()
         self.factory = ButtonFactory()
 

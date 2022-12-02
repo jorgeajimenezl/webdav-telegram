@@ -1,7 +1,7 @@
 import random
 from dataclasses import dataclass, field
 import string
-from typing import Any, Callable, Union
+from typing import Any, Callable
 
 from pyrogram import filters
 from pyrogram.handlers import CallbackQueryHandler
@@ -31,7 +31,7 @@ class GroupButton(object):
 
 @dataclass
 class ActionButton(object):
-    name: str
+    name: str | None
 
     # Private
     map: bytes
@@ -86,9 +86,9 @@ class ButtonFactory(object):
         self.buttons = dict()
         self.groups = dict()
 
-    def create_action(self, name: str = None) -> ActionButton:
+    def create_action(self, name: str | None = None) -> ActionButton:
         u = random.randbytes(64)
-        name = name or random.choices(string.ascii_lowercase, k=10)
+        name = name or "".join(random.choices(string.ascii_lowercase, k=10))
         self.buttons[u] = ActionButton(name, u)
         return self.buttons[u]
 
@@ -98,7 +98,7 @@ class ButtonFactory(object):
 
         return self.groups[name]
 
-    def get(self, map: bytes) -> Union[GroupButton, ActionButton]:
+    def get(self, map: bytes) -> GroupButton | ActionButton:
         return self.buttons[map]
 
     def get_value(self, map: bytes) -> Any:

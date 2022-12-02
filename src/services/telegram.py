@@ -1,5 +1,3 @@
-from typing import Tuple
-
 from datetime import datetime as dt
 from aiodav.client import Client as DavClient
 from async_executor.task import TaskState
@@ -20,7 +18,7 @@ class TelegramService(Service):
     def check(m: Message):
         return bool(m.document) | bool(m.photo) | bool(m.video) | bool(m.audio)
 
-    def __get_file_name(message: Message) -> Tuple[str, int]:
+    def __get_file_name(message: Message) -> tuple[str, int]:
         available_media = (
             "audio",
             "document",

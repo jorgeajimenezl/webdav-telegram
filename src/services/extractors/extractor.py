@@ -1,5 +1,3 @@
-from typing import Dict, List, Optional
-
 from aiohttp.client import ClientSession
 
 
@@ -11,7 +9,9 @@ class Extractor(object):
     def check(url: str) -> bool:
         raise NotImplementedError
 
-    async def get_options(session: ClientSession, url: str) -> List[Dict[str, str]]:
+    async def get_options(
+        session: ClientSession, url: str
+    ) -> list[dict[str, str]] | None:
         return None
 
     @staticmethod

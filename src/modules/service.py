@@ -11,11 +11,11 @@ import tempfile
 
 from pyrogram.types import Message
 from aiofiles.threadpool.binary import AsyncBufferedIOBase
-from async_executor.task import Task, TaskState, to_task
+from async_executor.task import Task, TaskState
 from aiodav.client import Client as DavClient
 from pyrogram import emoji, Client
 from asyncio.exceptions import CancelledError
-from typing import Any, AsyncGenerator, Callable, Dict, Tuple, Union
+from typing import Any, AsyncGenerator, Callable
 from io import IOBase
 from Cryptodome.Hash import SHA1
 
@@ -49,10 +49,10 @@ class Service(Task):
         raise NotImplementedError
 
     @staticmethod
-    def settings() -> Dict[
-        str, Tuple[str, str, Union[str, Dict], Callable[[str], Any]]
-    ]:
-        raise None
+    def settings() -> dict[
+        str, tuple[str, str, str | dict, Callable[[str], Any]]
+    ] | None:
+        return None
 
     def get_pieces_count(self, file_size: int) -> int:
         if file_size is None:

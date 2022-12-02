@@ -2,7 +2,6 @@ import uvloop
 
 uvloop.install()
 
-import os
 import config
 
 from warnings import warn

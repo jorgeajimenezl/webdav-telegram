@@ -1,5 +1,5 @@
 import re
-from typing import Any, Callable, Coroutine, Dict, Tuple, Union
+from typing import Any, Callable
 
 from pyrogram import Client, emoji, filters, StopPropagation
 from pyrogram.handlers import MessageHandler
@@ -98,7 +98,7 @@ class SettingsModule(Module):
     def __init__(self, context: UserContext, database: Database) -> None:
         super().__init__(context, database)
         self.factory = ButtonFactory()
-        self.buttons: Dict[str, ActionButton] = dict()
+        self.buttons: dict[str, ActionButton] = dict()
         self.close_action = self.factory.create_action("close-action")
         self.others_action = self.factory.create_action("others-action")
         # self.handlers = []
@@ -249,6 +249,6 @@ class SettingsModule(Module):
     def register_entry(
         self,
         name: str,
-        entries: Dict[str, Tuple[str, str, Union[str, Dict], Callable[[str], Any]]],
+        entries: dict[str, tuple[str, str, str | dict, Callable[[str], Any]]],
     ):
         self.entries[name] = entries.copy()

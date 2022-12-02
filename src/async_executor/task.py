@@ -4,7 +4,7 @@ import asyncio
 import functools
 from enum import Enum
 from threading import Lock
-from typing import Callable, List, Tuple, Union
+from typing import Callable
 from uuid import UUID, uuid4
 
 
@@ -22,15 +22,15 @@ class Task(object):
     def __init__(self, **kwargs) -> None:
         self.id: UUID = uuid4()
 
-        self._state = (TaskState.UNKNOW, None)
-        self._progress: Tuple[str, str] = (None, None)
+        self._state: tuple[TaskState, str | None] = (TaskState.UNKNOW, None)
+        self._progress: tuple[int | None, int | None] = (None, None)
         self._lock = Lock()
-        self._last_point: int = None
-        self._last_time: int = None
-        self._eta: int = None
-        self._speed: int = None
+        self._last_point: int | None = None
+        self._last_time: float | None = None
+        self._eta: float | None = None
+        self._speed: float | None = None
         self._executor = None
-        self._childs: List[Task] = []
+        self._childs: list[Task] = []
         self._future = None
 
         self.kwargs = kwargs
@@ -54,7 +54,7 @@ class Task(object):
         self,
         task: "Task",
         remove_on_complete: bool = True,
-        on_end_callback: Callable[["Task"], None] = None,
+        on_end_callback: Callable[["Task"], None] | None = None,
     ) -> None:
         if remove_on_complete:
 
@@ -70,7 +70,7 @@ class Task(object):
             self._executor.schedule(task, on_end_callback)
         self._childs.append(task)
 
-    def childs(self) -> List["Task"]:
+    def childs(self) -> list["Task"]:
         return self._childs
 
     async def wait_for_childs(self) -> None:
@@ -85,22 +85,22 @@ class Task(object):
         await self._future
 
     @property
-    def state(self) -> Tuple[TaskState, str]:
+    def state(self) -> tuple[TaskState, str | None]:
         with self._lock:
             return self._state
 
     @property
-    def progress(self) -> Tuple[int, int]:
+    def progress(self) -> tuple[int | None, int | None]:
         with self._lock:
             return self._progress
 
     @property
-    def eta(self) -> Union[float, None]:
+    def eta(self) -> float | None:
         with self._lock:
             return self._eta
 
     @property
-    def speed(self) -> Union[float, None]:
+    def speed(self) -> float | None:
         with self._lock:
             return self._speed
 
@@ -112,7 +112,7 @@ class Task(object):
             self._speed = None
             self._progress = (None, None)
 
-    def set_state(self, state: TaskState, description: str = None) -> None:
+    def set_state(self, state: TaskState, description: str | None = None) -> None:
         with self._lock:
             self._state = (state, description)
         return None

@@ -1,7 +1,6 @@
 import aiohttp
 import os
 import re
-from typing import List
 
 from aiodav.client import Client as DavClient
 from async_executor.task import TaskState
@@ -21,7 +20,7 @@ class HttpService(Service):
     Download web file and upload to webdav
     """
 
-    EXTRACTORS: List[Extractor] = [
+    EXTRACTORS: list[Extractor] = [
         AnimeFLVExtractor,
         # ZippyshareExtractor,
         MediafireExtractor,

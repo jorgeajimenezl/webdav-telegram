@@ -61,6 +61,6 @@ class AnimeFLVService(Service):
                             if link.server.lower() == "mega":
                                 child = HttpService(url=x.url, **self.kwargs)
                                 self.schedule_child(child)
-                
+
             await self.wait_for_childs()
             return None

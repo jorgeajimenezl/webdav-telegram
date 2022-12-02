@@ -1,6 +1,6 @@
 import asyncio
 import os
-from typing import Callable, Dict
+from typing import Callable
 from urllib.parse import urlparse
 
 from aiodav.client import Client as DavClient
@@ -15,7 +15,7 @@ from pyrogram.types import (
 )
 
 import dialogs
-from context import CONTEXT, UserContext
+from context import UserContext
 from database import Database
 from humanize import naturalsize
 from module import Module
@@ -56,7 +56,7 @@ class FileModule(Module):
 
                     return partial, name
 
-                def get_button_label(info: Dict[str, str]):
+                def get_button_label(info: dict[str, str]):
                     _, name = get_path(info["path"])
                     return f"{emoji.OPEN_FILE_FOLDER if info['isdir'] else emoji.PACKAGE} {name}"
 

@@ -5,14 +5,14 @@ import traceback
 from asyncio import events
 from concurrent.futures import Future, ThreadPoolExecutor
 from threading import Lock
-from typing import Callable, Optional, Tuple
+from typing import Callable
 
 from async_executor.task import Task, TaskState
 from asyncio.exceptions import CancelledError
 
 
 class TaskExecutor(object):
-    def __init__(self, max_tasks: int = 10, workers: Optional[int] = None) -> None:
+    def __init__(self, max_tasks: int = 10, workers: int | None = None) -> None:
         super().__init__()
         self.workers = workers or min(32, os.cpu_count())
         self._executor = ThreadPoolExecutor(
@@ -43,7 +43,7 @@ class TaskExecutor(object):
                 events.set_event_loop(None)
                 loop.close()
 
-    async def _execute(self, task: Task, index: int) -> Tuple[int, Task]:
+    async def _execute(self, task: Task, index: int) -> tuple[int, Task]:
         async with self._semaphore:
             self._active_count += 1
             try:
@@ -118,7 +118,7 @@ class TaskExecutor(object):
                         on_end_callback(task)
                 return task
 
-            def at_end(f: Future[Tuple[int, Task]]):
+            def at_end(f: Future[tuple[int, Task]]):
                 # Do something with result
                 if f.cancelled():
                     return

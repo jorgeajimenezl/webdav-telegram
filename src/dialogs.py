@@ -1,6 +1,6 @@
 import asyncio
 from types import SimpleNamespace
-from typing import Any, Callable, List, Tuple, TypeVar, Union
+from typing import Callable, TypeVar
 
 from pyrogram import Client, emoji
 from pyrogram.types import (
@@ -17,15 +17,15 @@ T = TypeVar("T")
 async def selection(
     app: Client,
     user: int,
-    options: List[T],
+    options: list[T],
     description: str = "Select",
     multi_selection: bool = True,
-    name_selector: Callable[[T], str] = None,
+    name_selector: Callable[[T], str] | None = None,
     max_options_per_page: int = 8,
-    message: Message = None,
+    message: Message | None = None,
     delete: bool = True,
     cancellable: bool = True,
-) -> Union[T, List[T], Tuple[List[T], Message]]:
+) -> T | list[T] | tuple[list[T], Message]:
     ns = SimpleNamespace(page=0, cancelled=False, options=[])
 
     lock = asyncio.Lock()

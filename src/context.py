@@ -34,7 +34,7 @@ class UserContext(object):
 
     def update(self, id: int, context: int) -> bool:
         assert isinstance(context, int)
-        return self._redis.set(f"ctx:{id}", context)
+        return self._redis.set(f"ctx:{id}", context) or False
 
     def resolve(self, id: int) -> int:
         if self._redis.exists(f"ctx:{id}"):

@@ -2,7 +2,7 @@ import re
 import itertools
 import asyncio
 import time
-from typing import Any, Callable, Iterator, List, TypeVar
+from typing import Any, Callable, Iterator, TypeVar
 
 
 EMOJI_PATTERN = re.compile(
@@ -53,7 +53,7 @@ def get_bool(x: str) -> bool:
     raise ValueError("Impossible convert from this string to bool")
 
 
-def cut(x: str, length: int) -> List[str]:
+def cut(x: str, length: int) -> list[str]:
     ret = []
     while x is not None and x != "":
         ret.append(x[:length])
@@ -64,7 +64,7 @@ def cut(x: str, length: int) -> List[str]:
 def expand_ranges(x: str) -> Iterator[str]:
     ranges = []
 
-    for match in re.finditer("\{([\d\-,A-Za-z&\.]+)\}", x):
+    for match in re.finditer(r"\{([\d\-,A-Za-z&\.]+)\}", x):
         items = match[1].split(",")
         r = []
 
@@ -72,7 +72,7 @@ def expand_ranges(x: str) -> Iterator[str]:
             item = item.strip()
 
             if "-" in item:
-                m = re.fullmatch("(\d+)-(\d+)", item)
+                m = re.fullmatch(r"(\d+)-(\d+)", item)
                 if not m:
                     raise Exception(f"Invalid range operation: line({match.start()})")
                 r.extend(range(int(m[1]), int(m[2]) + 1))
@@ -80,7 +80,7 @@ def expand_ranges(x: str) -> Iterator[str]:
                 r.append(item)
 
         ranges.append(r)
-    x = re.sub("\{([\d\-,A-Za-z&\.]+)\}", "{}", x)
+    x = re.sub(r"\{([\d\-,A-Za-z&\.]+)\}", "{}", x)
 
     for t in itertools.product(*ranges):
         yield x.format(*t)
@@ -91,7 +91,9 @@ def escape_markdown(x: str) -> str:
     return re.sub(f"([{re.escape(escape_chars)}])", r"\\\1", x)
 
 
-async def execute_process(program: str, *args: List[str], cwd: str = None) -> None:
+async def execute_process(
+    program: str, *args: list[str], cwd: str | None = None
+) -> None:
     proc = await asyncio.create_subprocess_exec(
         program,
         *args,
