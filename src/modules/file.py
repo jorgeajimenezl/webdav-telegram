@@ -15,6 +15,7 @@ from pyrogram.types import (
 )
 
 import dialogs
+import tempfile
 from context import UserContext
 from database import Database
 from humanize import naturalsize
@@ -28,6 +29,7 @@ class FileModule(Module):
         self.factory = ButtonFactory()
 
         # Groups
+        self.download_group = self.factory.create_group("download")
         self.delete_group = self.factory.create_group("delete")
 
     async def list(self, app: Client, message: Message, **kwargs):
@@ -88,10 +90,9 @@ class FileModule(Module):
                             reply_markup=InlineKeyboardMarkup(
                                 [
                                     [
-                                        InlineKeyboardButton(
-                                            f"{emoji.DOWN_ARROW} Download",
-                                            callback_data=b"1",
-                                        ),
+                                        self.download_group.add(
+                                            cwd, cachable=True
+                                        ).button(f"{emoji.DOWN_ARROW} Download"),
                                         InlineKeyboardButton(
                                             f"{emoji.PENCIL} Rename", callback_data=b"1"
                                         ),
@@ -106,6 +107,41 @@ class FileModule(Module):
                         break
             except Exception as e:
                 await app.send_message(user, f"Error getting file list: {e}")
+
+    async def download_file(self, app: Client, callback_query: CallbackQuery):
+        user = callback_query.from_user.id
+        path = self.factory.get_value(callback_query.data)
+        assert isinstance(path, str)
+
+        name = os.path.basename(path)
+        data = self.database.get_data(user)
+
+        async with DavClient(
+            hostname=data["server-uri"],
+            login=data["username"],
+            password=data["password"],
+        ) as dav:
+            try:
+                with tempfile.NamedTemporaryFile() as file:
+                    # Download to temporary file
+                    message = await app.send_message(user, "Downloading file ...")
+                    await dav.download_to(path, file)
+                    await message.delete(True)
+
+                    assert file.seek(0) == 0, "Unable to seek"
+
+                    # Upload
+                    message = await app.send_message(user, "Uploading file ...")
+                    await app.send_document(user, file, file_name=name)
+                    await message.delete(True)
+            except RemoteResourceNotFound:
+                await app.send_message(
+                    user, f"Resource **{path}** isn't longer available"
+                )
+            except Exception as e:
+                await app.send_message(
+                    user, f"Unexpected error while delete **{path}**: {e}"
+                )
 
     async def delete_file(self, app: Client, callback_query: CallbackQuery):
         user = callback_query.from_user.id
@@ -200,6 +236,7 @@ class FileModule(Module):
             MessageHandler(self.free, filters.command("free")),
             MessageHandler(coro_wrapper(self.wipe), filters.command("wipe")),
             self.delete_group.callback_handler(self.delete_file),
+            self.download_group.callback_handler(self.download_file),
         ]
 
         for u in handlers:
