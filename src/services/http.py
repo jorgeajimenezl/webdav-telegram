@@ -9,7 +9,7 @@ from pyrogram import emoji
 from pyrogram.types import Message
 from urllib.parse import urlparse
 
-from services.extractors.animeflv import AnimeFLVExtractor
+# from services.extractors.animeflv import AnimeFLVExtractor
 from services.extractors.extractor import Extractor
 from services.extractors.mediafire import MediafireExtractor
 from services.extractors.zippyshare import ZippyshareExtractor
