@@ -2,6 +2,7 @@ from urllib.parse import urlparse
 
 from redis import Redis
 import config
+import utils
 
 
 class Database(object):
@@ -31,6 +32,7 @@ class Database(object):
                 "file-password": "",
                 "checksum": "true",
                 "file-overwrite": "false",
+                "is-admin": "false",
             }
 
             self.set_data(id, **data)
@@ -51,3 +53,7 @@ class Database(object):
 
     def contains_user(self, id: int):
         return self._redis.exists(f"user:{id}")
+
+    def is_admin(self, id: int):
+        data = self.get_data(id)
+        return utils.get_bool(data["admin"])

@@ -24,7 +24,7 @@ class URLBatchService(Service):
     async def start(self) -> None:
         self.set_state(TaskState.STARTING)
 
-        with (await self.file_message.download(in_memory=True)) as file:
+        with await self.file_message.download(in_memory=True) as file:
             urls = file.readlines()
             urls = list(
                 set([url.decode() for url in urls if re.match(rb"^https?://", url)])

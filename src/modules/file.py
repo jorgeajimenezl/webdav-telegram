@@ -212,7 +212,6 @@ class FileModule(Module):
                 password=data["password"],
             ) as dav:
                 try:
-
                     nodes = await dav.list()
                     for node in nodes:
                         await dav.unlink(node)

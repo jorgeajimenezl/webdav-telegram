@@ -42,7 +42,7 @@ class WebdavModule(Module):
         DriveService,
         MegaService,
         YoutubeService,
-        GitService,        
+        GitService,
         HttpService,
     ]
 

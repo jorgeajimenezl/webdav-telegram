@@ -49,9 +49,9 @@ class Service(Task):
         raise NotImplementedError
 
     @staticmethod
-    def settings() -> dict[
-        str, tuple[str, str, str | dict, Callable[[str], Any]]
-    ] | None:
+    def settings() -> (
+        dict[str, tuple[str, str, str | dict, Callable[[str], Any]]] | None
+    ):
         return None
 
     def get_pieces_count(self, file_size: int) -> int:
