@@ -43,7 +43,7 @@ class DriveService(Service):
                 name = f"google-drive-file-{time.time()}"
                 path = os.path.join(directory, name)
 
-                output = gdown.download(link, path, quiet=True)
+                output = gdown.download(link, path, quiet=True, fuzzy=True)
 
                 async with aiofiles.open(output, "rb") as file:
                     size = os.path.getsize(path)
